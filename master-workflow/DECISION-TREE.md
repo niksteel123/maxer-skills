@@ -20,7 +20,6 @@ Start here: What SOT documents exist?
 │    ├─── Returns 0 (clean)? -> SKIP reset, check SOTs below
 │    └─── Returns >0 (has beads)?
 │         ├─── Beads from THIS feature? -> SKIP reset, continue work
-│         └─── Beads from OLD feature? -> [reset-workspace] first
 │
 ├─── No research or spec?
 │    │
@@ -80,7 +79,6 @@ Start here: What SOT documents exist?
 │
 └─── Everything corrupted or confused?
      │
-     └─── ACTION: Use [reset-workspace]
           Then start over from earliest missing SOT
 ```
 
@@ -146,10 +144,8 @@ What's your situation?
 │
 ├─── Starting a completely new feature
 │    ├─── Want to keep previous artifacts? -> NO RESET needed
-│    └─── Want a clean slate? -> [reset-workspace] FULL
 │
 ├─── Beads corrupted but SOT docs are fine
-│    └─── [reset-workspace] MINIMAL (beads only)
 │         Then: Re-run [beads-from-sources] from 3 SOTs
 │
 ├─── Strategy wrong but spec + TDD fine
@@ -163,11 +159,9 @@ What's your situation?
 │
 ├─── Spec is wrong
 │    └─── Fix the spec first (manual)
-│         Then: Consider [reset-workspace] FULL
 │         Then: Re-run entire pipeline from Phase 1
 │
 └─── Just want to clear AgentMail
-     └─── [reset-workspace] with mail-only option
 ```
 
 ---
@@ -187,7 +181,6 @@ What's your situation?
 | Human approves | Execution | Execute (`bd ready --json`) |
 | Execution done | Audit | STOP #2 and report to human |
 | Human triggers audit | Findings | `bead-completion-audit` |
-| Corrupted state | Varies | `reset-workspace` |
 
 ---
 
@@ -250,7 +243,6 @@ What's the problem?
 │    └─── This is spec drift. Run [bead-plan-audit] to fix.
 │
 ├─── "Circular dependency detected"
-│    └─── Edit beads or [reset-workspace] minimal + re-run [beads-from-sources]
 │
 ├─── "File reservation conflict"
 │    ├─── Check who holds: list_contacts, fetch_inbox

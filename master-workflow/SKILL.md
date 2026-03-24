@@ -122,7 +122,6 @@ Use this skill when:
 │  ┌─────────────────────┐                                                    │
 │  │  PHASE 7: COMPLETE  │   Feature Done                                     │
 │  │  ─────────────────  │                                                    │
-│  │  All beads done      │   Optional: [reset-workspace] for next feature    │
 │  │  QA gates passed     │                                                    │
 │  │  Audit passed        │                                                    │
 │  └─────────────────────┘                                                    │
@@ -253,11 +252,6 @@ Post-implementation audit with REOPEN -> FIX -> CLOSE lifecycle.
 - **Output:** Findings document, fixes applied
 - **Key:** Checks spec drift, test coverage, implementation quality
 
-### `reset-workspace` -- Any time
-Wipes beads, AgentMail, and workspace for a fresh cycle.
-- **When:** Starting fresh or recovering from corruption
-- **Skip if:** `bd list --json` returns 0 beads
-
 ---
 
 ## Quick Decision Tree
@@ -300,7 +294,6 @@ Where am I in the pipeline?
 │   └── Bead fidelity -> [bead-plan-audit]
 │
 └── Everything corrupted/confused?
-    └── Use [reset-workspace], start over
 ```
 
 ---
@@ -376,14 +369,13 @@ Where am I in the pipeline?
 ```
 1. Check current state: bd ready --json
 2. If beads exist -> continue execution
-3. If beads corrupted -> [reset-workspace] minimal, then rebuild from SOTs
 4. If strategy missing -> [spec-to-strategy] from spec + TDD
 5. If TDD missing -> [spec-to-tdd] from spec
 ```
 
 ### Complete Reset
 ```
-1. [reset-workspace] full
+1. Clean up any stale beads manually if needed
 2. Start fresh from Phase 0
 ```
 

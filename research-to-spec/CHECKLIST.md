@@ -306,7 +306,7 @@ Before delivering:
 - [ ] **SOT hierarchy explicit**
   - [ ] Spec marked as PRIMARY source of truth
   - [ ] Architecture marked as SUPPLEMENTARY
-  - [ ] Handoff references 3-SOT pipeline (not old spec-to-plan → beads-from-sources)
+  - [ ] Handoff references 3-SOT pipeline (not old spec-to-plan → plan-to-beads)
 
 - [ ] **Handoff ready**
   - [ ] Agent can proceed with only these documents
@@ -327,7 +327,7 @@ Group all drift-related checks for quick scanning:
 - [ ] **Every FR has Core Test**: No FR-section without an executable test
 - [ ] **Research test strategy preserved**: If research had test sections, spec-relevant tests carried forward
 - [ ] **Handoff references 3-SOT pipeline**: spec-to-tdd → spec-to-strategy → beads-from-sources → beads-to-execution
-- [ ] **No stale pipeline references**: No mentions of "spec-to-plan → beads-from-sources" (old pipeline)
+- [ ] **No stale pipeline references**: No mentions of old pipeline names: "spec-to-plan", "plan-to-beads"
 - [ ] **Handoff names specific skills**: Each step references an invocable skill by name
 
 ---

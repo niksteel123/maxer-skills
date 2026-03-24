@@ -38,7 +38,6 @@ One-page cheat sheet for the 3-SOT implementation pipeline.
 | 3 | `beads-from-sources` | `beads-from-sources` | "Create beads from SOTs" |
 | -- | `bead-plan-audit` | `bead-plan-audit` | "Audit beads for spec drift" |
 | 4 | `beads-to-execution` | `beads-to-execution` | "Prepare kickoff" |
-| R | `reset-workspace` | `reset-workspace` | "Reset workspace" |
 | 6 | `bead-completion-audit` | `bead-completion-audit` | "Audit completed implementation" |
 
 ---
@@ -94,7 +93,6 @@ BEADS              -> Self-contained. Embed spec + TDD verbatim.
 | Human says "proceed" | Execute: `bd ready --json` |
 | Execution done | STOP #2 -- report to human |
 | Human triggers audit | `bead-completion-audit` (Phase 6) |
-| State corrupted | `reset-workspace` |
 
 ---
 
@@ -195,11 +193,9 @@ artifacts/bd-{BEAD_ID}/        # Verification evidence
 
 ```
 Everything broken?
-  -> [reset-workspace] full
   -> Start from Phase 0
 
 Just beads broken?
-  -> [reset-workspace] minimal
   -> Re-run [beads-from-sources] from 3 SOTs
 
 SOT doc wrong?

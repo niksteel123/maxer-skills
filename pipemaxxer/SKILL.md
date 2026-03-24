@@ -1,7 +1,7 @@
 ---
 name: pipemaxxer
 description: "Orchestrate the complete 3-SOT implementation pipeline from any entry point. Deep-researches the codebase, generates feature-specific handoff prompts for every stage (spec, TDD, strategy, beads, audit, kickoff, push, completion audit, archive). Composable: start from research doc, existing spec, or mid-pipeline. Works on any codebase."
-disable-model-invocation: true
+disable-model-invocation: false
 ---
 
 # Pipemaxxer — 3-SOT Implementation Pipeline Generator

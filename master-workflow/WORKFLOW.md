@@ -392,7 +392,6 @@ Input: (discovers automatically from workspace)
    - Review audit findings document
 
 3. **Prepare for Next Feature**
-   - Optional: `[reset-workspace]` for clean slate
 
 ### Verification
 - [ ] All beads completed
@@ -406,14 +405,12 @@ Input: (discovers automatically from workspace)
 
 ### Everything Broken
 ```
-1. [reset-workspace] full
 2. Verify SOT docs still exist (never delete SOTs!)
 3. Start from earliest missing phase
 ```
 
 ### Just Beads Corrupted
 ```
-1. [reset-workspace] minimal (beads only)
 2. Re-run [beads-from-sources] from 3 SOTs
 3. Re-run [bead-plan-audit]
 4. Continue from Phase 4

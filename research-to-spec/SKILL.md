@@ -736,7 +736,6 @@ Before doing ANYTHING else, you MUST thoroughly read and understand the complete
 - The source-of-truth pattern that prevents drift
 
 ### Sub-Skills (Read After Master Workflow)
-1. `/Users/{user}/.claude/skills/reset-workspace/SKILL.md` - Workspace cleanup
 2. `/Users/{user}/.claude/skills/spec-to-tdd/SKILL.md` - Spec to TDD test specifications (SOT #2)
 3. `/Users/{user}/.claude/skills/spec-to-strategy/SKILL.md` - Implementation strategy (SOT #3, lightweight ~500-800 line routing table)
 4. `/Users/{user}/.claude/skills/beads-from-sources/SKILL.md` - Create beads from Spec + TDD + Strategy (strategy serves as organizational framework)
@@ -777,9 +776,7 @@ For each file, understand:
 
 ---
 
-### Step 3: Clean Slate (Reset Workspace)
 
-Invoke the `reset-workspace` skill:
 - Wipe all existing beads
 - Reset AgentMail (agents AND messages)
 - Clean workspace for fresh implementation

@@ -608,7 +608,6 @@ then beads directly from all three source-of-truth documents.
 Before doing ANYTHING else, thoroughly read and understand the workflow skills:
 
 1. `~/.claude/skills/master-workflow/SKILL.md`
-2. `~/.claude/skills/reset-workspace/SKILL.md`
 3. `~/.claude/skills/spec-to-tdd/SKILL.md` — Spec to TDD (SOT #2)
 4. `~/.claude/skills/spec-to-strategy/SKILL.md` — Implementation strategy (SOT #3, ~500-800 line routing table)
 5. `~/.claude/skills/beads-from-sources/SKILL.md` — Create beads from Spec + TDD + Strategy
@@ -652,7 +651,6 @@ For each file, understand:
 
 ### Step 3: Clean Slate
 
-Invoke `reset-workspace` skill:
 - Wipe beads
 - Reset AgentMail
 - Clean workspace
