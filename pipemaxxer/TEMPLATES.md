@@ -287,6 +287,15 @@ Generate the **kickoff prompt** (full agent onboarding), **push prompt** (contin
 
 These are the documents agents will actually USE during implementation. They must be deeply feature-specific — reference actual file paths, actual types, actual commands.
 
+**CRITICAL: The kickoff and push prompts MUST include the full AgentMail coordination workflow.** Assume multiple agents may work in parallel. The prompts must leave ZERO ambiguity about:
+- Organization model (FLAT — no hierarchy, agents pick next ready bead)
+- How to register with AgentMail (exact MCP calls)
+- How to check inbox before picking work (situational awareness)
+- How to claim a bead (update status + reserve files + announce via mail)
+- How to handle file reservation conflicts
+- The full execution loop (claim → reserve → announce → implement → verify → commit → push → release → loop)
+- Session landing protocol (when fully blocked)
+
 ---
 
 ## Source Documents
@@ -304,10 +313,10 @@ These are the documents agents will actually USE during implementation. They mus
 {key_files with descriptions}
 ```
 
-### Quality Bar
+### Quality Bar (MATCH THIS LEVEL OF DETAIL)
 ```
-{existing_kickoff}   — Best existing kickoff prompt
-{existing_push}      — Best existing push prompt
+docs/plan-hub/prompts/l2.5-desktop-kickoff.md   — Best existing kickoff (study the AgentMail section)
+docs/plan-hub/prompts/l2.5-desktop-push.md       — Best existing push prompt
 ```
 
 ---
@@ -316,9 +325,78 @@ These are the documents agents will actually USE during implementation. They mus
 
 | File | Path | Purpose |
 |------|------|---------|
-| Kickoff | `{kickoff_path}` | Full agent onboarding (~150-250 lines) |
+| Kickoff | `{kickoff_path}` | Full agent onboarding (~150-300 lines) |
 | Push | `{push_path}` | Continuation nudge (~30-50 lines) |
 | Status | `{status_path}` | YAML pointer to all SOT docs |
+
+---
+
+## Required Kickoff Sections (ALL mandatory)
+
+The generated kickoff prompt MUST include these sections in this order:
+
+### 1. Mission + Organization Model
+- Feature description with completion milestones
+- **Organization: FLAT** — no team hierarchy, pick next ready bead
+- **Coordination: AGENTMAIL-FIRST** — register, check inbox, announce claims BEFORE touching code
+- **Beads are SELF-CONTAINED** — implement from bead alone, spec as tiebreaker only
+
+### 2. Source of Truth Reading List
+- Ordered list with READ/SKIM/REFERENCE annotations
+- AGENTS.md first, then Spec, TDD, Bootstrap, Strategy, Architecture, Key codebase files
+
+### 3. AgentMail Registration (exact MCP calls)
+- `ensure_project(human_key="{project_path}")`
+- `register_agent(project_key, program, model, task_description)`
+- Or `macro_start_session(...)` for speed
+
+### 4. Situational Awareness (check before picking work)
+- `fetch_inbox(project_key, agent_name, include_bodies=true)`
+- `search_messages(project_key, query="in_progress OR claimed")`
+- `{bead_cli} ready` — current work queue
+- KEY PRINCIPLE: if another agent claimed a bead, DO NOT take it
+
+### 5. Claim Protocol (announce + reserve)
+- `{bead_cli} update <id> --status=in_progress`
+- `file_reservation_paths(project_key, agent_name, paths=[...], ttl_seconds=3600, exclusive=true, reason="<bead-id>")`
+- `send_message(project_key, sender_name, to=[...], subject="[<bead-id>] Claimed: ...", ack_required=true)`
+- FILE_RESERVATION_CONFLICT handling
+
+### 6. Beads ↔ AgentMail Mapping
+| Concept | Value |
+|---------|-------|
+| Mail `thread_id` | Bead ID |
+| Mail subject prefix | `[<bead-id>]` |
+| File reservation `reason` | Bead ID |
+| Commit message prefix | Bead ID |
+
+### 7. Quality Gates (actual commands)
+```bash
+{build_cmd}
+{test_cmd}
+{lint_cmd}
+```
+
+### 8. Execution Loop
+Claim → Reserve files → Announce → Implement → Verify → Commit → Push → Release reservations → Announce completion → Loop
+
+### 9. Session Landing Protocol
+When fully blocked: push all work, release all reservations, announce handoff via mail.
+
+---
+
+## Required Push Sections (ALL mandatory)
+
+The generated push prompt MUST include:
+1. "Re-read AGENTS.md"
+2. Project key
+3. "Finish in-progress work first"
+4. "Check inbox" with exact `fetch_inbox` command
+5. "Run `{bead_cli} ready`" with bead prefix filter
+6. Full claim protocol (update status → reserve files → announce → implement → verify → commit → push → release → loop)
+7. Quality gate commands
+8. "Do NOT stop to ask what to work on"
+9. Session landing protocol when blocked
 
 ---
 
@@ -379,12 +457,10 @@ Is the acceptance criteria concrete — not "fix this" but "add field X of type 
 
 ## Your Mission
 
-Execute the fix beads created by the completion audit. For each fix bead:
-1. Read the bead — it's self-contained with spec refs and TDD test IDs
-2. Implement the fix
-3. Run the specific TDD tests referenced in the bead
-4. Verify acceptance criteria
-5. Commit, mark bead complete
+Execute the fix beads created by the completion audit. Multiple agents may work on fix beads in parallel — use AgentMail coordination to avoid conflicts.
+
+**Organization: FLAT.** Pick next ready fix bead, implement, verify, move on.
+**Coordination: AGENTMAIL-FIRST.** Check inbox, claim via mail, reserve files before touching code.
 
 ---
 
@@ -403,6 +479,32 @@ Execute the fix beads created by the completion audit. For each fix bead:
 
 ---
 
+## AgentMail Coordination
+
+**Project key:** `{project_path}`
+
+### Before picking a fix bead:
+```
+fetch_inbox(project_key, agent_name, include_bodies=true)
+search_messages(project_key, query="audit-fix OR fix-bead")
+```
+
+### For each fix bead:
+1. **Claim:** `{bead_cli} update <id> --status=in_progress`
+2. **Reserve files:** `file_reservation_paths(project_key, agent_name, paths=[...], ttl_seconds=3600, exclusive=true, reason="<fix-bead-id>")`
+3. **Announce:** `send_message(project_key, sender_name, to=[...], subject="[<fix-bead-id>] Claimed: ...", ack_required=true)`
+4. **Read the bead:** `{bead_cli} show <id>` — self-contained with spec refs and TDD test IDs
+5. **Implement the fix**
+6. **Run the specific TDD tests** referenced in the bead
+7. **Verify acceptance criteria**
+8. **Commit** with fix bead ID as prefix
+9. **Release reservations:** `release_file_reservations(project_key, agent_name)`
+10. **Announce completion:** `send_message(project_key, sender_name, to=[...], subject="[<fix-bead-id>] Complete")`
+11. **Close bead:** `{bead_cli} close <id>`
+12. **Loop** to next ready fix bead
+
+---
+
 ## Quality Gates
 
 ```bash
@@ -416,9 +518,11 @@ Execute the fix beads created by the completion audit. For each fix bead:
 ## Mini Push (After Each Fix)
 
 If gaps remain after this pass, go back to the completion audit (step 12) and re-audit.
-Check inbox for coordination messages. Check next fix bead.
+Check inbox for coordination messages. Check next fix bead via `{bead_cli} ready --label audit-fix`.
 Keep going until ALL fix beads are complete or you are BLOCKED on a SPEC_QUESTION.
-Do NOT stop to ask what to work on next.
+Do NOT stop to ask what to work on next. Do NOT wait for permission.
+
+If fully blocked: push all work, release all reservations, announce handoff via mail.
 ```
 
 ---
