@@ -50,6 +50,57 @@ Use this as a worldview constraint:
   in place, and what remains future architecture
 {END_IF}
 
+{IF_RETROACTIVE}
+---
+
+## Retroactive Mode — The Feature Is Already Implemented
+
+This is a **retroactive** harmonization. The feature described by the
+{source_type} has ALREADY BEEN IMPLEMENTED in the codebase. The layer/plan
+docs are stale — they don't yet reflect this feature.
+
+### Source-of-Truth Hierarchy (Retroactive)
+
+```text
+Code implementation  >  Research/feature doc  >  Layer/plan docs
+(what was built)        (design intent)          (stale, being updated)
+```
+
+- **Code** tells you what WAS ACTUALLY BUILT — types, APIs, behavior
+- **{source_type}** tells you WHY it was built — design rationale, intent
+- **Layer docs** tell you the PRE-FEATURE system state (this is what you're fixing)
+
+Where code and {source_type} diverge, the code wins for factual accuracy.
+Use the {source_type} for narrative context and design rationale.
+
+### Implementation Surface Map
+
+The feature was implemented in these code locations:
+
+```text
+{implementation_surface_map}
+```
+
+### Implementation Drift Points
+
+Where the implementation diverges from the {source_type}:
+
+{implementation_drift_list}
+
+For each drift point: the harmonized docs must describe the code's behavior,
+not the {source_type}'s intended behavior. Use the {source_type} to explain
+WHY the behavior exists, but describe WHAT actually happens.
+
+### Unimplemented Portions
+
+These aspects of the {source_type} were NOT implemented:
+
+{unimplemented_portions_list}
+
+For these: the docs should mention them as planned/future architecture,
+NOT as current capability. Do not write as if they exist.
+{END_IF}
+
 ---
 
 ## First Requirement
@@ -121,6 +172,25 @@ or oversimplifying:
 ```
 
 You are not changing code in this step, but you must understand it.
+{END_IF}
+
+{IF_RETROACTIVE}
+### Feature Implementation Code (CRITICAL — READ FOR FACTUAL ACCURACY)
+
+These files contain the ACTUAL IMPLEMENTATION of the feature. They are your
+primary source of truth for what the system does today:
+
+```text
+{retroactive_code_surface_paths_with_per_file_notes}
+```
+
+Reading order for retroactive mode:
+1. {source_type} first (for intent and design context)
+2. Implementation code (for what was actually built)
+3. Layer/plan docs (for current stale state you're fixing)
+
+Where the code differs from the {source_type}, describe what the code does.
+Use the {source_type} to explain WHY, but the code to describe WHAT.
 {END_IF}
 
 ---
@@ -352,6 +422,22 @@ Ask:
 - can an engineer read only the docs and understand the exact intended {domain_model}?
 {implementation_readiness_questions}
 - could multiple engineers reading different docs derive the same implementation model?
+
+{IF_RETROACTIVE}
+### 3b. Code-Doc Alignment (RETROACTIVE ONLY)
+
+Verify that the harmonized docs accurately describe the ACTUAL implementation:
+
+- Do the docs match what the code actually does? (not what the {source_type} planned)
+- Where the implementation diverged from the {source_type}, do the docs follow the code?
+- Are unimplemented portions clearly marked as future/planned, not current?
+- Does the design rationale from the {source_type} appear alongside the code-accurate
+  descriptions?
+- Could an engineer read the docs and correctly predict what they'd find in the code?
+
+Spot-check: pick 2-3 feature concepts, compare the doc description against the actual
+code. If they diverge, the doc is wrong and must be fixed.
+{END_IF}
 
 ### 4. Overreach check
 

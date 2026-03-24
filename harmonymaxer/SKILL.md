@@ -1,16 +1,16 @@
 ---
 name: harmonymaxer
-description: "Integrate new features, research findings, or feedback into existing plan/layer documentation with perfect cross-document consistency. Use when: user says 'harmonymaxer', 'harmonize this', 'integrate this feature', 'integrate feedback', 'harmonize docs', 'absorb this research', 'harmonize into layers', or '/harmonymaxer'. Reads new material (research docs, feature plans, or feedback), deeply understands both the new material and the existing doc set, then generates harmonization handoff + optimization prompts that produce perfectly consistent documentation. Works on any codebase."
+description: "Integrate new features, research findings, or feedback into existing plan/layer documentation with perfect cross-document consistency. Supports both proactive (before implementation) and retroactive (after implementation) modes. Use when: user says 'harmonymaxer', 'harmonize this', 'integrate this feature', 'integrate feedback', 'harmonize docs', 'absorb this research', 'harmonize into layers', 'sync docs with implementation', 'retroactive harmonize', or '/harmonymaxer'. Reads new material (research docs, feature plans, or feedback), deeply understands both the new material and the existing doc set, then generates harmonization handoff + optimization prompts that produce perfectly consistent documentation. In retroactive mode, also studies the codebase to understand how the feature was actually implemented. Works on any codebase."
 user_invocable: true
 compatibility: "Works with Claude Code, Codex, and any Agent Skills-compatible tool."
 metadata:
   author: steel
-  version: "1.0"
+  version: "1.1"
 ---
 
 # Harmonymaxer — Feature & Feedback Integration Engine
 
-> Integrate new features, research findings, or feedback into existing plan/layer docs — producing harmonization handoffs that ensure perfect cross-document consistency.
+> Integrate new features, research findings, or feedback into existing plan/layer docs — producing harmonization handoffs that ensure perfect cross-document consistency. Supports both proactive (pre-implementation) and retroactive (post-implementation) modes.
 
 ---
 
@@ -18,6 +18,8 @@ metadata:
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
+│                                                                         │
+│   PROACTIVE MODE (before implementation):                               │
 │                                                                         │
 │   /harmonymaxer research.md                                             │
 │       │                                                                 │
@@ -37,6 +39,24 @@ metadata:
 │                                                                         │
 │   RESULT: Layer/plan docs are self-contained. Source material is no     │
 │           longer needed. All docs tell one coherent story.              │
+│                                                                         │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                         │
+│   RETROACTIVE MODE (after implementation):                              │
+│                                                                         │
+│   /harmonymaxer research.md --retroactive                               │
+│       │                                                                 │
+│       ├── Phase 0-1: Deep understand docs + research + CODEBASE         │
+│       ├── Phase 1: Build change impact map from CODE + research doc     │
+│       │            (code is the primary source of truth)                │
+│       │                                                                 │
+│       ├── Generates: HARMONIZATION HANDOFF   (code-aware)               │
+│       └── Generates: HARMONIZATION OPTIMIZATION (code-aware)            │
+│                                                                         │
+│   Same workflow: run handoff → follow-up → optimization → follow-up     │
+│                                                                         │
+│   RESULT: Layer/plan docs now accurately describe the system as it      │
+│           exists after implementation. No stale pre-feature docs.       │
 │                                                                         │
 │   (optional: run /planmaxer on the updated docs for expert reviews)     │
 │                                                                         │
@@ -70,12 +90,19 @@ Examples:
   /harmonymaxer feedback.md                             Integrate feedback into plan docs
   /harmonymaxer research.md --into docs/strategy/       Specify target doc directory
   /harmonymaxer --feedback-mode notes.md                Force feedback mode for brief source
+  /harmonymaxer research.md --retroactive               Post-implementation: sync docs with code
+  /harmonymaxer research.md --retroactive --into docs/  Retroactive with explicit target dir
 ```
 
 Flags:
   --into <path>       Specify target docs directory (auto-detected if not provided)
   --feedback-mode     Force feedback mode (less structured source, more reasoning guidance)
   --research-mode     Force research doc mode (structured source, more mechanical mapping)
+  --retroactive       Retroactive mode: feature is ALREADY IMPLEMENTED in the codebase.
+                      Studies the code alongside the research doc. Code becomes the primary
+                      source of truth; research doc provides intent and design rationale.
+                      The harmonizing agent reads both code and research doc to understand
+                      the feature as it was actually built.
 
 ---
 
@@ -210,6 +237,64 @@ IMPLEMENTATION STATE:
   If no code exists (pure documentation project): skip this step.
 ```
 
+#### Step 0.5b: Detect Retroactive Mode (if `--retroactive` flag)
+
+In retroactive mode, the feature described by the source material is ALREADY
+IMPLEMENTED in the codebase. The layer/plan docs are stale — they don't yet
+reflect the implemented feature.
+
+```
+RETROACTIVE MODE DETECTION:
+
+  1. LOCATE THE IMPLEMENTATION:
+     Search the codebase for code that implements the feature described in
+     the source material. Use the research doc's data structures, function
+     names, module names, and concepts as search targets.
+
+     SEARCH STRATEGY:
+       - Grep for key type names, function names, and constants from the
+         research doc
+       - Check recent git commits for feature-related changes
+       - Trace module structure changes that match the feature's architecture
+       - Look for new files/directories that correspond to feature components
+
+  2. MAP IMPLEMENTATION SURFACES:
+     For each aspect of the feature found in code:
+       - What file/module implements it?
+       - How does the implementation differ from the research doc's design?
+       - What patterns/conventions did the implementation follow?
+       - What was added vs what was modified?
+
+  3. IDENTIFY IMPLEMENTATION DRIFT:
+     Where the code differs from the research doc:
+       - Design simplifications made during implementation
+       - Additional complexity discovered during implementation
+       - Naming changes, API changes, structural changes
+       - Features described in research but not yet implemented
+       - Features implemented differently than described
+
+  4. ESTABLISH SOURCE-OF-TRUTH HIERARCHY:
+     In retroactive mode, the hierarchy changes:
+
+     Code implementation > Research doc > Layer docs
+
+     - CODE tells you what WAS ACTUALLY BUILT
+     - RESEARCH DOC tells you the INTENT and DESIGN RATIONALE
+     - LAYER DOCS tell you the PRE-FEATURE system state (stale for this feature)
+
+     The harmonizing agent must make the layer docs describe the system
+     as it NOW EXISTS (including the feature as implemented), not as the
+     research doc PLANNED it.
+
+  5. BUILD RETROACTIVE CONTEXT:
+     Produce an internal summary:
+       - What the research doc describes (intended design)
+       - What the code actually implements (ground truth)
+       - Where they agree (directly usable for harmonization)
+       - Where they differ (docs must follow code, not research doc)
+       - What from the research doc wasn't implemented (future work, document clearly)
+```
+
 #### Step 0.6: Identify Output Location
 
 ```
@@ -272,6 +357,46 @@ WHAT THE SOURCE MATERIAL:
     What does the source material assume or require that it doesn't
     explicitly state? What other docs must change for consistency
     even though the source doesn't mention them?
+```
+
+#### Step 1.2b: Study the Implementation (RETROACTIVE MODE ONLY)
+
+If `--retroactive`, the feature is already implemented. The code is the PRIMARY source of truth for what was actually built. The research doc provides intent and rationale.
+
+```
+RETROACTIVE CODEBASE STUDY:
+
+  For each concept in the research doc:
+
+  1. FIND IT IN CODE:
+     - Where is it implemented? (file, module, type, function)
+     - Is it implemented as the research doc describes?
+     - What divergences exist?
+
+  2. BUILD THE IMPLEMENTATION MAP:
+     For each implemented concept:
+       - CODE LOCATION: exact file/module
+       - RESEARCH DOC LOCATION: section/page
+       - MATCH STATUS: exact match / minor drift / significant divergence / not implemented
+       - DRIFT DETAILS: what specifically differs and why it matters for docs
+
+  3. IDENTIFY UNIMPLEMENTED PORTIONS:
+     What the research doc describes but the code does NOT implement:
+       - Mark as "future work" — docs should mention these as planned, not current
+       - Do NOT harmonize unimplemented features as if they exist
+
+  4. IDENTIFY UNDOCUMENTED IMPLEMENTATIONS:
+     What the code implements that the research doc does NOT describe:
+       - Additional helper functions, utilities, or infrastructure
+       - Implementation patterns chosen during development
+       - These also need representation in the harmonized docs
+
+  5. SYNTHESIZE DUAL-SOURCE TRUTH:
+     The harmonization handoff must instruct the agent to use:
+       - CODE for: what exists, how it works, what types/APIs are real
+       - RESEARCH DOC for: why it was built, design rationale, intended model
+       - COMBINATION for: doc narrative that describes the system accurately
+         with the design context that makes it understandable
 ```
 
 #### Step 1.3: Classify the Integration
@@ -470,6 +595,16 @@ The harmonization handoff must include ALL of:
    "Make the documents clear about what is implemented, what is foundationally
    in place, and what remains future architecture."
 
+   IF RETROACTIVE MODE: Include a "Retroactive Mode" section that:
+   - Explicitly states the feature is ALREADY IMPLEMENTED in the codebase
+   - Provides the implementation surface map (which files implement the feature)
+   - States the source-of-truth hierarchy: Code > Research doc > Layer docs
+   - Lists implementation drift points (where code differs from research doc)
+   - Instructs the agent to read the CODE for factual accuracy and the RESEARCH
+     DOC for design rationale and narrative context
+   - Lists any portions of the research doc that were NOT implemented (mark as
+     future work in the docs, not as current capability)
+
 3. MANDATORY PRE-READ REQUIREMENT (CRITICAL — from Phase 1 analysis)
    "Before you touch any documentation, you MUST perform a deep-reading and
    comparison pass."
@@ -494,6 +629,14 @@ The harmonization handoff must include ALL of:
    Overview/index docs.
    Code surfaces (if applicable): paths with note "read for drift awareness,
    not changing code."
+
+   IF RETROACTIVE MODE: The "What To Read" section must additionally include:
+   - Implementation code surfaces: exact files that implement the feature,
+     with per-file notes on what to look for
+   - Implementation drift summary: where code diverges from research doc,
+     so the agent knows to follow code over research doc for those areas
+   - Reading order: research doc first (for intent), then code (for truth),
+     then layer docs (for current stale state to fix)
 
 5. CORE HARMONIZATION GOALS (from Phase 1 Step 1.6 — numbered, specific)
    Each goal: what must become consistent + which docs it affects.
@@ -714,9 +857,12 @@ harmonymaxer/active/harmonization-optimization.md
 
 ```
 HARMONYMAXER OUTPUT (run {N}):
+  Mode: {PROACTIVE | RETROACTIVE}
   Source material: {path} ({line_count} lines, mode: {RESEARCH | FEEDBACK | HYBRID})
   Integration type: {FEATURE_ADDITION | ARCHITECTURE_EVOLUTION | FEEDBACK_CORRECTION | CROSS_CUTTING}
   Target doc set: {path} ({N} docs)
+  {IF RETROACTIVE: Implementation surfaces: {N} files across {N} modules}
+  {IF RETROACTIVE: Implementation drift: {N} divergences from research doc}
 
   Change Impact Summary:
     Primary targets ({N} docs):
@@ -767,6 +913,9 @@ HARMONYMAXER OUTPUT (run {N}):
 - [ ] Know project domain
 - [ ] Read AGENTS.md, README, CLAUDE.md if they exist
 - [ ] Know implementation state (if code exists alongside docs)
+- [ ] If retroactive: located feature implementation in codebase
+- [ ] If retroactive: mapped implementation surfaces and identified drift
+- [ ] If retroactive: established dual-source truth (code + research doc)
 - [ ] Know output location
 
 ### Gate 1 -> 2: Deep Understanding Complete
@@ -781,6 +930,10 @@ HARMONYMAXER OUTPUT (run {N}):
 - [ ] Identified all cascading effects (changes in doc A that require changes in doc B)
 - [ ] Determined integration principles specific to this project
 - [ ] If feedback mode: identified all ambiguous points requiring interpretation
+- [ ] If retroactive: studied code implementation of feature (Step 1.2b)
+- [ ] If retroactive: built implementation map (code location → research doc section → match status)
+- [ ] If retroactive: identified implementation drift and unimplemented portions
+- [ ] If retroactive: synthesized dual-source truth for handoff generation
 
 ### Gate 2 -> 3: Harmonization Handoff Generated
 - [ ] Has mandatory pre-read requirement with comparison matrix
@@ -886,4 +1039,30 @@ WHY: Feedback mode requires REASONING about implications. The agent must
 trace the feedback through every affected subsystem, not just parrot it
 into the nearest section. The harmonization prompt must include reasoning
 guidance that forces this depth.
+```
+
+### The Research-Over-Code Trap (Retroactive Mode)
+```
+BAD: In retroactive mode, the harmonizing agent follows the research doc
+instead of the code when they diverge. The docs end up describing the
+PLANNED architecture rather than the ACTUAL implementation.
+
+WHY: In retroactive mode, the code IS the ground truth. The research doc
+provides intent and rationale, but where the implementation diverged from
+the plan, the docs must describe what was actually built. Harmonizing
+against the research doc instead of the code produces documentation that
+lies about the system's actual behavior — the exact problem retroactive
+mode exists to solve.
+```
+
+### The Code-Without-Context Trap (Retroactive Mode)
+```
+BAD: In retroactive mode, the harmonizing agent describes exactly what
+the code does but strips out all design rationale and architectural
+context from the research doc.
+
+WHY: The research doc provides the "why" that makes the architecture
+understandable. Pure code-derived docs read like implementation notes,
+not architecture documentation. The dual-source synthesis must combine
+the code's factual accuracy with the research doc's design narrative.
 ```

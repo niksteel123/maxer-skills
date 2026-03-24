@@ -459,7 +459,7 @@ Think of yourself as designing a manufacturing plan for a **compact documentatio
   does NOT mean compact content
 
 {IF_BEAD_TOOL_PRESENT}
-Invoke the `/plan-to-beads` skill for methodology only.
+Invoke the `/beads-from-sources` skill for methodology only.
 Use the skill for bead quality and dependency discipline.
 {END_IF}
 
