@@ -37,6 +37,25 @@ files, real types, and real tests — not abstract module names.
 If you find a simpler, more correct way to achieve the same outcome — propose
 it. The feature doc is the starting direction, not a frozen blueprint.
 
+### CARDINAL RULE: ZERO SCOPE DRIFT
+
+**If it's in the spec, it gets implemented. No exceptions.**
+
+Your job is to IMPROVE the quality, clarity, and implementability of the spec.
+It is NEVER to reduce scope. You may improve HOW a feature is implemented,
+resequence WHEN features are built, strengthen vague language, or flag genuine
+contradictions with proposed SOLUTIONS. You may NEVER:
+
+- Remove features from the spec
+- Defer features to "post-MVP," "Phase 2+," or any non-existent future iteration
+- Label spec features as "nice to have," "stretch goal," or "out of scope"
+- Reduce acceptance criteria below what the spec defines
+- "Simplify" by dropping features instead of improving approach
+
+Phases in the implementation strategy are EXECUTION ORDER — they determine
+WHEN things are built, not WHETHER they are built. Every phase ships. Later
+phases get the same depth of treatment as early phases.
+
 ---
 
 ## Source-of-Truth Hierarchy
@@ -163,6 +182,10 @@ Everything else is fair game for questioning.
 - Don't make code changes
 - Don't change non-negotiables
 - Don't turn the feature doc into an implementation plan
+- **Don't remove, defer, or scope-down ANY feature defined in the spec**
+- **Don't label anything as "post-MVP," "Phase 2+," "nice to have," or "stretch goal"**
+- **Don't reduce acceptance criteria below what the spec defines**
+- **Don't "simplify" by dropping features — simplify the APPROACH, not the feature set**
 
 ---
 
@@ -190,6 +213,11 @@ For each file/module the feature touches:
 - Critical path items
 
 ### 3. Dependency Spine
+
+**IMPORTANT: Phases are EXECUTION ORDER, not importance tiers. Every phase
+listed here MUST be implemented — later phases get the same depth and rigor
+as early phases. No phase may be labeled "post-MVP," "stretch," or "optional."
+If it's in the spec, it's in a phase, and that phase ships.**
 
 ```
 Phase 1: {foundational_work}
@@ -261,6 +289,14 @@ Now re-read the feature doc AND the implementation strategy with completely
 - The sequencing analysis has no circular dependencies
 - The dependency spine can actually be executed as described
 - Parallel tracks have genuinely independent file ownership
+- **SCOPE PRESERVATION CHECK (MANDATORY):** Enumerate every feature/subsystem
+  in the ORIGINAL spec. Verify that NONE were removed, deferred, or labeled
+  "post-MVP"/"Phase 2+". Every spec feature must appear in the strategy's
+  dependency spine. If any feature is missing, this is a BLOCKING failure —
+  add it back before proceeding.
+- **No scope-reduction language:** Scan for "post-MVP," "Phase 2+," "stretch
+  goal," "nice to have," "out of scope," "future iteration." If found,
+  remove and replace with proper execution-order phasing.
 - {specific_fresh_eyes_verification_items}
 
 If anything doesn't hold up, fix it now. This is the last quality gate before
@@ -346,6 +382,19 @@ Every bead must be:
 - **TDD-first**: testing requirements embedded, not deferred
 - **Architecture-preserving**: respects existing patterns and conventions
 - **Test-harness-aware**: real-runtime validation, not mock-only
+
+**CARDINAL RULE: 100% SPEC COVERAGE**
+
+The bead graph must cover EVERY feature defined in the spec. No feature may be
+deferred, dropped, or labeled "post-MVP." Phases in the bead hierarchy are
+EXECUTION ORDER — they determine WHEN things are built, not WHETHER they are
+built. Every phase ships. If the strategy document has N phases, the bead graph
+must have beads for ALL N phases, not just the early ones.
+
+If you find yourself thinking "this can be added later" — stop. If it's in the
+spec, it gets a bead NOW. The only valid reason to exclude a spec feature from
+the bead graph is a genuine technical impossibility, which must be flagged with
+a proposed SOLUTION, not a cut.
 
 ---
 
@@ -465,8 +514,23 @@ ultrathink. Perform:
 4. **File/symbol accuracy check**: Are all file paths real? Are all
    type/function names accurate against the current codebase?
 
-5. **Coverage check**: Does the bead tree cover the ENTIRE feature? Is anything
-   from the feature doc missing from the beads?
+5. **Coverage check (MANDATORY — BLOCKING)**: Does the bead tree cover the
+   ENTIRE feature? Build an explicit mapping:
+
+   ```
+   For EVERY feature/subsystem in the spec:
+     Spec feature → bead ID(s) that implement it
+   ```
+
+   If ANY spec feature has ZERO corresponding beads, this is a BLOCKING
+   failure. Create the missing beads before proceeding. No feature may be
+   deferred to a future phase that doesn't exist in the bead graph.
+
+6. **Scope drift scan**: Search all beads for these red-flag phrases:
+   "post-MVP," "Phase 2+," "stretch goal," "nice to have," "future
+   iteration," "out of scope," "can be added later." If found, remove and
+   replace with proper implementation content. Phases are execution order,
+   not importance tiers.
 
 Fix any issues found. {additional_followup_instructions}
 ```
@@ -581,7 +645,30 @@ Verify:
 - Cross-cutting concerns have explicit beads (not assumed to be handled
   "along the way")
 
-### 6. Coverage Matrix Audit
+### 6. Scope Drift Detection Audit (MOST CRITICAL DIMENSION)
+
+**This is the single most important audit dimension.** Scope drift — where
+spec features are silently deferred or dropped — is the #1 failure mode of
+the entire pipeline.
+
+**Scan ALL beads for these red-flag phrases:**
+- "post-MVP," "Phase 2+," "stretch goal," "nice to have"
+- "future iteration," "out of scope," "can be added later"
+- "simplified for initial implementation," "deferred to"
+- Any language that implies a spec feature won't be implemented
+
+**If found:** This is a BLOCKING failure. Remove the scope-reduction language
+and replace with full implementation content. If the bead was deliberately
+thinned because someone decided the feature "wasn't important enough," that
+decision was wrong — the spec is the contract.
+
+**Verify phase coverage equality:**
+- Count beads per strategy phase. If later phases have significantly fewer
+  beads than early phases, investigate why. Later phases should NOT be
+  treated as less important.
+- Every strategy phase must have full-depth beads, not thin stubs.
+
+### 7. Coverage Matrix Audit
 
 Build these mappings and verify completeness:
 
@@ -595,9 +682,13 @@ Architecture decision → bead(s) that implement it
 Flag any feature subsystem, integration surface, test requirement, or
 architecture decision that has NO corresponding bead.
 
-### 7. Fix and Follow-Up Fresh-Eyes Pass
+**100% spec coverage is MANDATORY.** If any spec feature has zero
+corresponding beads, this is a BLOCKING failure. Create the missing beads
+before proceeding. Do not defer them to a future iteration.
 
-Fix every issue found in dimensions 1-6:
+### 8. Fix and Follow-Up Fresh-Eyes Pass
+
+Fix every issue found in dimensions 1-7:
 
 - Thin beads → add missing detail
 - Vague beads → replace with specific files/types/functions
@@ -623,13 +714,17 @@ If the answer is no for any bead, fix it now.
 ```markdown
 # {PROJECT} — Execution Kickoff: {Feature_Name}
 
-## Your Mission
+> For fresh agents starting implementation. Read this FIRST.
 
-You are an implementation agent executing the {feature_name} feature from the
-bead graph. Your work orders are beads — self-contained task descriptions with
-exact files, types, tests, and acceptance criteria.
+---
 
+## Mission
+
+You are implementing the {feature_name} feature from the bead graph.
 {scope_description}
+
+Work from the bead graph. Claim task beads, not epics. Each bead is
+self-contained — implement from the bead alone.
 
 ---
 
@@ -644,7 +739,11 @@ Total: {total_bead_count} beads across {epic_count} epics.
 {IF_IMPLEMENTATION_CONTEXT}
 ## Implementation Boundary
 
-{implementation_state_description}
+**EXISTS (build on top of):**
+{existing_infrastructure_description}
+
+**DOES NOT EXIST (you're building):**
+{new_feature_description}
 
 **Do NOT assume unbuilt infrastructure exists.** If a bead depends on
 something that isn't built yet, check the dependency graph — the prerequisite
@@ -661,20 +760,9 @@ If code conflicts with this contract, the contract wins.
 
 ---
 
-## Operation Independence
+## Source of Truth Loading (MANDATORY — Read Before Starting ANY Implementation)
 
-- Execute from beads ONLY — claim task beads, not epics
-- If blocked on a dependency, move to another parallel track
-- If you find a conflict between beads, announce in AgentMail — do NOT
-  improvise silently
-- If a bead's description doesn't match the code you see, investigate first,
-  then raise in AgentMail if it's a genuine discrepancy
-
----
-
-## Source of Truth Loading (MANDATORY — Read Before Implementing)
-
-Read these in order:
+Read these in order before starting:
 
 1. **AGENTS.md** — agent guidelines, rules, coordination
    ```text
@@ -686,57 +774,173 @@ Read these in order:
    {feature_doc_path}
    ```
 
-3. **Architecture docs** — existing system context
+3. **Implementation strategy** — sequencing and integration surface map
+   ```text
+   {strategy_path}
+   ```
+
+4. **Architecture docs** — existing system context
    ```text
    {architecture_doc_paths}
    ```
 
-4. **Bead graph** — your ACTUAL work orders
+5. **Bead graph** — your ACTUAL work orders
    ```text
    {bead_graph_location_or_command}
    ```
 
+6. **Key integration surfaces** — study for patterns
+   ```text
+   {key_codebase_files_with_descriptions}
+   ```
+
 ---
 
-## Coordination
+## AgentMail Setup (Do This ONCE At Session Start)
 
-{agentmail_setup_instructions}
+```
+# 1. Register with the project
+ensure_project(project_key="{project_path}")
+register_agent(project_key, program="claude-code", model="opus",
+  task_description="{feature_name} implementation")
 
-Before editing any file:
-1. Check if another agent has a file reservation on it
-2. Reserve the file yourself
-3. After completion, release the reservation
+# 2. Set contact policy — accept messages from any agent in this project
+set_contact_policy(project_key, agent_name, policy="open")
 
-For every bead:
-1. Claim the bead before starting
-2. Announce completion when done
-3. If blocked, announce the blocker
+# 3. Check inbox for any messages from prior sessions or other agents
+fetch_inbox(project_key, agent_name, limit=20)
+```
+
+Read and acknowledge any pending messages before starting work. If another
+agent left a blocker notice, address it first.
+
+---
+
+## Bead Completion Policy (CRITICAL)
+
+**You MUST fully complete every bead you claim.** No partial completion.
+No "I'll finish this later." No moving on to another bead while one is
+in progress.
+
+A bead is COMPLETE when:
+1. All code changes described in the bead are implemented
+2. All tests described in the bead pass
+3. All build/lint/test verification commands pass (zero warnings)
+4. Code is committed with proper message (bead ID prefix)
+5. Bead is marked complete
+6. Completion announced via AgentMail
+7. File reservations released
+
+**If you hit a blocker during a bead:**
+- DO NOT abandon the bead and move to another track
+- DO NOT mark it complete with missing pieces
+- DO NOT do mid-way commits of incomplete work
+- Diagnose the blocker. Read the error. Understand the root cause.
+- Fix the blocker yourself — you have the full codebase available
+- If the blocker is in a DIFFERENT bead's code (not yours), announce the
+  specific issue in AgentMail with file path, line number, and what's wrong,
+  then wait for resolution
+- Only if genuinely impossible to resolve (missing infrastructure not in
+  your bead) should you report it and move on
 
 ---
 
 ## Work Loop
 
 ```
-LOOP:
-  1. Find ready tasks (all dependencies satisfied, not claimed)
-  2. Read the bead fully — understand what it asks
-  3. Claim the bead
-  4. Reserve relevant files
-  5. Implement the changes described in the bead
-  6. Run tests specified in the bead's testing section
-  7. Run build/lint verification
-  8. Close the bead with completion notes
-  9. Commit and push
-  10. Announce completion in AgentMail
-  11. Release file reservations
-  12. GOTO 1
+ONE-TIME SETUP:
+  1. AgentMail registration (see above)
+  2. Read AGENTS.md + feature doc + strategy
+  3. {bead_cli} ready --json → understand the bead graph
+
+MAIN LOOP (repeat until all beads complete):
+
+  ┌─ PICK ──────────────────────────────────────────────────────────┐
+  │ {bead_cli} ready --json                                          │
+  │ Pick the highest-priority ready bead.                            │
+  │ Read the bead description FULLY before touching any code.        │
+  └──────────────────────────────────────────────────────────────────┘
+           │
+  ┌─ CLAIM + ANNOUNCE ──────────────────────────────────────────────┐
+  │ {bead_cli} claim <bead-id>                                       │
+  │                                                                  │
+  │ file_reservation_paths(                                          │
+  │   project_key="{project_path}",                                  │
+  │   agent_name=<your-name>,                                        │
+  │   paths=[<files this bead touches>],                             │
+  │   ttl_seconds=3600,                                              │
+  │   exclusive=true,                                                │
+  │   reason="<bead-id>"                                             │
+  │ )                                                                │
+  │                                                                  │
+  │ send_message(                                                    │
+  │   project_key="{project_path}",                                  │
+  │   from_agent=<your-name>,                                        │
+  │   thread_id="<bead-id>",                                         │
+  │   subject="[<bead-id>] Start: <bead title>",                     │
+  │   body="Claiming bead. Files: <list>. Starting implementation."  │
+  │ )                                                                │
+  └──────────────────────────────────────────────────────────────────┘
+           │
+  ┌─ IMPLEMENT (TDD) ──────────────────────────────────────────────┐
+  │ 1. Study the target files — understand current state             │
+  │ 2. Write tests FIRST (from test IDs in the bead)                │
+  │ 3. Implement the feature code to make tests pass                 │
+  │ 4. Iterate until ALL tests pass and ALL acceptance criteria met  │
+  │                                                                  │
+  │ DO NOT cut corners. DO NOT skip tests. DO NOT leave TODOs.       │
+  │ DO NOT do mid-way commits of incomplete work.                    │
+  │ The bead defines what "done" means — implement ALL of it.        │
+  └──────────────────────────────────────────────────────────────────┘
+           │
+  ┌─ VERIFY ────────────────────────────────────────────────────────┐
+  │ # MUST ALL PASS — fix any failures before proceeding             │
+  │ {build_cmd}                                                      │
+  │ {lint_cmd}                                                       │
+  │ {test_cmd}                                                       │
+  │                                                                  │
+  │ If ANY command fails → fix the issue → re-verify.                │
+  │ Never proceed with failing checks.                               │
+  └──────────────────────────────────────────────────────────────────┘
+           │
+  ┌─ COMMIT ────────────────────────────────────────────────────────┐
+  │ # Stage only the files this bead touches — not unrelated files   │
+  │ git add <specific-files>                                         │
+  │                                                                  │
+  │ # Commit message format:                                         │
+  │ git commit -m "<bead-id>: <short description of what was done>"  │
+  │                                                                  │
+  │ # DO NOT push unless explicitly told to.                         │
+  │ # One commit per bead. If the bead is large, multiple commits    │
+  │ # are acceptable but each must pass all checks independently.    │
+  └──────────────────────────────────────────────────────────────────┘
+           │
+  ┌─ COMPLETE + RELEASE ────────────────────────────────────────────┐
+  │ {bead_cli} complete <bead-id>                                    │
+  │ {bead_cli} sync --flush-only                                     │
+  │                                                                  │
+  │ send_message(                                                    │
+  │   project_key="{project_path}",                                  │
+  │   from_agent=<your-name>,                                        │
+  │   thread_id="<bead-id>",                                         │
+  │   subject="[<bead-id>] Complete: <bead title>",                  │
+  │   body="Bead complete. Commit: <hash>. All checks pass."         │
+  │ )                                                                │
+  │                                                                  │
+  │ release_file_reservations(                                       │
+  │   project_key="{project_path}",                                  │
+  │   agent_name=<your-name>                                         │
+  │ )                                                                │
+  └──────────────────────────────────────────────────────────────────┘
+           │
+        LOOP → back to PICK
 ```
 
-Do not stop to ask what to work on next. The bead graph tells you.
+**Use debug builds for fast iteration** — only use release profile for final validation.
 
 ---
 
-## Verification Discipline
+## Verification Commands
 
 {build_lint_test_commands_per_surface}
 
@@ -761,8 +965,31 @@ lane, check dependencies — another lane's bead should handle those files.
 
 {dependency_spine_visualization}
 
-Trust `br ready`, but use this spine as your mental model for what comes first,
-what's parallel, and what's last.
+Trust `{bead_cli} ready`, but use this spine as your mental model for what
+comes first, what's parallel, and what's last.
+
+---
+
+## AgentMail Quick Reference
+
+```
+# Check inbox (do this at start of session and between beads)
+fetch_inbox(project_key, agent_name, limit=10)
+
+# Claim bead
+send_message(thread_id="<bead-id>", subject="[<bead-id>] Start: <title>")
+
+# Complete bead
+send_message(thread_id="<bead-id>", subject="[<bead-id>] Complete: <title>",
+  body="Commit: <hash>. All checks pass.")
+
+# Report blocker (only if you truly cannot fix it yourself)
+send_message(thread_id="<bead-id>", subject="[<bead-id>] BLOCKED: <issue>",
+  body="File: <path>, Line: <N>. Issue: <desc>. Needed: <what would unblock>")
+
+# Release files
+release_file_reservations(project_key, agent_name)
+```
 ```
 
 ---
@@ -772,61 +999,76 @@ what's parallel, and what's last.
 ```markdown
 # {PROJECT} — Execution Push: {Feature_Name}
 
+> For continuing agents. Compact reminder of contracts, work loop, and verification.
+
+---
+
 ## Re-Orient
 
-Re-read:
-1. `{agents_md_path}` — agent guidelines and rules
-2. Feature doc + architecture docs for context (NOT your work orders)
-3. Your WORK ORDERS are in the bead graph
+1. Re-read `{agents_md_path}` — agent rules and coordination
+2. Feature: {feature_name} — {one_line_description}
+3. Feature doc: `{feature_doc_path}`
+4. Strategy: `{strategy_path}`
+5. Bead graph: `{bead_cli} ready --json`
 
-Core contracts reminder:
+---
+
+## Core Contracts
 
 {core_contracts_compact}
 
 ---
 
-{IF_IMPLEMENTATION_CONTEXT}
-## Implementation Boundary Reminder
+## Bead Completion Policy
 
-{implementation_state_compact}
+**Every bead you claim MUST be fully completed.** No partial work. No TODOs.
+No "finish later."
 
-Don't drift. Build on what exists.
-{END_IF}
+Complete means: all code implemented + all tests pass + all checks pass +
+committed + announced.
+
+**If you hit a blocker:** Diagnose it. Fix it yourself. Only escalate via
+AgentMail if the blocker is in another agent's code that you cannot modify.
+Do NOT abandon the bead.
 
 ---
 
 ## Work Loop
 
 ```
-LOOP:
-  1. Check AgentMail inbox for messages
-  2. Find ready tasks (br ready)
-  3. Read bead fully
-  4. Claim bead + reserve files
-  5. Implement + test
-  6. Build/lint verify
-  7. Close bead + commit + push
-  8. Announce completion + release reservations
-  9. GOTO 1
+1. Check inbox (fetch_inbox) → acknowledge any messages
+2. {bead_cli} ready --json → pick highest-priority ready bead
+3. Read bead FULLY → study target files
+4. CLAIM:
+   {bead_cli} claim <bead-id>
+   file_reservation_paths(paths=[<files>], ttl_seconds=3600,
+     exclusive=true, reason="<bead-id>")
+   send_message(thread_id="<bead-id>",
+     subject="[<bead-id>] Start: <title>")
+5. IMPLEMENT: TDD — test first, then code. Implement ALL of it.
+   No mid-way commits. No partial work.
+6. VERIFY: {build_cmd} + {lint_cmd} + {test_cmd} (ALL must pass)
+7. COMMIT:
+   git add <specific-files>
+   git commit -m "<bead-id>: <short description>"
+   (do NOT push unless told to)
+8. COMPLETE:
+   {bead_cli} complete <bead-id>
+   {bead_cli} sync --flush-only
+   send_message(thread_id="<bead-id>",
+     subject="[<bead-id>] Complete: <title>",
+     body="Commit: <hash>. All checks pass.")
+   release_file_reservations(agent_name)
+9. LOOP → back to step 1
+
+Do not stop to ask what to work on next. Pick the next ready bead.
 ```
 
-Do not stop to ask what to work on next.
-
 ---
 
-## Critical Path Reminder
+## Verification (Every Bead)
 
-{dependency_spine_compact}
-
----
-
-## File-Surface Reminder by Lane
-
-{file_surface_map_compact}
-
----
-
-## Verification Discipline
+Use debug builds for fast iteration. Fix ALL failures before committing.
 
 {build_lint_test_commands_compact}
 
@@ -834,11 +1076,41 @@ Do not stop to ask what to work on next.
 
 ---
 
-## Coordination Reminder
+## Dependency Spine
 
-- AgentMail for every claim, blocker, and completion
-- File reservations before edits
-- Never improvise silently on conflicts — announce first
+{dependency_spine_compact}
+
+---
+
+## File Surfaces by Lane
+
+{file_surface_map_compact}
+
+---
+
+## AgentMail Quick Reference
+
+```
+# Check inbox (between beads)
+fetch_inbox(project_key, agent_name, limit=10)
+
+# Claim bead
+send_message(thread_id="<bead-id>",
+  subject="[<bead-id>] Start: <title>")
+
+# Complete bead
+send_message(thread_id="<bead-id>",
+  subject="[<bead-id>] Complete: <title>",
+  body="Commit: <hash>")
+
+# Report blocker
+send_message(thread_id="<bead-id>",
+  subject="[<bead-id>] BLOCKED: <issue>",
+  body="File: <path>, Line: <N>. Issue: <desc>.")
+
+# Release files
+release_file_reservations(project_key, agent_name)
+```
 ```
 
 ---

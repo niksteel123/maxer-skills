@@ -110,6 +110,9 @@ Regardless of pattern, these are always true:
 3. **Every create step has sub-optimization:** feature-specific self-check at end
 4. **Every optimize step has sub-optimization:** auditor re-checks own fixes
 5. **Audit is dedicated (Batch 5):** systematic spec drift detection
-6. **Completion audit is a loop:** audit → fix beads → execute → re-audit until 100%
+6. **Completion audit is a loop:** audit → fix beads kickoff → execute → re-audit until 100%
 7. **Archive at the end:** clean state for next pipeline run
-8. **"If it's in the spec, it ships":** no step can silently drop requirements
+8. **ZERO SCOPE DRIFT (CARDINAL RULE):** The research doc has been deeply iterated on and is the source of truth. Every feature in it must be implemented. No step in the pipeline may silently drop, defer, or deprioritize any requirement. Phases are execution ORDER, not importance tiers — every phase ships. Scope-reduction language ("post-MVP," "Phase 2+," "stretch goal," "nice to have," "deferred," "out of scope") is a BLOCKING failure at any step.
+9. **Every create/optimize handoff includes scope gates:** mandatory scope-preservation checks that enumerate source doc features and verify 100% coverage in the output
+10. **Fix beads get proper kickoff/push:** the fix-beads execution step (13-14) has the same agent onboarding rigor as the main execution step (10-11) — full AgentMail registration, file reservation, bead completion policy, commit workflow
+11. **Bead completion is atomic:** agents must fully complete every bead before moving on — no partial work, no mid-way commits, no "finish later"

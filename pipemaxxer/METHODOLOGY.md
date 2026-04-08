@@ -14,6 +14,25 @@ Phase 4: OUTPUT    — Write execution guide, report to user
 
 ---
 
+## Governing Principle: ZERO SCOPE DRIFT at Every Phase
+
+The research doc provided to pipemaxxer has already been deeply iterated on. It IS the source of truth. Every phase of this methodology must preserve 100% of its feature surface. No phase may silently reduce scope.
+
+**Every CREATE handoff must include:**
+- Explicit instruction: "The research doc/spec defines what to build. You may improve HOW, resequence WHEN, but NEVER reduce WHAT."
+- A mandatory follow-up scope-preservation check
+
+**Every OPTIMIZE handoff must include:**
+- A dedicated scope-drift scan for red-flag language ("post-MVP", "Phase 2+", "stretch goal", "nice to have", "deferred", "out of scope", "future iteration", "simplified for initial")
+- A coverage verification: enumerate spec features → verify all present in target document
+
+**Every AUDIT handoff must include:**
+- A blocking scope-drift dimension: if ANY spec feature has zero coverage, the audit FAILS
+
+This is not optional guidance — it is embedded into every handoff file that pipemaxxer generates.
+
+---
+
 ## Phase 0: Detect Context (5-10 minutes)
 
 ### Step 0.1: Read the Source Document
@@ -305,6 +324,17 @@ For each handoff file:
 - Every optimize handoff must have at least 5 feature-specific verification questions
 - No handoff may contain the word "TODO" or "placeholder"
 - Path references must be absolute or relative to project root (no "find the file")
+
+### Scope-Preservation Rules (MANDATORY for every handoff)
+
+- Every CREATE handoff (01, 03, 05, 07) must include the Cardinal Rule: "If it's in the research doc, it gets implemented. No exceptions."
+- Every CREATE handoff must include a follow-up scope-preservation check that enumerates research doc features and verifies coverage
+- Every OPTIMIZE handoff (02, 04, 06, 08) must include a scope-drift scan: search for "post-MVP," "Phase 2+," "stretch goal," "nice to have," "deferred," "out of scope," "future iteration," "simplified for initial implementation"
+- Every OPTIMIZE handoff must include a coverage verification: "enumerate every feature/subsystem in the spec → verify each appears in the target document"
+- The strategy handoff (05-06) must explicitly state: "Phases are execution ORDER, not importance tiers. Later phases get the SAME depth as early phases. Every phase ships."
+- The beads handoff (07-08) must explicitly state: "100% spec coverage is MANDATORY. If any spec feature has zero corresponding beads, this is a BLOCKING failure."
+- The audit handoff (09) must include scope-drift as a dedicated, blocking audit dimension
+- The kickoff handoff (10) must include the full bead graph — covering ALL spec features, not a subset
 
 ---
 
