@@ -903,17 +903,21 @@ MAIN LOOP (repeat until all beads complete):
   │ Never proceed with failing checks.                               │
   └──────────────────────────────────────────────────────────────────┘
            │
-  ┌─ COMMIT ────────────────────────────────────────────────────────┐
-  │ # Stage only the files this bead touches — not unrelated files   │
-  │ git add <specific-files>                                         │
-  │                                                                  │
-  │ # Commit message format:                                         │
-  │ git commit -m "<bead-id>: <short description of what was done>"  │
-  │                                                                  │
-  │ # DO NOT push unless explicitly told to.                         │
-  │ # One commit per bead. If the bead is large, multiple commits    │
-  │ # are acceptable but each must pass all checks independently.    │
-  └──────────────────────────────────────────────────────────────────┘
+  ┌─ COMMIT + PUSH (MANDATORY) ──────────────────────────────────────┐
+  │ # Stage only the files this bead touches — not unrelated files    │
+  │ git add <specific-files>                                          │
+  │                                                                   │
+  │ # Commit message format:                                          │
+  │ git commit -m "<bead-id>: <short description of what was done>"   │
+  │                                                                   │
+  │ # PUSH IS MANDATORY — work is NOT complete until push succeeds.   │
+  │ git push                                                          │
+  │ # If push fails → git pull --rebase → resolve → push again.      │
+  │ # NEVER say "ready to push when you are" — YOU must push.         │
+  │                                                                   │
+  │ # One commit per bead. If the bead is large, multiple commits     │
+  │ # are acceptable but each must pass all checks independently.     │
+  └───────────────────────────────────────────────────────────────────┘
            │
   ┌─ COMPLETE + RELEASE ────────────────────────────────────────────┐
   │ {bead_cli} complete <bead-id>                                    │
@@ -1048,10 +1052,11 @@ Do NOT abandon the bead.
 5. IMPLEMENT: TDD — test first, then code. Implement ALL of it.
    No mid-way commits. No partial work.
 6. VERIFY: {build_cmd} + {lint_cmd} + {test_cmd} (ALL must pass)
-7. COMMIT:
+7. COMMIT + PUSH (MANDATORY):
    git add <specific-files>
    git commit -m "<bead-id>: <short description>"
-   (do NOT push unless told to)
+   git push
+   (Work is NOT complete until push succeeds. If push fails → pull --rebase → retry.)
 8. COMPLETE:
    {bead_cli} complete <bead-id>
    {bead_cli} sync --flush-only

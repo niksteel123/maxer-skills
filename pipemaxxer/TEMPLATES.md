@@ -373,7 +373,16 @@ These are the documents agents will actually USE during implementation. They mus
 - The full execution loop (claim → reserve → announce → implement → verify → commit → push → release → loop)
 - Session landing protocol (when fully blocked)
 - **Bead completion policy** (MUST fully complete every bead — no partial work)
-- **Commit workflow** (complete bead fully → verify → stage specific files → commit with bead ID prefix → do NOT push unless told)
+- **Commit+push workflow** (complete bead fully → verify → stage specific files → commit with bead ID prefix → push is MANDATORY — work is NOT complete until push succeeds)
+
+**If the feature is backend-heavy Rust / control-plane work, the generated kickoff and push prompts MUST also encode:**
+- `fast-local` for the narrow inner loop
+- `feature-local` for cross-crate backend close proof
+- `phase-gate` for validation-model / config / workflow / control-plane changes
+- `merge-gate` / `ci-merge` for broader pre-merge escalation
+- `nightly-extended` only for env-gated heavy/default-off surfaces
+- `cargo test --workspace` as fallback/debug compatibility only, not the default per-bead inner loop
+- `resource-status` before heavy lanes once that routed command surface exists
 
 ---
 
@@ -505,13 +514,17 @@ MAIN LOOP (repeat until all beads complete):
   │ Fix ALL failures before proceeding.                  │
   └──────────────────────────────────────────────────────┘
            │
-  ┌─ COMMIT ────────────────────────────────────────────┐
-  │ git add <specific-files-only>                        │
-  │ git commit -m "<bead-id>: <short description>"       │
-  │ DO NOT push unless explicitly told to.               │
-  │ One commit per bead (multiple OK if large, but each  │
-  │ must pass all checks independently).                 │
-  └──────────────────────────────────────────────────────┘
+  ┌─ COMMIT + PUSH (MANDATORY) ──────────────────────────┐
+  │ git add <specific-files-only>                         │
+  │ git commit -m "<bead-id>: <short description>"        │
+  │ git push                                              │
+  │ # PUSH IS MANDATORY — work is NOT complete until      │
+  │ # push succeeds. If push fails → pull --rebase →      │
+  │ # resolve → push again. NEVER say "ready to push      │
+  │ # when you are" — YOU must push.                      │
+  │ One commit per bead (multiple OK if large, but each   │
+  │ must pass all checks independently).                  │
+  └───────────────────────────────────────────────────────┘
            │
   ┌─ COMPLETE + RELEASE ────────────────────────────────┐
   │ {bead_cli} complete <bead-id>                        │
@@ -584,7 +597,7 @@ If blocked: diagnose, fix yourself, only escalate via AgentMail if the blocker i
 4. CLAIM: {bead_cli} claim + file_reservation_paths + send_message
 5. IMPLEMENT: TDD — test first, then code. Implement ALL of it. No mid-way commits.
 6. VERIFY: {build_cmd} + {lint_cmd} + {test_cmd} (ALL must pass)
-7. COMMIT: git add <specific-files> + git commit -m "<bead-id>: <desc>" (do NOT push)
+7. COMMIT + PUSH: git add <specific-files> + git commit -m "<bead-id>: <desc>" + git push (MANDATORY)
 8. COMPLETE: {bead_cli} complete + sync + send_message + release_file_reservations
 9. LOOP → step 1
 Do not stop to ask what to work on next. Pick the next ready bead.
@@ -602,6 +615,13 @@ format.
 
 ### 8. AgentMail Quick Reference (compact)
 Claim/complete/blocker/release patterns.
+
+### 9. Backend Validation Contract (include when feature is backend-heavy)
+- Start with `fast-local`
+- Escalate to `feature-local` / `phase-gate` as touched backend surfaces widen
+- Reserve `merge-gate` / `nightly-extended` for broader or env-gated proof
+- Treat `cargo test --workspace` as fallback/debug compatibility only
+- Mention `resource-status` before heavy lanes once it exists
 
 ---
 
@@ -847,13 +867,15 @@ MAIN LOOP (repeat until all fix beads complete):
   │ Never proceed with failing checks.                   │
   └──────────────────────────────────────────────────────┘
            │
-  ┌─ COMMIT ────────────────────────────────────────────┐
-  │ git add <specific-files-only>                        │
-  │ git commit -m "<fix-bead-id>: <short description>"   │
-  │                                                      │
-  │ DO NOT push unless explicitly told to.               │
-  │ One commit per fix bead.                             │
-  └──────────────────────────────────────────────────────┘
+  ┌─ COMMIT + PUSH (MANDATORY) ──────────────────────────┐
+  │ git add <specific-files-only>                         │
+  │ git commit -m "<fix-bead-id>: <short description>"    │
+  │ git push                                              │
+  │ # PUSH IS MANDATORY — work is NOT complete until      │
+  │ # push succeeds. If push fails → pull --rebase →      │
+  │ # resolve → push again.                               │
+  │ One commit per fix bead.                              │
+  └───────────────────────────────────────────────────────┘
            │
   ┌─ COMPLETE + RELEASE ────────────────────────────────┐
   │ {bead_cli} complete <fix-bead-id>                    │
@@ -973,10 +995,11 @@ is in another agent's code. Do NOT abandon the fix bead.
 5. IMPLEMENT: Read spec section + TDD tests referenced. Fix/write tests first, then code.
    Implement ALL of it. No mid-way commits. No partial work.
 6. VERIFY: {build_cmd} + {lint_cmd} + {test_cmd} (ALL must pass)
-7. COMMIT:
+7. COMMIT + PUSH (MANDATORY):
    git add <specific-files>
    git commit -m "<fix-bead-id>: <short description>"
-   (do NOT push unless told to)
+   git push
+   (Work is NOT complete until push succeeds. If push fails → pull --rebase → retry.)
 8. COMPLETE:
    {bead_cli} complete <fix-bead-id>
    {bead_cli} sync --flush-only

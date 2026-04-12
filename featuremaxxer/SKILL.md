@@ -928,11 +928,20 @@ See **references/TEMPLATES.md -> Execution Kickoff Template** for the full struc
    via AgentMail if blocker is in another agent's code.
 
 7. WORK LOOP (full visual — VXG-style ASCII diagram)
-   PICK → CLAIM+ANNOUNCE → IMPLEMENT(TDD) → VERIFY → COMMIT → COMPLETE+RELEASE → LOOP.
+   PICK → CLAIM+ANNOUNCE → IMPLEMENT(TDD) → VERIFY → COMMIT+PUSH → COMPLETE+RELEASE → LOOP.
    File reservations, exact MCP calls, commit format, debug builds.
 
 8. VERIFICATION DISCIPLINE
    Build/lint/test commands per surface. Real-runtime rule.
+   For backend-heavy Rust/control-plane work, generated prompts MUST encode:
+   - `fast-local` as the default narrow inner loop
+   - `feature-local` as the cross-crate backend close lane
+   - `phase-gate` for validation-model, config, workflow, or control-plane changes
+   - `merge-gate` / `ci-merge` as the broader pre-merge escalation
+   - `nightly-extended` only for env-gated heavy/default-off surfaces
+   They MUST say `cargo test --workspace` is fallback/debug compatibility, not the
+   default per-bead inner loop, and they MUST mention `resource-status` before
+   heavy lanes once that routed command surface exists.
 
 9. FILE-SURFACE MAP BY LANE
    Per epic: which files are in scope.
@@ -958,7 +967,7 @@ See **references/TEMPLATES.md -> Execution Kickoff Template** for the full struc
 4. WORK LOOP (compact with exact commands)
    inbox → ready → read → claim+reserve+announce → implement(TDD,
    no mid-way commits) → verify → commit(specific files, bead ID
-   prefix, no push) → complete+sync+announce+release → loop.
+   prefix) → push(MANDATORY) → complete+sync+announce+release → loop.
 
 5. VERIFICATION (compact, per surface)
 
@@ -1130,8 +1139,8 @@ FEATUREMAXXER OUTPUT (run {N}):
 - [ ] **Kickoff includes AgentMail setup with exact MCP calls**
 - [ ] **Kickoff includes Bead Completion Policy (no partial work, no mid-way commits)**
 - [ ] **Kickoff includes full ASCII Work Loop diagram (VXG-style)**
-- [ ] **Kickoff includes commit workflow (specific files, bead ID prefix, no push)**
-- [ ] **Push includes compact bead completion policy and commit workflow**
+- [ ] **Kickoff includes commit+push workflow (specific files, bead ID prefix, mandatory push)**
+- [ ] **Push includes compact bead completion policy and commit+push workflow**
 - [ ] **Bead graph covers ALL spec features, not a subset**
 
 ---

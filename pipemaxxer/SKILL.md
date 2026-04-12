@@ -135,6 +135,22 @@ A numbered set of handoff files in `{working_dir}/`, plus a manifest:
 
 Only files from the entry point onward are generated. If starting from Batch 3, files 01-04 are not created.
 
+## Backend Validation Inheritance
+
+When pipemaxxer generates kickoff or push prompts for backend-heavy Rust / control-plane work, those prompts MUST inherit the repo validation ladder instead of inventing a local variant:
+
+- `fast-local` for the narrow backend inner loop
+- `feature-local` for cross-crate backend close proof
+- `phase-gate` for validation-model, config, workflow, or other control-plane changes
+- `merge-gate` / `ci-merge` for the broader pre-merge escalation
+- `nightly-extended` only for env-gated heavy/default-off surfaces
+
+Generated prompts MUST also state that:
+
+- `cargo test --workspace` is fallback/debug compatibility, not the default per-change backend proof
+- `resource-status` should be checked before heavy lanes once that routed command surface exists
+- persistent build artifacts, persistent caches, ephemeral scratch roots, and retained evidence are different resource classes
+
 ## The Pipeline (All 7 Batches)
 
 ### Batch 1: SPEC
