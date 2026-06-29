@@ -1,6 +1,6 @@
 ---
 name: research-to-spec
-description: Transform research documents into production-ready specification and architecture documents. Deep codebase study, critical evaluation of proposed approaches, and comprehensive design with E2E testing focus. Outputs spec (SOT #1, PRIMARY), architecture (SUPPLEMENTARY), and handoff prompt for 3-SOT pipeline.
+description: Transform research documents into production-ready specification and architecture documents — with mandatory anti-drift faithfulness checks. Canonical research is treated as authoritative; the spec is a faithful encoding (not a reinterpretation). Deep codebase study, canonical-anchor inspection, research-clause traceability matrix, explicit descoping decisions, and E2E testing focus. Outputs spec (SOT #1, PRIMARY) with Faithfulness Matrix + Descoping Decisions sections, architecture (SUPPLEMENTARY), and handoff prompt for the 3-SOT pipeline.
 ---
 
 # Research to Spec & Architecture
@@ -20,10 +20,22 @@ This skill transforms research documents into **production-ready specification a
 └─────────────────────────┘     └─────────────────────────┘     └─────────────────────────┘
 ```
 
-**Critical Distinction:**
-- Research documents are **exploratory context** - they suggest approaches but are NOT authoritative
-- YOU are the **architect** - you critically evaluate and design the best solution
-- Spec + Architecture become the **source of truth** for implementation
+**Critical Distinction (UPDATED 2026-05-08 — CANONICAL vs EXPLORATORY research):**
+
+Research documents fall into two modes. The first paragraph or frontmatter of every research doc MUST declare which mode it is in. If undeclared, treat as CANONICAL (the safer default — drift is harder to undo than over-faithfulness).
+
+**CANONICAL research** — authoritative. The research has been audited, anchors on real artifacts (graph snapshots, design refs, code surfaces), and represents committed structural intent. Examples: research that cites specific graph node IDs, slot definitions, layout modes; research with `last_audited` and version history; research authored after multiple iteration cycles.
+- Spec MUST faithfully encode every structural claim — by exact name, ID, and enumerated list.
+- Spec MUST NOT silently descope. Any narrowing requires an explicit `## Descoping Decisions` section with rationale, decision owner, decision date, and reference to the canonical clause being narrowed.
+- Codebase reality may force adapter layers, but it cannot force structural cuts.
+
+**EXPLORATORY research** — suggestions. Initial brainstorm, idea-stage, or drafted before any artifact authoring. Spec author has license to design optimally.
+
+**You are the architect of the IMPLEMENTATION, not of the SCOPE.** Codebase reality (Phase 1) informs HOW to build. Canonical research (Phase 2) informs WHAT to build. The two never collapse.
+
+**Why this matters:** the previous philosophy ("research is exploratory; you are the architect") permitted silent descoping. In production work where the user has authored canonical artifacts (designs, graph nodes, layout shells), the spec must be a faithful encoding of those artifacts, not the spec author's reinterpretation.
+
+**Spec + Architecture are the implementation contract** — they bind beads to specific files, tests, and verification. They do NOT supersede canonical research.
 
 ## 3-SOT Alignment
 
@@ -229,35 +241,107 @@ For each feature/requirement:
 
 ---
 
-## Phase 3: Gap Analysis (CRITICAL)
+## Phase 2.5: Research Faithfulness Mapping (MANDATORY for canonical research)
 
-**Do NOT take research at face value.** Critically evaluate:
+**This phase is the single most important addition to the workflow. Skipping it caused the 2026-05-08 vite-vgx-layout-foundation drift.**
 
-### Validate Assumptions
+Before writing any spec FR, produce a **Research Clause Map** — a table that enumerates every structural, enumerable, or anchor-bearing claim in the canonical research and binds it to a forthcoming FR ID.
 
-- Does the research assume APIs/methods that don't exist?
-- Are the proposed file locations correct?
-- Do the suggested patterns match the codebase?
+### What counts as a "research clause"
 
-### Identify Discrepancies
+A research clause is anything the spec must faithfully encode:
 
-- Research says X, but codebase actually does Y
-- Research assumes capability Z, but it doesn't exist
-- Research suggests approach A, but pattern B is established
+1. **Structural enumerations** — slot lists, layout modes, page variants, sidebar variations, component IDs. Example: research §16.18 lists "`left-rail`, `top-title-bar`, `main-content`, `right-rail`, and `bottom-dock` slots." That is FIVE distinct slots, not "left/main/right plus extras."
+2. **Graph anchors** — any node, edge, ref, or shell cited by ID, key, or schema. Example: research analyzes `swarm2` graph showing 11 shell nodes — every shell key (`shell-core-layout`, `shell-top-title`, `shell-left-hex-container`, etc.) must appear in the spec's faithfulness matrix.
+3. **Quantitative claims** — "44px height", "280px width", "3 layout modes", "9 STEP_1 apps". Each is a binding constraint.
+4. **Scope statements** — "app-wide", "all routes under `/ui/`", "every project". Scope statements bind cardinality.
+5. **Named contracts** — "Shell Config V2", "design_ref pipeline", "component_ref binding". Each contract has implementation obligations.
 
-### Challenge the Design
+### The Research Clause Map (required artifact)
 
-- Is the proposed approach the best fit?
-- Are there simpler alternatives?
-- Does it align with existing architecture?
-- Will it scale appropriately?
+Produce this table as a section of the spec (or as an appendix). It must contain EVERY clause from the categories above:
 
-### Document Gaps
+```markdown
+## Research Faithfulness Matrix
 
-Create a clear list of:
-- Corrections needed from research
-- Missing considerations
-- Alternative approaches to evaluate
+| Research location | Clause (verbatim or close paraphrase) | Encoded as | Status |
+|---|---|---|---|
+| §16.18 line 1327 | "Shell Config V2 pages with `left-rail`, `top-title-bar`, `main-content`, `right-rail`, and `bottom-dock` slots" | FR-V.7.1 (5 slots enumerated) | encoded |
+| §16.18 line 1328 | "Layout modes including `expanded`, `fullscreen`, and `minimized`" | FR-V.7.3 (3 modes route-addressable) | encoded |
+| §16.2 graph snapshot | swarm2 has 11 shells: shell-core-layout, shell-top-title, shell-left-sidebar, ... | FR-V.7.4 (nested-shell composition cites all 11 by key) | encoded |
+| §16.18 line 1289 | "app-wide left sidebar, main content area, and right sidebar" | FR-V.7.8 (applies to all `/ui/*` routes) | encoded |
+| §16.X | (claim text) | (FR-X.Y.Z) | descoped — see §Descoping Decisions |
+```
+
+### Faithfulness rules
+
+- **Every row must have an `encoded` or `descoped` status.** No `tbd`, no missing rows.
+- **`encoded`** means a specific FR-X.Y.Z fully covers the clause. The FR must enumerate items by name (not paraphrase like "various slots").
+- **`descoped`** means the clause is intentionally NOT in this spec. Each descoped row links to a Descoping Decisions row that records: why, who decided, when, alternatives considered, future bead/spec link.
+- **Mechanical check (CI-friendly)**: `grep -c "| §" spec.md | awk '{print $1}'` must match the number of clauses you extracted from the research, with all rows marked `encoded` or `descoped`.
+
+### Audit step (REQUIRED before spec freeze)
+
+Before declaring the spec ready, run a **research-clause cross-check**:
+
+```bash
+# 1. Pull every numbered list, fenced enumeration, and quoted entity from the research
+grep -E "^\s*[-*]\s|^\s*\d+\.|`[a-z-]+`" research.md | wc -l
+# 2. Pull every entry in your faithfulness matrix
+grep -c "^| §" spec.md
+# 3. Cross-check. Items present in research but missing from matrix = drift candidates.
+```
+
+If steps 1 and 2 disagree, you have potential drift. Investigate every gap and either add to matrix as `encoded` or `descoped`.
+
+### When research IS exploratory
+
+If (and only if) the research declares itself EXPLORATORY in its frontmatter, this phase becomes optional — but you should still produce a lighter-weight clause map for the parts the research treats as committed. Default to canonical when in doubt.
+
+---
+
+## Phase 3: Gap Analysis (codebase reality vs research IMPLEMENTATION)
+
+**Do NOT confuse this with descoping.** Phase 3 finds gaps between what the research describes and what the codebase actually contains. It does NOT have license to drop research scope.
+
+The right mental model: research says "Shell V2 with 5 slots and nested composition." Phase 3 asks "does the codebase have a V2 renderer? Are the existing files in the locations the research expects? Are the dependencies the research assumes actually installed?"
+
+### Validate codebase assumptions
+
+- Does the research assume APIs/methods that don't exist? — If so, plan to build them. Don't drop the requirement.
+- Are the proposed file locations correct? — If not, propose adapter paths. Don't drop the file.
+- Do the suggested patterns match the codebase? — If not, design how to bridge. Don't drop the pattern.
+
+### Identify discrepancies
+
+- Research says X, codebase has Y → spec FR mandates X, with explicit migration/build plan from Y to X.
+- Research assumes capability Z that doesn't exist → spec FR mandates building Z.
+- Research suggests approach A, established pattern is B → spec resolves the tension explicitly (either A wins with rationale, or B wins with rationale, or hybrid). NEVER silent paraphrase.
+
+### Challenge the IMPLEMENTATION (not the scope)
+
+- Is the proposed implementation approach the best fit? — If not, design a better one. Same scope.
+- Are there simpler alternatives? — If yes, document. Same scope.
+- Does it align with existing architecture? — If not, design alignment. Same scope.
+
+### When you genuinely need to descope
+
+Sometimes a research clause is wrong, infeasible, or out of date. That's fine. Record it explicitly:
+
+```markdown
+## Descoping Decisions
+
+### DESCOPE-1 — `shellLayout=minimized` not in v1
+- **Canonical source**: research §16.18 line 1328
+- **Decision**: Defer minimized layout mode to v2.
+- **Rationale**: Codebase audit (Phase 1) revealed no token system supports the slot-collapse semantics the graph defines. Building it would require a 3-week token refactor we don't have budget for.
+- **Owner**: <author>
+- **Date**: 2026-05-06
+- **Future bead**: filed as `bd-XXXXX` for v2 follow-up.
+- **Visibility**: this descope MUST be visible to downstream readers — the spec's structural FR must say "v1: default, fullscreen. minimized deferred — see DESCOPE-1."
+```
+
+Without this section, descoping is invisible drift. With this section, descoping is auditable.
 
 ---
 
@@ -920,9 +1004,22 @@ After completing beads-to-execution:
 
 Before completing, verify:
 
+### Faithfulness (NEW — anti-drift, MANDATORY for canonical research)
+
+- [ ] **Research mode declared** — research frontmatter or first paragraph says CANONICAL or EXPLORATORY
+- [ ] **Research Clause Map exists** in the spec (section or appendix) and every row is marked `encoded` or `descoped`
+- [ ] **Every structural enumeration in research appears verbatim in spec** — slot names, layout mode IDs, page variant IDs, sidebar variation IDs, etc. (no paraphrasing)
+- [ ] **Every graph anchor in research appears in spec by ID/key** — if research cites `swarm2` graph nodes, spec enumerates them by `nodeId` or `key`
+- [ ] **Every quantitative claim in research is encoded** — heights, widths, counts (e.g., "44px", "280px", "3 modes", "9 apps")
+- [ ] **Scope statements honored** — if research says "app-wide", spec FR says "applies to all `/ui/*` routes" (not paraphrased to "the first app")
+- [ ] **Descoping Decisions section exists** for any research clause not encoded — with rationale, owner, date, future link
+- [ ] **Mechanical clause-count check passes** — number of research clauses extracted matches matrix row count
+- [ ] **No silent paraphrase** — review the diff between research and spec; flag anywhere a list got summarized as a number, a named entity got renamed, or a "must" became "may"
+
+### Specification structure
+
 - [ ] Codebase deeply studied (not superficial)
-- [ ] Research critically evaluated (not blindly accepted)
-- [ ] Gaps identified and resolved
+- [ ] Research IMPLEMENTATION critically evaluated (codebase gaps, integration plans) — but research SCOPE preserved
 - [ ] Spec is exhaustively detailed
 - [ ] Every requirement has a unique, stable FR-X.Y.Z identifier
 - [ ] Every requirement has explicit acceptance criteria bullets (not buried in prose)
@@ -936,6 +1033,11 @@ Before completing, verify:
 - [ ] Handoff prompt written to SEPARATE file (`thoughts/shared/prompts/`)
 - [ ] Handoff prompt references 3-SOT pipeline (spec-to-tdd → strategy → beads-from-sources)
 - [ ] Handoff prompt includes master workflow as FIRST prerequisite
+
+### Spec→Audit follow-up
+
+- [ ] Audit ratifies faithfulness matrix as well as FR coverage — audit step CANNOT silently drop matrix rows
+- [ ] If audit finds drift, audit notes link the dropped clause and either (a) reinstate it as encoded or (b) move it to Descoping Decisions with rationale
 
 ---
 

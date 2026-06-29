@@ -7,9 +7,50 @@ Ready-to-use templates for specification and architecture documents.
 ## Specification Document Template
 
 ```markdown
+---
+feature: {feature-slug}
+artifact: specification
+version: 1.0.0
+research_mode: CANONICAL  # or EXPLORATORY — declares whether research is authoritative
+research_source: {path to research doc}
+canonical_anchors:        # list authoritative external artifacts the research/spec bind to
+  - swarm2 VXG graph (shell-* nodes)
+  - {other artifacts}
+last_audited: {date}
+---
+
 # {Feature Name} - Specification
 
 > Comprehensive specification for {feature description}.
+
+---
+
+## 0. Research Faithfulness Matrix (REQUIRED for canonical research)
+
+This matrix proves every research clause is encoded in this spec or explicitly descoped.
+Drift is silent paraphrase; this section makes it loud.
+
+| Research location | Clause (verbatim or close paraphrase) | Encoded as | Status |
+|---|---|---|---|
+| §16.18 line 1327 | "5 slots: left-rail, top-title-bar, main-content, right-rail, bottom-dock" | FR-7.1 enumerates all 5 by name | encoded |
+| §16.18 line 1328 | "3 layout modes: default, fullscreen, minimized" | FR-7.3 mandates all 3 route-addressable | encoded |
+| §16.2 graph | swarm2 has 11 shells (shell-core-layout, shell-top-title, ...) | FR-7.4 cites all 11 by `key` | encoded |
+| §16.18 line 1289 | "app-wide" | FR-7.8 applies to all `/ui/*` routes | encoded |
+| {row} | {clause} | (none — see §0a) | descoped |
+
+### 0a. Descoping Decisions (REQUIRED if any matrix row says `descoped`)
+
+#### DESCOPE-1 — {clause being descoped}
+- **Canonical source**: {research §X.Y line N or graph node ID}
+- **Decision**: {what is being descoped}
+- **Rationale**: {why — codebase reality, budget, risk, etc.}
+- **Owner**: {name}
+- **Date**: {YYYY-MM-DD}
+- **Alternatives considered**: {options weighed}
+- **Future home**: {bead ID, follow-up spec, or "deferred indefinitely"}
+- **Visibility hook**: {which FR mentions the descoping so downstream readers see it}
+
+If this section is empty, write "No descoping decisions for this spec — all canonical research clauses are encoded."
 
 ---
 

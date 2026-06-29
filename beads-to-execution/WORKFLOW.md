@@ -95,8 +95,11 @@ cat Makefile           # if exists
 # Total bead count
 br list --json | jq length
 
-# Ready beads (no blockers)
-br ready --json | jq length
+# Ready feature task beads (no blockers)
+br ready --limit 0 --parent <root-epic-id> --recursive --type task --json | jq length
+
+# Fallback when no root epic filter is available
+br ready --limit 0 --type task --label <feature-label> --json | jq length
 
 # Bead prefix (look at IDs)
 br list --json | jq -r '.[0].id' | cut -d. -f1-2
@@ -108,7 +111,7 @@ br list --json | jq -r '.[].id' | sort
 br list --json | jq -r '.[] | select(.type == "epic" and (.deps | length == 0)) | .id'
 
 # Dependency graph health
-bv --robot-insights | jq '.Cycles'  # MUST be empty []
+br dep cycles --json  # MUST have count 0
 ```
 
 **Document these findings:**
@@ -118,6 +121,8 @@ bv --robot-insights | jq '.Cycles'  # MUST be empty []
 - Phase-to-epic-to-bead mapping table
 - Entry point bead(s) — the only task(s) with no blockers at start
 - Other bead prefixes in the database to EXCLUDE (prior layers)
+
+**Ready queue rule:** never use bare `br ready --json` to decide if the feature has ready work. It defaults to `--limit 20`, which can be filled by unrelated ready beads. Always include `--limit 0`, a feature/root filter, and `--type task`. Parent-child links are hierarchy, not blockers; do not treat parent/root epics as blocking executable task beads.
 
 ### 1.4 Verify AgentMail
 
@@ -228,11 +233,11 @@ wc -l docs/plan-hub/prompts/{feature}-push.md  # Should be ~30-50 lines
 # Status file is valid YAML
 cat docs/plan-hub/prompts/{feature}-pipeline-status.yaml
 
-# Beads are ready
-br ready --json | jq '.[0].id'
+# Feature task beads are ready
+br ready --limit 0 --parent <root-epic-id> --recursive --type task --json | jq '.[0].id'
 
 # No dependency cycles
-bv --robot-insights | jq '.Cycles'  # Should be empty []
+br dep cycles --json  # Should report count 0
 ```
 
 ---
@@ -286,7 +291,7 @@ lsof -p $(lsof -i :8765 -t) 2>&1 | grep sqlite
 ### "Beads not showing as ready"
 - Verify dependencies: `br dep tree {root-epic}`
 - Check parent epic status: `br show {parent-id}`
-- Look for cycles: `bv --robot-insights | jq '.Cycles'`
+- Look for cycles: `br dep cycles --json`
 
 ### "Kickoff looks too generic"
 You didn't do enough codebase research. Go back to Step 1 and:

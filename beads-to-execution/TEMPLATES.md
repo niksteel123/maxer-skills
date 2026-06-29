@@ -67,7 +67,7 @@ You are implementing **{Feature Name}** of {Project Name} — {one-sentence desc
 
 **Completion milestone:** {What "done" looks like — specific gate or criteria}. This delivers {what the user gets when this is done}.
 
-**Organization: FLAT.** There is no team hierarchy. You pick the next ready bead, implement it, and move on. Always take initiative — never ask "what should I work on next?" Just run `br ready` and pick the highest-priority unblocked task.
+**Organization: FLAT.** There is no team hierarchy. You pick the next ready bead, implement it, and move on. Always take initiative — never ask "what should I work on next?" Just run the scoped unlimited ready query and pick the highest-priority unblocked task.
 
 **Coordination: AGENTMAIL-FIRST.** Before touching ANY code, you register with AgentMail, check your inbox for what other agents are doing, announce which bead you're claiming, and reserve the files you'll edit. This is not optional — it's how you avoid conflicts and how the swarm stays coherent.
 
@@ -140,6 +140,16 @@ Study these — your {target language} types MUST match:
 {- **Build:** {build tool}}
 {- ...other relevant stack items}
 
+### Backend Validation Ladder (include when the feature is backend-heavy)
+
+- `fast-local` — default narrow backend inner loop
+- `feature-local` — cross-crate backend close lane
+- `phase-gate` — validation-model / config / workflow / control-plane lane
+- `merge-gate` — policy-level pre-merge escalation (`ci-merge` in CI-facing contexts)
+- `nightly-extended` — env-gated heavy/default-off surfaces only
+
+State explicitly that `cargo test --workspace` is fallback/debug compatibility, not the default per-change backend proof. If the routed command surface exists, tell agents to inspect `resource-status` before heavy lanes.
+
 ---
 
 ## Step 2: Register with AgentMail (BEFORE ANY CODE)
@@ -186,7 +196,7 @@ search_messages(project_key, query="in_progress OR claimed OR started")
 
 Also check beads state:
 ```bash
-br ready              # Shows beads with no blockers (your work queue)
+br ready --limit 0 --parent {root_epic_id} --recursive --type task --json  # Feature task queue
 br list --json        # Full bead list — check which are already in_progress
 bv --robot-plan       # Parallel execution tracks
 ```
@@ -199,11 +209,11 @@ bv --robot-plan       # Parallel execution tracks
 # 1. Claim in beads
 br update <bead-id> --status=in_progress
 
-# 2. RESERVE files you'll edit (MANDATORY)
+# 2. RESERVE implementation/test/doc/config/artifact files you'll edit (MANDATORY)
 file_reservation_paths(
   project_key="{absolute_project_path}",
   agent_name="<your-agent-name>",
-  paths=[{list of file paths this bead touches}],
+  paths=[{list of implementation/test/doc/config/artifact paths this bead touches; never .beads/**}],
   ttl_seconds=3600,
   exclusive=true,
   reason="<bead-id>"
@@ -224,6 +234,8 @@ send_message(
 
 **If you get a FILE_RESERVATION_CONFLICT:** Another agent is editing those files. Pick a different bead that touches different files, or wait. Check inbox for coordination messages.
 
+**Never reserve `.beads/**`:** Beads metadata is shared coordination state, not an implementation edit surface. `br update`, `br close`, and `br sync --flush-only` may mutate `.beads/issues.jsonl`, but those operations are exempt from AgentMail file reservations. A `.beads/**` reservation conflict is invalid and must not block claiming, implementation, closeout, sync, commit, or push.
+
 **If you're the first/only agent:** Skip `send_message` but ALWAYS reserve files. Once other agents register and show up in your inbox, start announcing claims.
 
 ---
@@ -234,12 +246,14 @@ send_message(
 
 **IMPORTANT:** Use `br` (beads_rust), NOT `bd`.
 
-**IMPORTANT:** The beads database may contain beads from other features/layers. You are working on **{Feature Name} only**. When `br ready` shows results, only pick beads with the `{bead_prefix}.*` prefix. Ignore all other prefixes.
+**IMPORTANT:** The beads database may contain beads from other features/layers. You are working on **{Feature Name} only**. Do not use bare `br ready --json` to decide whether this feature has ready work; it defaults to `--limit 20` and can be filled by other projects' beads. Use a scoped unlimited task query and only pick beads with the `{bead_prefix}.*` prefix. Ignore all other prefixes.
+
+**IMPORTANT:** Parent-child links are hierarchy links, not blocking dependencies. A task that only depends on its parent epic can still be ready. Do not report root/workstream epics as blockers.
 
 ```bash
 # Finding work
-br ready              # Beads with no blockers
-br ready --json       # Machine-readable
+br ready --limit 0 --parent {root_epic_id} --recursive --type task --json
+br ready --limit 0 --type task --label {feature_label} --json  # Fallback if no root epic filter is available
 br list --status=open # All open issues
 br list --json        # Full bead list
 
@@ -261,14 +275,12 @@ br sync --flush-only  # Export to JSONL, then YOU run git add .beads/ && git com
 
 ### bv (beads_viewer) — Graph-Aware Triage
 
-**CRITICAL: NEVER run bare `bv` — it launches an interactive TUI. ALWAYS use `--robot-*` flags.**
+**CRITICAL: NEVER run bare `bv` — it launches an interactive TUI. ALWAYS use robot flags that exist in the installed version. Check `bv --robot-help` when unsure. Use `br dep cycles --json` for cycle checks because it is stable across versions.**
 
 ```bash
-bv --robot-triage        # Ranked picks, quick wins, blockers, health
-bv --robot-next          # Single top pick + claim command
 bv --robot-plan          # Parallel execution tracks
-bv --robot-insights      # Full metrics: critical path, cycles
-bv --robot-alerts        # Stale issues, blocking cascades
+br dep cycles --json     # Dependency cycles; must report count 0
+bv --robot-help          # Discover which other robot flags are supported locally
 ```
 
 ### Beads <> AgentMail Mapping
@@ -284,7 +296,7 @@ bv --robot-alerts        # Stale issues, blocking cascades
 
 ## Current State ({total_beads} beads, {phase_count} phases)
 
-> **This listing reflects the INITIAL state.** As agents complete beads, the dependency graph evolves. Always run `br ready` for current unblocked tasks.
+> **This listing reflects the INITIAL state.** As agents complete beads, the dependency graph evolves. Always run the scoped unlimited ready query for current unblocked feature tasks.
 
 {### Phase {N}: {Phase Name} ({task_count} tasks)}
 
@@ -307,7 +319,7 @@ bv --robot-alerts        # Stale issues, blocking cascades
 fetch_inbox(project_key, agent_name)
 
 # 2. Find ready work
-br ready
+br ready --limit 0 --parent {root_epic_id} --recursive --type task --json
 
 # 3. Read the bead description (SELF-CONTAINED)
 br show <bead-id>
@@ -315,7 +327,7 @@ br show <bead-id>
 # 4. Read relevant existing code
 #    {describe what to read for this feature's integration points}
 
-# 5. Claim + reserve + announce (Step 2c above)
+# 5. Claim + reserve + announce (Step 2c above; never reserve .beads/**)
 br update <bead-id> --status=in_progress
 file_reservation_paths(...)
 send_message(...)
@@ -328,6 +340,9 @@ send_message(...)
 # --- VERIFY ---
 # 7. Quality gates (run in this order — fail early)
 {quality_gate_commands}
+
+# If this feature is backend-heavy, these commands MUST reflect the tier ladder
+# above instead of a generic whole-workspace regression loop.
 
 # --- COMPLETE + ANNOUNCE ---
 # 8. Close bead
@@ -366,14 +381,14 @@ Check your inbox at these points:
 {Phase-specific QA gate details — what the final QA phase checks}
 {List the specific validation items for the feature's completion gate}
 
-**Do NOT start {next step/phase} until {gate name} passes.** Dependencies enforce this via `br ready`.
+**Do NOT start {next step/phase} until {gate name} passes.** Dependencies enforce this via the scoped unlimited ready query.
 
 When a phase completes, **announce it loudly** — this unblocks the next phase for all agents:
 ```
 send_message(
   ...,
   subject="[Phase {N}] COMPLETE — {what's now unblocked}",
-  body_md="All Phase {N} tasks verified. Multiple phases are now unblocked. Run `br ready` to see available work.",
+  body_md="All Phase {N} tasks verified. Multiple phases are now unblocked. Run the scoped unlimited `br ready` query to see available work.",
   importance="high"
 )
 ```
@@ -430,7 +445,7 @@ send_message(
 
 You are an **autonomous agent**. Act like one.
 
-1. **NEVER ask "what should I work on?"** — Run `br ready`, check inbox, pick the highest-priority unblocked bead, claim it, and go.
+1. **NEVER ask "what should I work on?"** — Run the scoped unlimited ready query, check inbox, pick the highest-priority unblocked bead, claim it, and go.
 2. **NEVER wait for permission to start a bead** — If it's ready and unclaimed, it's yours.
 3. **NEVER stop after finishing one bead and ask if you should continue** — Immediately loop back.
 4. **NEVER leave your session without announcing status via mail** — Other agents depend on knowing what you did.
@@ -450,8 +465,8 @@ You are an **autonomous agent**. Act like one.
 {6. Feature-specific: type matching rules if cross-boundary types exist}
 {7. Feature-specific: package manager rules (e.g., "Bun, not npm")}
 8. **AgentMail before code** — register, check inbox, announce, reserve, THEN implement
-9. **Phase gates are hard barriers** — no skipping ahead (dependencies enforce via `br ready`)
-10. **Always take initiative** — check inbox, `br ready`, claim, implement, announce, repeat. Never stop. Never ask.
+9. **Phase gates are hard barriers** — no skipping ahead (dependencies enforce via the scoped unlimited ready query)
+10. **Always take initiative** — check inbox, run the scoped unlimited ready query, claim, implement, announce, repeat. Never stop. Never ask.
 11. **Use `br`, not `bd`** — this project uses beads_rust CLI
 {12. Feature-specific: integration rules (e.g., "Study the gateway API")}
 
@@ -590,8 +605,8 @@ When you see uncommitted changes in your working tree that you didn't make — *
 ### Tools
 | Tool | Key Commands |
 |------|-------------|
-| `br` (beads) | `br ready`, `br show <id>`, `br update <id> --status=in_progress`, `br close <id>`, `br sync --flush-only` |
-| `bv` (triage) | `bv --robot-triage`, `bv --robot-next`, `bv --robot-plan`, `bv --robot-insights` |
+| `br` (beads) | `br ready --limit 0 --parent {root_epic_id} --recursive --type task --json`, `br show <id>`, `br update <id> --status=in_progress`, `br close <id>`, `br sync --flush-only` |
+| `bv` / graph | `bv --robot-plan`, `bv --robot-help`, `br dep cycles --json` |
 {| `ubs` (bugs) | `ubs <files>`, `ubs $(git diff --name-only --cached)` |}
 {| {build_tool} | `{quality gate commands}` |}
 | AgentMail | `ensure_project`, `register_agent`, `fetch_inbox`, `send_message`, `file_reservation_paths`, `release_file_reservations` |
@@ -618,14 +633,14 @@ Re-read `AGENTS.md` so it's fresh in your mind. Continue the great work.
 
 If you have a bead currently in-progress that you haven't finished, **finish it first** — implement, verify, commit, push, announce, release.
 
-Then check into AgentMail — `fetch_inbox("{absolute_project_path}", "<your-agent-name>", include_bodies=true)` — and communicate with your fellow agents to avoid duplicating work. Pick up the next available bead via `br ready` (only `{bead_prefix}.*` beads — ignore {other_prefixes_to_ignore}). Remember to keep proceeding with the plan, taking initiative, until all {scope description} beads are done.
+Then check into AgentMail — `fetch_inbox("{absolute_project_path}", "<your-agent-name>", include_bodies=true)` — and communicate with your fellow agents to avoid duplicating work. Pick up the next available bead via `br ready --limit 0 --parent {root_epic_id} --recursive --type task --json` (only `{bead_prefix}.*` beads — ignore {other_prefixes_to_ignore}). Remember to keep proceeding with the plan, taking initiative, until all {scope description} beads are done.
 
 Specifically:
 
 1. **Finish in-progress work** — if you have a half-done bead, complete it before picking a new one.
 2. **Check inbox** — see if any agents announced completions, flagged conflicts, or need help.
-3. **Run `br ready`** — find the next unblocked `{bead_prefix}.*` bead.
-4. **Claim it** — `br update <id> --status=in_progress`, reserve files via `file_reservation_paths`, announce via `send_message` (if other agents are active).
+3. **Run `br ready --limit 0 --parent {root_epic_id} --recursive --type task --json`** — find the next unblocked `{bead_prefix}.*` task bead.
+4. **Claim it** — `br update <id> --status=in_progress`, reserve implementation/test/doc/config/artifact files via `file_reservation_paths`, announce via `send_message` (if other agents are active). Never reserve `.beads/**`; `.beads/issues.jsonl` mutations from `br` are shared metadata operations and cannot block claiming or closeout.
 5. **Read the bead** — `br show <id>`. It's self-contained. Implement from the bead alone. {What's embedded in beads for this feature}. Only consult the spec (`{spec_path}`) as a tiebreaker if something is ambiguous.
 6. **Study the codebase** — before implementing, read the existing code your bead integrates with:
    {- **{Integration Area}:** `{path}` for {what to look for}}
@@ -637,10 +652,19 @@ Quality gates before every commit:
 {quality_gate_commands}
 ```
 
+If the feature is backend-heavy, `{quality_gate_commands}` must reflect the tier ladder above instead of a generic whole-workspace regression loop.
+
 Do NOT stop to ask what to work on. Do NOT wait for permission. Do NOT ask if you should continue. Just keep going until every {scope} bead is done or you are fully blocked with nothing available.
 
 If fully blocked (no ready `{bead_prefix}.*` beads and nothing in-progress): look for useful work — run QA checks on completed code, write missing tests, review recent commits. If truly nothing to do, execute the Session Landing Protocol (push all work, release reservations, announce handoff via mail).
 ```
+
+For backend-heavy features, add one compact reminder after this block:
+- start with `fast-local`
+- escalate to `feature-local` / `phase-gate` as touched surfaces widen
+- reserve `merge-gate` / `nightly-extended` for broader or env-gated proof
+- use `resource-status` before heavy lanes once available
+- treat `cargo test --workspace` as fallback/debug only
 
 ---
 

@@ -2,6 +2,8 @@
 
 Detailed step-by-step process for converting research documents into production-ready specification and architecture documents.
 
+**Anti-drift doctrine (added 2026-05-08):** When research is canonical (frontmatter says `research_mode: CANONICAL`, or it cites graph snapshots, audited artifacts, design refs, or has gone through multiple iteration cycles), the spec is a FAITHFUL ENCODING of the research, not a reinterpretation. Step 1.6 below is the load-bearing addition to this methodology.
+
 ---
 
 ## Step 0: Gather Inputs
@@ -18,6 +20,26 @@ These may include:
 - Technical investigation notes
 - Prototype documentation
 - Integration analysis
+
+### 0.1 Determine Research Mode (NEW)
+
+Read the research frontmatter and opening section. Classify:
+
+- **CANONICAL** — research is authoritative for SCOPE. Examples: cites graph node IDs by key, has audit history, references real artifacts, was iterated multiple times. The spec must be a faithful encoding.
+- **EXPLORATORY** — research is a brainstorm. The spec author has license to design SCOPE.
+
+If the research has no declaration, default to CANONICAL. The cost of over-faithfulness is a slightly larger spec; the cost of under-faithfulness is silent drift.
+
+### 0.2 Identify Canonical Anchors (NEW)
+
+If the research is canonical, list the external artifacts it binds to. Examples:
+- VXG graph snapshots (specific projects, specific node IDs)
+- Design files (`.pen` documents)
+- Existing test packages (UVP)
+- API contracts
+- File surfaces with line numbers
+
+These anchors will become the "source of truth" the spec cites by exact ID. They go into the spec's `canonical_anchors:` frontmatter.
 
 ### Identify Output Locations
 
@@ -97,6 +119,43 @@ Write internal notes:
 - E2E: Framework, patterns
 - Integration: Approach used
 ```
+
+### 1.6 Inspect Canonical Anchors Directly (NEW — load-bearing)
+
+For every canonical anchor identified in Step 0.2, read it from the live source. Don't trust the research's paraphrase — go to the artifact.
+
+Example for a VXG graph anchor:
+
+```bash
+# Pull the actual canonical structure
+agent-swarm vxg use {project_id}
+agent-swarm vxg analyze
+agent-swarm vxg node list --type shell --format json | jq '.data.nodes' > /tmp/canonical_shells.json
+
+# Capture the structure you'll need to encode
+jq '.[] | {key, nodeId, slots: .meta.shell.slots, layoutModes: .meta.shell.layoutModes}' /tmp/canonical_shells.json
+```
+
+Example for a design file anchor:
+
+```bash
+# Use design.list / design.get / design_screenshot to view actual canvas content
+agent-swarm design list --project {project_id}
+```
+
+**Output of this step:** a `Canonical Catalog` table that the spec MUST cite by exact name/ID. Save it as a section in your internal notes:
+
+```markdown
+## Canonical Catalog (frozen as of {date})
+
+| Anchor | Source | Identifying field | Contents |
+|---|---|---|---|
+| `shell-core-layout` | swarm2 graph node | `nodeId=node-44f5...` | 4 slots: top-title (44px), left-sidebar (280px), main-content, right-sidebar (280px); 3 layout modes |
+| `shell-top-title` | swarm2 graph node | `key=shell-top-title` | placeholder shell, 3 layout modes |
+| ...etc... | | | |
+```
+
+This catalog MUST be reflected verbatim in the spec's Research Faithfulness Matrix. Skipping this step is the most common drift cause.
 
 ---
 

@@ -1,11 +1,14 @@
 ---
 name: featuremaxxer
-description: "Orchestrate full feature implementation from research/spec doc to codebase integration. Use when: user says 'featuremaxxer', 'implement this feature', 'feature to code', 'implement from spec', 'feature implementation pipeline', or '/featuremaxxer'. Reads feature research/spec docs, deeply understands both the feature and the existing codebase, then generates the complete prompt pipeline: feature optimization → beads creation → beads optimization → execution kickoff/push. Fast-tracked pipeline (skips separate plan/TDD stage — strategy and testing are front-loaded into optimization). Works on any codebase."
+description: "Orchestrate full feature implementation from research/spec doc to codebase integration. Use when: user says 'featuremaxxer', 'implement this feature', 'feature to code', 'implement from spec', 'feature implementation pipeline', or '/featuremaxxer'. Reads feature research/spec docs, deeply understands both the feature and the existing codebase, then generates a per-feature folder with 5 numbered handoff prompts (01-feature-optimization → 02-beads-creation → 03-beads-optimization → 04-execution-kickoff → 05-execution-push), plus manifest.yaml and EXECUTION-GUIDE.md. Fast-tracked pipeline (skips separate plan/TDD stage — strategy and testing are front-loaded into optimization). Each feature gets its own folder so multiple features can ship in parallel without collision (matches pipemaxxer convention). Works on any codebase."
 user_invocable: true
 compatibility: "Works with Claude Code, Codex, and any Agent Skills-compatible tool."
 metadata:
   author: steel
-  version: "1.0"
+  version: "2.0"
+  changelog:
+    - "2.0 (2026-05-11): Per-feature folder convention. Each feature gets its own folder at {parent_dir}/{feature-slug}-featuremaxxer/ instead of the shared featuremaxxer/active/ + archived/ + .run pattern. Adds manifest.yaml + EXECUTION-GUIDE.md. Stage files are numbered 01-05 matching pipemaxxer. Supports parallel features."
+    - "1.0: Initial release. Shared featuremaxxer/active/ folder with run counter and archived/ subdirs."
 ---
 
 # Featuremaxxer — Feature-to-Implementation Engine
@@ -17,30 +20,37 @@ metadata:
 ## The Pipeline
 
 ```
-┌─────────────────────────────────────────────────────────────────────────┐
-│                                                                         │
-│   /featuremaxxer feature-doc.md                                         │
-│       │                                                                 │
-│       ├── Phase 0-1: Deep understand feature + codebase + tests         │
-│       │                                                                 │
-│       ├── Generates: FEATURE OPTIMIZATION    → featuremaxxer/active/    │
-│       ├── Generates: BEADS CREATION          → featuremaxxer/active/    │
-│       ├── Generates: BEADS OPTIMIZATION      → featuremaxxer/active/    │
-│       ├── Generates: EXECUTION KICKOFF       → featuremaxxer/active/    │
-│       └── Generates: EXECUTION PUSH          → featuremaxxer/active/    │
-│                                                                         │
-│   USER RUNS feature optimization → improves feature doc + produces      │
-│       │                            implementation & testing strategy     │
-│       │                                                                 │
-│   USER RUNS beads creation → produces executable bead graph             │
-│       │                                                                 │
-│   USER RUNS beads optimization → audits and fixes bead graph            │
-│       │                                                                 │
-│   USER RUNS execution kickoff/push → agents implement the feature       │
-│                                                                         │
-│   (optional: run /harmonymaxer retroactively to sync layer docs)        │
-│                                                                         │
-└─────────────────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────────────────────┐
+│                                                                                  │
+│   /featuremaxxer feature-doc.md                                                  │
+│       │                                                                          │
+│       ├── Phase 0-1: Derive feature slug, pick parent dir,                       │
+│       │             deep understand feature + codebase + tests                   │
+│       │                                                                          │
+│       ├── Creates folder: {parent_dir}/{feature-slug}-featuremaxxer/             │
+│       │                                                                          │
+│       ├── Generates: 01-feature-optimization.md                                  │
+│       ├── Generates: 02-beads-creation.md                                        │
+│       ├── Generates: 03-beads-optimization.md                                    │
+│       ├── Generates: 04-execution-kickoff.md                                     │
+│       ├── Generates: 05-execution-push.md                                        │
+│       ├── Generates: manifest.yaml (feature metadata + deliverables)             │
+│       └── Generates: EXECUTION-GUIDE.md (per-feature operating manual)           │
+│                                                                                  │
+│   USER RUNS 01 → improves feature doc + produces implementation-strategy.md      │
+│       │                                                                          │
+│   USER RUNS 02 → produces executable bead graph                                  │
+│       │                                                                          │
+│   USER RUNS 03 → audits and fixes bead graph                                     │
+│       │                                                                          │
+│   USER RUNS 04/05 → agents implement the feature                                 │
+│                                                                                  │
+│   (optional: run /harmonymaxer retroactively to sync layer docs)                 │
+│                                                                                  │
+│   Multiple features can be in-flight simultaneously — each lives in its own      │
+│   folder. No global state, no run counter, no archive collisions.                │
+│                                                                                  │
+└──────────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ### Cardinal Rule: ZERO SCOPE DRIFT
@@ -83,54 +93,87 @@ This works because:
 - The strategy is a temporary artifact consumed during beads creation, then discarded
 - Each bead embeds its own testing requirements (TDD-first, E2E-focused)
 
-### File Structure
+### File Structure (Per-Feature Isolation)
+
+**Each feature gets its own folder so multiple features can ship in parallel without collision.** This matches the pipemaxxer convention.
 
 ```
-featuremaxxer/                           (lives at project root or docs/featuremaxxer/)
-├── active/                              (current run — generated prompts)
-│   ├── feature-optimization.md          (prompt to improve feature doc + produce strategy)
-│   ├── implementation-strategy.md       (PRODUCED by optimization agent — temporary)
-│   ├── beads-creation.md                (prompt to create beads from optimized doc + strategy)
-│   ├── beads-optimization.md            (prompt to audit and fix bead graph)
-│   ├── execution-kickoff.md             (prompt to onboard fresh execution agents)
-│   └── execution-push.md               (prompt to push continuing execution agents)
-├── archived/                            (previous runs — kept for reference)
-│   ├── run-001/
-│   └── run-002/
-└── .run                                 (counter file: current run number)
+{parent_dir}/{feature-slug}-featuremaxxer/        (parent picked per §0.6; slug derived per §0.6)
+├── manifest.yaml                                  (feature metadata, deliverables, tensions, non-negotiables)
+├── EXECUTION-GUIDE.md                             (run order, checkpoints, contracts, parallelization)
+├── 01-feature-optimization.md                     (prompt: improve feature doc + produce strategy)
+├── 02-beads-creation.md                           (prompt: create beads from optimized doc + strategy)
+├── 03-beads-optimization.md                       (prompt: audit and fix bead graph)
+├── 04-execution-kickoff.md                        (prompt: onboard fresh execution agents)
+├── 05-execution-push.md                           (prompt: push continuing execution agents)
+└── implementation-strategy.md                     (PRODUCED by optimization agent — temporary)
 ```
 
-Note: `implementation-strategy.md` is NOT generated by the skill — it is PRODUCED by the optimization agent when they run `feature-optimization.md`. It becomes an input to beads creation and is explicitly temporary.
+**`{parent_dir}` resolution priority** (use first that exists; create if needed):
+1. `prompts/` (recent pipemaxxer convention — e.g., `prompts/vite-vgx-layout-foundation-pipeline/`)
+2. `docs/plan-hub/` (older pipemaxxer convention)
+3. `thoughts/handoffs/` (oldest pipemaxxer convention)
+4. Create `prompts/` if it can be created
+5. Fall back to `{cwd}/`
+
+**`{feature-slug}` derivation** from the feature doc filename:
+- `docs/research/2026-05-10-vgx-human-production-rework-research.md` → `vgx-human-production-rework`
+- Strip leading date `YYYY-MM-DD-` if present
+- Strip trailing `-research` / `-spec` / `-feature` / `-doc` if present
+- Lowercase, hyphenate, alphanumeric-only
+
+Or override with `--name <slug>` and `--into <dir>` flags.
+
+**No more `featuremaxxer/active/`**, **no more `featuremaxxer/archived/`**, **no more `.run` counter**. Each feature folder is self-contained and parallelizable.
+
+**Parallel features** — multiple folders coexist with no conflict:
+- `prompts/auth-featuremaxxer/` (feature A — stage 02 in progress)
+- `prompts/vgx-rework-featuremaxxer/` (feature B — execution running)
+- `prompts/billing-featuremaxxer/` (feature C — stage 01 not started)
+
+Agents pick which folder they're working from.
+
+Note: `implementation-strategy.md` is NOT generated by this skill — it is PRODUCED by the optimization agent when they execute `01-feature-optimization.md`. It becomes an input to beads creation (stage 02) and is explicitly temporary.
 
 ### Pipeline Sequencing — Sequential Invocation
 
 The 5 prompts have a **strict dependency chain**. Downstream prompts become fully project-specific only after upstream prompts produce their outputs:
 
 ```
-/featuremaxxer (first run)
+/featuremaxxer feature-doc.md (first run)
     │
-    ├── feature-optimization.md    ← FULLY FILLED (needs only feature doc + codebase)
+    ├── Creates: {parent_dir}/{feature-slug}-featuremaxxer/
+    ├── Writes:  manifest.yaml + EXECUTION-GUIDE.md
     │
-    ├── beads-creation.md          ← SCAFFOLD (implementation-strategy.md doesn't
-    ├── beads-optimization.md      ←   exist yet until optimization agent produces it.
-    ├── execution-kickoff.md       ←   Marked with {AFTER_OPTIMIZATION} sections.
-    └── execution-push.md          ←   Still 90% filled from Phase 1 analysis.)
-
-User runs feature-optimization.md → produces improved doc + implementation-strategy.md
-
-/featuremaxxer --beads-only (second run — reads strategy + optimized doc)
+    ├── 01-feature-optimization.md    ← FULLY FILLED (needs only feature doc + codebase)
     │
-    ├── beads-creation.md          ← NOW FULLY FILLED (knows testing strategy,
-    └── beads-optimization.md      ←   sequencing, file surfaces)
+    ├── 02-beads-creation.md          ← SCAFFOLD (implementation-strategy.md doesn't
+    ├── 03-beads-optimization.md      ←   exist yet until optimization agent produces it.
+    ├── 04-execution-kickoff.md       ←   Marked with {AFTER_OPTIMIZATION} sections.
+    └── 05-execution-push.md          ←   Still 90% filled from Phase 1 analysis.)
 
-User runs beads-creation → produces bead graph
-User runs beads-optimization → audits beads
+User runs 01-feature-optimization.md
+    → produces improved feature doc + {feature_folder}/implementation-strategy.md
 
-/featuremaxxer --execution-only (third run — reads bead graph)
+/featuremaxxer --beads-only feature-doc.md (second run — reads strategy + optimized doc)
     │
-    ├── execution-kickoff.md       ← NOW FULLY FILLED (real bead IDs,
-    └── execution-push.md          ←   file-surface maps, dependency spine)
+    ├── 02-beads-creation.md          ← NOW FULLY FILLED (knows testing strategy,
+    └── 03-beads-optimization.md      ←   sequencing, file surfaces)
+    │
+    └── Updates: manifest.yaml stage 02+03 deliverables
+
+User runs 02-beads-creation.md → produces bead graph (.beads/beads.jsonl)
+User runs 03-beads-optimization.md → audits beads
+
+/featuremaxxer --execution-only feature-doc.md (third run — reads bead graph)
+    │
+    ├── 04-execution-kickoff.md       ← NOW FULLY FILLED (real bead IDs,
+    └── 05-execution-push.md          ←   file-surface maps, dependency spine)
+    │
+    └── Updates: manifest.yaml stage 04+05 deliverables
 ```
+
+The skill auto-discovers the feature folder from the feature doc path on re-runs. If you have multiple feature folders and want to operate on a specific one, pass `--folder <path>` to skip discovery.
 
 ---
 
@@ -139,13 +182,46 @@ User runs beads-optimization → audits beads
 ```
 /featuremaxxer [feature doc path] [flags]
 
+Flags:
+  --name <slug>          Override the derived feature slug
+                         (default: derived from feature doc filename)
+  --into <dir>           Override the parent directory for the feature folder
+                         (default: prompts/ | docs/plan-hub/ | thoughts/handoffs/ | cwd)
+  --folder <path>        Skip discovery — operate directly on the named feature folder
+                         (useful for re-runs when the folder already exists)
+  --beads-only           After 01 has run: fill stages 02 + 03 with strategy context
+                         (requires {feature_folder}/implementation-strategy.md to exist)
+  --execution-only       After 02 has run: fill stages 04 + 05 with real bead IDs
+                         (requires bead graph at .beads/ or equivalent)
+  --optimization-only    Generate only stage 01 (feature optimization)
+
 Examples:
-  /featuremaxxer docs/research/auth-research.md         Full run — generate all prompts
-  /featuremaxxer feature-spec.md --into src/             Specify target codebase root
-  /featuremaxxer --beads-only                            After optimization: fill beads prompts
-  /featuremaxxer --execution-only                        After beads: fill execution prompts
-  /featuremaxxer --optimization-only                     Only generate optimization handoff
+  /featuremaxxer docs/research/auth-research.md
+      Full run — creates prompts/auth-featuremaxxer/ with all 5 stages
+
+  /featuremaxxer feature-spec.md --name billing-v2 --into thoughts/handoffs/
+      Override slug + parent: thoughts/handoffs/billing-v2-featuremaxxer/
+
+  /featuremaxxer --beads-only docs/research/auth-research.md
+      Re-fill stages 02+03 in the auth feature folder with strategy context
+
+  /featuremaxxer --execution-only docs/research/auth-research.md
+      Re-fill stages 04+05 in the auth feature folder with real bead IDs
+
+  /featuremaxxer --folder prompts/auth-featuremaxxer/ --beads-only
+      Operate directly on a known folder (skip discovery + slug derivation)
+
+  /featuremaxxer --optimization-only docs/research/auth-research.md
+      Only generate stage 01 — useful when you want the feature reviewed without
+      committing to the full pipeline
 ```
+
+**Parallel features:** Each feature folder is independent. You can run featuremaxxer for feature A, then immediately for feature B, and both folders coexist:
+- `prompts/auth-featuremaxxer/` (feature A — stage 02 in progress)
+- `prompts/vgx-rework-featuremaxxer/` (feature B — stage 04+05 running)
+- `prompts/billing-featuremaxxer/` (feature C — stage 01 just generated)
+
+Agents pick which folder they're working from via the EXECUTION-GUIDE.md and manifest.yaml. No global state, no run counter, no archive collisions.
 
 ---
 
@@ -283,27 +359,63 @@ IMPLEMENTATION STATE:
   - What test infrastructure is available vs needs creation
 ```
 
-#### Step 0.6: Detect Existing Pipeline State
+#### Step 0.6: Derive Feature Slug + Parent Directory + Feature Folder
 
-Check if earlier pipeline outputs exist (for `--beads-only` and `--execution-only` re-runs):
+```
+FEATURE SLUG:
+  If --name <slug> flag provided: use it verbatim
+  Else if --folder <path> provided: extract slug from folder basename
+       (strip trailing "-featuremaxxer")
+  Else derive from feature doc filename:
+    1. Strip path:           docs/research/2026-05-10-vgx-human-production-rework-research.md
+                             → 2026-05-10-vgx-human-production-rework-research.md
+    2. Strip extension:      → 2026-05-10-vgx-human-production-rework-research
+    3. Strip YYYY-MM-DD-:    → vgx-human-production-rework-research
+    4. Strip -research / -spec / -feature / -doc suffix:
+                             → vgx-human-production-rework
+    5. Lowercase, hyphenate, alphanumeric+hyphen-only.
+    6. If empty/invalid: ASK user for a slug.
+
+PARENT DIRECTORY (mirrors pipemaxxer convention):
+  If --into <dir> flag provided: use it
+  Else if --folder <path> provided: use the path's parent
+  Else check in order (use first that exists):
+    1. prompts/                (newest pipemaxxer convention — recommended default)
+    2. docs/plan-hub/          (older pipemaxxer convention)
+    3. thoughts/handoffs/      (oldest pipemaxxer convention)
+    4. Create prompts/ if writable
+    5. Fall back to {cwd}/
+
+FEATURE FOLDER:
+  full_path = {parent_dir}/{feature-slug}-featuremaxxer/
+
+  If folder does NOT exist: create it. Continue.
+
+  If folder ALREADY exists:
+    - First-run mode (no --beads-only / --execution-only / --folder): ASK user
+      "Folder {full_path} already exists. (a) Re-use and overwrite stage files,
+       (b) Pick a different slug, (c) Abort"
+    - --beads-only / --execution-only / --folder: re-use (this is expected)
+```
+
+#### Step 0.7: Detect Existing Stage State
+
+Check if earlier stage outputs exist (for `--beads-only` and `--execution-only` re-runs):
 
 ```
 EXISTING STRATEGY:
-  featuremaxxer/active/implementation-strategy.md
-  If found: read it. Downstream prompts can be FULLY FILLED.
+  {feature_folder}/implementation-strategy.md
+  If found: read it. Stages 02+ can be FULLY FILLED.
 
 EXISTING BEAD GRAPH:
-  .beads/ directory or bead tool present
-  If found: execution prompts reference real bead IDs and file surfaces.
-```
+  .beads/ directory or bead tool present (project-level, not feature-folder-local).
+  Bead IDs likely prefixed with feature-slug or related identifier.
+  If found: stages 04+ reference real bead IDs and file surfaces.
 
-#### Step 0.7: Identify Output Location
-
-```
-Location priority for featuremaxxer/ root:
-  1. featuremaxxer/ (if exists)
-  2. docs/featuremaxxer/ (if docs/ exists)
-  3. Create featuremaxxer/ at project root
+EXISTING MANIFEST:
+  {feature_folder}/manifest.yaml
+  If found: load existing metadata to preserve user edits;
+  this run UPDATES (does not overwrite wholesale) stage entries.
 ```
 
 #### Step 0.8: Apply Re-Run Skip Logic
@@ -315,24 +427,26 @@ Skip accordingly:
 RE-RUN ROUTING:
 
   --beads-only:
-    REQUIRES: featuremaxxer/active/implementation-strategy.md exists
-    If missing: ERROR — "Run feature optimization first to produce the strategy."
+    REQUIRES: {feature_folder}/implementation-strategy.md exists
+    If missing: ERROR — "Run stage 01 (feature optimization) first to produce the strategy."
 
-    SKIP: Phases 0-2 (orientation, deep understanding, optimization handoff)
+    SKIP: Phases 0-2 (orientation analysis, deep understanding, optimization handoff)
     READ: implementation-strategy.md + optimized feature doc
     RESUME AT: Phase 3 (Beads Creation Handoff Generation)
     ALSO GENERATE: Phase 4 (Beads Optimization)
+    UPDATE: manifest.yaml stage 02 + 03 deliverables (mark regenerated, bump timestamps)
 
     The strategy doc contains the integration surface map, sequencing,
     testing landscape — everything Phase 1 would have produced. Don't redo it.
 
   --execution-only:
     REQUIRES: bead graph exists (.beads/ or equivalent)
-    If missing: ERROR — "Run beads creation first to produce the bead graph."
+    If missing: ERROR — "Run stage 02 (beads creation) first to produce the bead graph."
 
     SKIP: Phases 0-4 (everything before execution prompts)
     READ: bead graph + feature doc + implementation-strategy.md (if still exists)
     RESUME AT: Phase 5 (Execution Prompt Generation)
+    UPDATE: manifest.yaml stage 04 + 05 deliverables
 
     Extract real bead IDs, file-surface maps, and dependency spine from
     the actual bead graph. These replace the scaffolded placeholders from
@@ -340,13 +454,14 @@ RE-RUN ROUTING:
 
   --optimization-only:
     SKIP: Phases 3-5 (everything after optimization handoff)
-    GENERATE: Only Phase 2 (Feature Optimization Handoff)
+    GENERATE: Only Phase 2 (Feature Optimization Handoff = stage 01 file)
     Useful when you only need the feature reviewed, not full pipeline.
 
   (no flag — full run):
-    Execute all phases. Downstream prompts use scaffolds with
-    {AFTER_OPTIMIZATION} / {AFTER_BEADS} placeholders where upstream
-    outputs don't yet exist.
+    Execute all phases. Create feature folder, write manifest.yaml +
+    EXECUTION-GUIDE.md, and write all 5 stage files. Downstream prompts
+    use scaffolds with {AFTER_OPTIMIZATION} / {AFTER_BEADS} placeholders
+    where upstream outputs don't yet exist.
 ```
 
 ---
@@ -627,7 +742,7 @@ RISK IDENTIFICATION:
 
 This is the MOST IMPORTANT generated artifact. The optimization handoff must produce two outputs:
 1. **Improved feature doc** — edited in place with targeted improvements
-2. **Implementation & testing strategy** — saved to `featuremaxxer/active/implementation-strategy.md` (temporary, consumed by beads creation)
+2. **Implementation & testing strategy** — saved to `{feature_folder}/implementation-strategy.md` (temporary, consumed by beads creation)
 
 ### What the Feature Optimization Handoff Must Contain
 
@@ -702,7 +817,7 @@ See **references/TEMPLATES.md -> Feature Optimization Template** for the full st
 
 8. IMPLEMENTATION STRATEGY DELIVERABLE (CRITICAL — fast-tracking requirement)
    The optimization agent must ALSO produce:
-   `featuremaxxer/active/implementation-strategy.md` containing:
+   `{feature_folder}/implementation-strategy.md` containing:
    - Implementation surface map (which files/modules the feature touches)
    - Sequencing analysis (what must come first, what can parallelize)
    - Dependency spine
@@ -983,45 +1098,163 @@ See **references/TEMPLATES.md -> Execution Kickoff Template** for the full struc
 ## Phase 6: OUTPUT & MANIFEST
 
 **Duration:** 5 minutes
-**Goal:** Archive previous run (if any), write all prompts, and report to user
+**Goal:** Create the feature folder (if new), write all stage prompts + manifest + execution guide, report to user
 
-### Archive Previous Run
-
-```
-1. READ the current run number from featuremaxxer/.run
-   (if file doesn't exist, assume run 0)
-
-2. IF active/ has content:
-   a. CREATE featuremaxxer/archived/run-{NNN}/
-   b. MOVE all contents of active/ into the archive directory
-   c. INCREMENT the run counter in .run
-
-3. Recreate empty active/ directory
-```
-
-### Output Location
+### Create Feature Folder (Per-Feature Isolation)
 
 ```
-Location priority for featuremaxxer/ root:
-  1. featuremaxxer/ (if exists)
-  2. docs/featuremaxxer/ (if docs/ exists)
-  3. Create featuremaxxer/ at project root
+1. RESOLVE feature folder path: {parent_dir}/{feature-slug}-featuremaxxer/
+   (parent + slug derived in §0.6)
+
+2. IF folder does NOT exist:
+   a. CREATE {parent_dir}/{feature-slug}-featuremaxxer/
+   b. CREATE manifest.yaml (see Manifest Schema below)
+   c. CREATE EXECUTION-GUIDE.md (see Execution Guide Schema below)
+
+3. IF folder ALREADY exists (re-run mode):
+   a. PRESERVE existing files in folder
+   b. OVERWRITE only the stage files this run is regenerating (per --flag)
+   c. UPDATE manifest.yaml: mark regenerated stage entries with new timestamps
+   d. APPEND a "Re-run note" entry to the EXECUTION-GUIDE.md change log
+
+4. NO archive directory needed — each feature is already isolated by folder.
+   To "archive" a completed feature folder, just leave it in place — it's already
+   feature-isolated and can serve as historical reference.
 ```
 
 ### File Names
 
+Numbered prefixes match pipemaxxer convention so the run order is obvious from `ls` alone:
+
 ```
-featuremaxxer/active/feature-optimization.md
-featuremaxxer/active/beads-creation.md
-featuremaxxer/active/beads-optimization.md
-featuremaxxer/active/execution-kickoff.md
-featuremaxxer/active/execution-push.md
+{feature_folder}/manifest.yaml
+{feature_folder}/EXECUTION-GUIDE.md
+{feature_folder}/01-feature-optimization.md
+{feature_folder}/02-beads-creation.md
+{feature_folder}/03-beads-optimization.md
+{feature_folder}/04-execution-kickoff.md
+{feature_folder}/05-execution-push.md
+{feature_folder}/implementation-strategy.md   (produced by 01 when run; not generated by skill)
+```
+
+### Manifest Schema
+
+`manifest.yaml` contains feature metadata + deliverable status. Template:
+
+```yaml
+name: {feature-slug}-featuremaxxer
+feature: {Feature Title — human-readable}
+pipeline: featuremaxxer
+classification: {brief-spec | structured-spec | deep-research}
+created: {YYYY-MM-DD}
+
+source:
+  feature_doc: {path/to/feature-doc.md}
+  lines: {N}
+  sections: {N}
+  appendices: {N if any}
+
+target_route: {URL or scope of the feature, if applicable}
+project: {project id, if applicable}
+
+deliverables:
+  - id: "01"
+    file: 01-feature-optimization.md
+    stage: feature-optimization
+    role: producer
+    produces:
+      - {improved feature doc — edited in place}
+      - {feature_folder}/implementation-strategy.md   # temporary, consumed by 02
+    consumes:
+      - feature_doc
+      - codebase
+      - skills: [{relevant skill list}]
+    duration_estimate_minutes: 90-180
+  - id: "02"
+    file: 02-beads-creation.md
+    stage: beads-creation
+    produces: [bead_graph]
+    depends_on: ["01"]
+  # ... id 03, 04, 05 ...
+
+phases:
+  # phase descriptors with sequential/parallel flags
+  # (derived from Phase 1 implementation strategy analysis)
+
+unresolved_tensions:
+  # Tensions surfaced by Phase 1 — to be resolved in implementation-strategy.md by stage 01
+
+non_negotiables:
+  architecture: [...]
+  product: [...]
+  runtime_contract: [...]
+
+anti_patterns:
+  count: {N}
+  list: [...]
+
+url_conventions:
+  manual: {URL for manual / agent-browser validation}
+  e2e: {URL for Playwright E2E}
+
+evidence_path: evidence/{feature-slug}/<bead-id>/<step>.{png,json,html}
+```
+
+### Execution Guide Schema
+
+`EXECUTION-GUIDE.md` is the per-feature operating manual. Template:
+
+```markdown
+# {Feature Title} — Featuremaxxer Execution Guide
+
+**Feature:** {one-line description}
+**Feature Document:** {path} ({line count}, {classification})
+**Pipeline:** Featuremaxxer (fast-tracked — skips separate spec/TDD/strategy stages)
+
+## Run Order
+
+01 → optimized doc + implementation-strategy.md
+   ↓
+02 → bead graph
+   ↓
+03 → audited bead graph
+   ↓
+04 + 05 → implementation agents (claim → implement → verify → push → loop)
+
+## Critical Contracts (Apply To All Stages)
+
+{Zero scope drift + project-specific non-negotiables — same as manifest's non_negotiables}
+
+## Tensions Requiring Resolution
+
+{The open questions from Phase 1 analysis that stage 01 MUST answer in implementation-strategy.md}
+
+## Required Skills (Invoke Per Stage)
+
+{Skills table per stage — feature-specific}
+
+## Parallelization
+
+{Within-folder phases that can parallelize during implementation}
+
+## Checkpoints
+
+{Per-stage checkpoint reports the agent must produce before next stage}
+
+## Verification
+
+{Compiler / test / browser / graph commands relevant to this feature}
+
+## File Surfaces (Quick Reference)
+
+{Per-phase file map from Phase 1 analysis}
 ```
 
 ### Report to User
 
 ```
-FEATUREMAXXER OUTPUT (run {N}):
+FEATUREMAXXER OUTPUT:
+  Feature folder: {parent_dir}/{feature-slug}-featuremaxxer/
   Feature document: {path} ({line_count} lines)
   Project domain: {domain}
   Tech stack: {stack}
@@ -1038,36 +1271,43 @@ FEATUREMAXXER OUTPUT (run {N}):
     Testing landscape: {N} existing tests to update, {N} new tests to create
 
   Generated:
-    1. featuremaxxer/active/feature-optimization.md
-       → Run FIRST to improve feature doc + produce implementation strategy
-       → Produces: featuremaxxer/active/implementation-strategy.md (temporary)
+    1. 01-feature-optimization.md
+       → Run FIRST to improve feature doc + produce implementation-strategy.md
        → Best with: model with deep reasoning + codebase study capability
 
-    2. featuremaxxer/active/beads-creation.md
-       → Run AFTER optimization is complete
+    2. 02-beads-creation.md
+       → Run AFTER stage 01 completes
        → Reads: optimized feature doc + implementation-strategy.md
        → Converts architecture into executable beads
 
-    3. featuremaxxer/active/beads-optimization.md
-       → Run AFTER beads are created
-       → Bead-by-bead QA audit
+    3. 03-beads-optimization.md
+       → Run AFTER stage 02 completes
+       → Bead-by-bead QA audit (8 dimensions)
 
-    4. featuremaxxer/active/execution-kickoff.md
+    4. 04-execution-kickoff.md
        → Use to onboard fresh execution agents
 
-    5. featuremaxxer/active/execution-push.md
+    5. 05-execution-push.md
        → Use to push continuing execution agents
 
+  Plus: manifest.yaml + EXECUTION-GUIDE.md
+
   Workflow:
-    1. Run feature-optimization.md (improves doc + produces strategy)
-    2. Send the follow-up section in the same session
-    3. Re-run: /featuremaxxer --beads-only (fills beads prompts with strategy context)
-    4. Run beads-creation.md (creates bead graph)
-    5. Run beads-optimization.md (audits beads)
-    6. Re-run: /featuremaxxer --execution-only (fills execution prompts with bead IDs)
-    7. Use execution-kickoff.md to start agents
-    8. Use execution-push.md to keep agents on track
-    9. (Optional: run /harmonymaxer --retroactive to sync layer docs after implementation)
+    1. Run 01-feature-optimization.md → produces strategy
+    2. Re-run: /featuremaxxer --beads-only {feature-doc-path}
+       (fills 02+03 with strategy context)
+    3. Run 02-beads-creation.md → creates bead graph
+    4. Run 03-beads-optimization.md → audits beads
+    5. Re-run: /featuremaxxer --execution-only {feature-doc-path}
+       (fills 04+05 with bead IDs)
+    6. Use 04-execution-kickoff.md to start agents
+    7. Use 05-execution-push.md to keep agents on track
+    8. (Optional: run /harmonymaxer --retroactive to sync layer docs after implementation)
+
+  Parallel features:
+    Each feature lives in its OWN folder — multiple features can be in-flight at the same
+    time without collision. Agents pick the folder they're working from via the
+    EXECUTION-GUIDE.md and manifest.yaml inside each folder.
 ```
 
 ---
@@ -1080,7 +1320,11 @@ FEATUREMAXXER OUTPUT (run {N}):
 - [ ] Know tech stack and build/test commands
 - [ ] Read AGENTS.md, README, CLAUDE.md if they exist
 - [ ] Know implementation state
-- [ ] Know output location
+- [ ] Derived feature-slug (from filename or `--name` flag)
+- [ ] Resolved parent directory (`prompts/` | `docs/plan-hub/` | `thoughts/handoffs/` | cwd)
+- [ ] Resolved feature folder path `{parent_dir}/{feature-slug}-featuremaxxer/`
+- [ ] Verified folder either doesn't exist (will create) OR existing folder confirmed re-usable
+- [ ] Detected existing stage state (implementation-strategy.md / bead graph / manifest.yaml) for re-run flag routing
 
 ### Gate 0 -> 1: Orientation Complete (additional)
 - [ ] Feature doc classified (brief spec / structured spec / deep research)
@@ -1142,6 +1386,15 @@ FEATUREMAXXER OUTPUT (run {N}):
 - [ ] **Kickoff includes commit+push workflow (specific files, bead ID prefix, mandatory push)**
 - [ ] **Push includes compact bead completion policy and commit+push workflow**
 - [ ] **Bead graph covers ALL spec features, not a subset**
+
+### Gate 6 -> Done: Output & Manifest Complete
+- [ ] Feature folder created at `{parent_dir}/{feature-slug}-featuremaxxer/`
+- [ ] manifest.yaml written with feature metadata, deliverables, phases, tensions, non-negotiables, anti-patterns, URL conventions
+- [ ] EXECUTION-GUIDE.md written with run order, contracts, tensions, skills table, checkpoints, verification, file surfaces
+- [ ] All 5 stage prompts written with numbered prefixes (01- through 05-)
+- [ ] Internal path references in stage prompts use the new feature folder path (NOT `featuremaxxer/active/`)
+- [ ] User report includes the feature folder path so they can navigate to it
+- [ ] No `featuremaxxer/active/` or `featuremaxxer/archived/` or `.run` references anywhere in generated files
 
 ---
 

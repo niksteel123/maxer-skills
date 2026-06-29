@@ -99,7 +99,7 @@ This is what separates good kickoff prompts from generic templates. The skill MU
    - What types cross the boundary (wire types, API types)?
    - What's the stack and toolchain?
    - What does the monorepo/project structure look like?
-6. **Read Bead Metadata** — `br list --json` for total count, `br ready` for ready queue, bead prefix, phase-to-epic mapping
+6. **Read Bead Metadata** — `br list --json` for total count, scoped unlimited `br ready` for the feature queue, bead prefix, phase-to-epic mapping
 7. **Check AgentMail** — is coordination needed? What's the project key?
 
 ### Step 2: Generate Feature-Specific Outputs
@@ -122,9 +122,25 @@ Report outputs to human and wait for authorization. **Do NOT auto-execute.**
 3. **Register with AgentMail** — boot session, check inbox, situational awareness
 4. **Beads & Triage Tools** — br/bv commands, bead prefix, ready queue
 5. **The Work Loop** — claim → read → study → implement → verify → commit → push → announce → release → loop
-6. **Quality Gates** — actual shell commands for this project's stack
+6. **Quality Gates** — actual shell commands for this project's stack, including the backend tier ladder when the feature touches backend-heavy Rust/control-plane surfaces
 7. **Initiative Rules** — never ask "what should I work on?", never wait for permission
 8. **Session Landing Protocol** — push all work, release reservations, announce handoff
+
+## Backend-Heavy Validation Contract
+
+When this skill generates kickoff/push prompts for backend-heavy Rust or control-plane work, it MUST encode:
+
+- `fast-local` as the default narrow backend inner loop
+- `feature-local` as the cross-crate backend close lane
+- `phase-gate` for validation-model, config, workflow, or control-plane changes
+- `merge-gate` / `ci-merge` for broader pre-merge escalation
+- `nightly-extended` only for env-gated heavy/default-off surfaces
+
+Those prompts MUST also say:
+
+- `cargo test --workspace` is fallback/debug compatibility, not the default per-change backend proof
+- `resource-status` should be inspected before heavy lanes once that routed command surface exists
+- persistent build artifacts, persistent caches, ephemeral scratch roots, and retained evidence are distinct resource classes
 
 ## Critical Rules
 
@@ -137,6 +153,41 @@ Report outputs to human and wait for authorization. **Do NOT auto-execute.**
 7. **ALWAYS include bead prefix filter** — agents must only pick beads for THIS feature
 8. **ALWAYS include AgentMail coordination** — it's how multi-agent execution works
 9. **ALWAYS include Session Landing Protocol** — work is not complete until `git push` succeeds
+10. **ALWAYS encode the backend tier ladder** when the feature touches backend-heavy Rust/control-plane surfaces
+11. **NEVER tell agents to reserve `.beads/**`** — beads metadata is shared coordination state, not an implementation edit surface
+
+## Beads Metadata Reservation Rule
+
+When generating kickoff and push prompts, explicitly state that agents must never reserve `.beads/**`, including `.beads/issues.jsonl`.
+
+`br update`, `br close`, and `br sync --flush-only` may mutate `.beads/issues.jsonl`, but those operations are exempt from AgentMail file reservations. A `.beads/**` reservation conflict is invalid and must not block claiming, implementation, closeout, sync, commit, or push.
+
+Generated prompts MUST instruct agents to reserve only the actual implementation, test, docs, config, or generated artifact files owned by the bead.
+
+## Scoped Ready Queue Rules
+
+When generating kickoff and push prompts, NEVER tell agents to decide feature readiness from bare `br ready --json`.
+
+Bare `br ready --json` defaults to `--limit 20`. In repositories with multiple active plans, those first 20 ready items can all belong to other features, causing agents to falsely report that the target feature has no ready work.
+
+Generated prompts MUST include a feature-scoped unlimited task query:
+
+```bash
+br ready --limit 0 --parent <root-epic-id> --recursive --type task --json
+```
+
+If a root epic is not known, use the strongest available feature filter and still include `--limit 0` and `--type task`:
+
+```bash
+br ready --limit 0 --type task --label <feature-label> --json
+```
+
+Generated prompts MUST also state:
+
+- Claim TASK beads only; skip epics/features.
+- Parent-child dependencies are hierarchy links, not blocking dependencies.
+- A task that only depends on its parent epic can still be ready.
+- If scoped unlimited ready returns no feature tasks, then inspect blockers with `br show <id>` and `br dep cycles --json`; do not infer blockers from parent/root hierarchy alone.
 
 ## Supporting Files
 

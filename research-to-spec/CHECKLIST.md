@@ -319,7 +319,21 @@ Before delivering:
 
 Group all drift-related checks for quick scanning:
 
-- [ ] **SOT hierarchy stated**: Spec = PRIMARY, Architecture = SUPPLEMENTARY
+### Research Faithfulness (NEW — anti-drift)
+
+- [ ] **Research mode declared**: frontmatter or opening paragraph says `CANONICAL` or `EXPLORATORY`. Default to canonical if unclear.
+- [ ] **Research Clause Map exists**: a table (in spec or appendix) listing every structural/anchor/quantitative/scope clause from canonical research with status `encoded` or `descoped`
+- [ ] **Verbatim structural lists**: every enumeration in research (slot lists, layout modes, page variants, etc.) appears in spec with the same items, by name, in a single FR
+- [ ] **Graph anchors bound by ID**: if research cites a graph (`vxg.getSnapshot`, `agent-swarm vxg node list`), spec FRs cite specific node `key` or `nodeId` values — never paraphrased
+- [ ] **Quantitative claims preserved**: every measurement, count, dimension from research appears in spec AC
+- [ ] **Scope statements preserved**: research "app-wide" → spec "all `/ui/*` routes"; research "every project" → spec FR mandates same; never narrowed without an explicit Descoping Decision
+- [ ] **Descoping Decisions section exists** for any clause not encoded, with rationale, owner, date, future-link
+- [ ] **Mechanical clause-count check**: number of research enumerated items roughly matches faithfulness matrix row count
+- [ ] **Diff review**: spec author has eyeballed a side-by-side diff between research §X and spec FR-X.Y.Z and confirmed no list got summarized, no entity got renamed, no "must" became "may"
+
+### Spec structure (existing)
+
+- [ ] **SOT hierarchy stated**: Canonical research = AUTHORITATIVE for scope; Spec = PRIMARY for implementation; Architecture = SUPPLEMENTARY
 - [ ] **"Everything Ships" verified**: No hedged scope in spec (no "could have", "nice to have", "post-MVP")
 - [ ] **No orphan requirements**: All requirements in `#### FR-X.Y.Z` sections, none buried in prose
 - [ ] **Mechanical coverage check passed**: `grep -oP 'FR-\d+\.\d+\.\d+' spec.md | sort -u` returns complete inventory
@@ -329,6 +343,11 @@ Group all drift-related checks for quick scanning:
 - [ ] **Handoff references 3-SOT pipeline**: spec-to-tdd → spec-to-strategy → beads-from-sources → beads-to-execution
 - [ ] **No stale pipeline references**: No mentions of old pipeline names: "spec-to-plan", "plan-to-beads"
 - [ ] **Handoff names specific skills**: Each step references an invocable skill by name
+
+### Audit step gate
+
+- [ ] **Audit ratifies the faithfulness matrix, not just FRs**: every audit pass checks the matrix; an audit that narrows or removes encoded clauses must move them to Descoping Decisions, not silently
+- [ ] **Audit recorded in spec changelog**: every audit version note describes WHICH clauses were reviewed; "X audit dimensions" without enumerating them is itself a drift signal
 
 ---
 

@@ -1,11 +1,15 @@
 ---
 name: researchmaxer
-description: "Optimize any research or feature document through deep codebase research and two expert passes — WITHOUT touching existing project documentation. Use when: user says 'researchmaxer', 'optimize my research', 'improve my feature doc', 'iterate on research', 'research review cycle', 'researchmax', or '/researchmaxer'. Does deep codebase exploration, reads all source docs, then generates two context-rich handoff prompts: (1) Improvement Pass — improve the feature from every dimension, (2) Audit & Test Pass — find gaps, define testing strategy with real E2E manifests. Each prompt is packed with actual research findings, file paths, and code context. Works on any codebase."
+description: "Optimize any research or feature document through deep codebase research and two expert passes — WITHOUT touching existing project documentation. Use when: user says 'researchmaxer', 'researchmaxxer', 'optimize my research', 'improve my feature doc', 'iterate on research', 'research review cycle', 'researchmax', or '/researchmaxer'. Does deep codebase exploration, reads all source docs, then generates a per-feature folder with 2 numbered handoff prompts (01-improvement-pass → 02-audit-test-pass), plus manifest.yaml and EXECUTION-GUIDE.md. Each prompt is packed with actual research findings, file paths, and code context. Each feature gets its own folder so multiple research docs can be optimized in parallel without collision (matches pipemaxxer/featuremaxxer convention). Works on any codebase."
 user_invocable: true
 compatibility: "Works with Claude Code, Codex, and any Agent Skills-compatible tool."
 metadata:
   author: steel
-  version: "2.0"
+  version: "3.0"
+  changelog:
+    - "3.0 (2026-05-11): Per-feature folder convention. Each research doc gets its own folder at {parent_dir}/{feature-slug}-researchmaxer/ instead of the shared researchmaxer/active/ + archived/ + .run pattern. Adds manifest.yaml + EXECUTION-GUIDE.md. Pass files are numbered 01-02 matching pipemaxxer/featuremaxxer. Supports parallel research-doc optimization."
+    - "2.0: Complete rewrite — replaced planmaxer-style multi-domain iteration with two-pass workflow (improvement + audit/test). Added mandatory subagent codebase exploration. Prompts now embed actual research findings instead of templates. Added E2E test manifest requirements."
+    - "1.0: Initial skill definition (planmaxer-style, deprecated)."
 ---
 
 # Researchmaxer — Deep Research + Two-Pass Feature Document Optimization
@@ -65,29 +69,37 @@ DO NOT use researchmaxer when:
 ## The Two-Pass Workflow
 
 ```
-┌─────────────────────────────────────────────────────────────────────────┐
-│                                                                         │
-│   /researchmaxer path/to/research-doc.md                                │
-│       │                                                                 │
-│       ├── Phase 0-3: Deep research (codebase, docs, subagents)          │
-│       │                                                                 │
-│       ├── Generates: IMPROVEMENT PASS     → researchmaxer/active/       │
-│       └── Generates: AUDIT & TEST PASS    → researchmaxer/active/       │
-│                                                                         │
-│   USER RUNS improvement-pass.md                                         │
-│       │   Agent researches → improves feature → edits research doc      │
-│       │   Agent runs fresh-eyes follow-up in same session               │
-│       │                                                                 │
-│   USER RUNS audit-test-pass.md                                          │
-│       │   Agent audits → finds gaps → defines testing strategy          │
-│       │   Agent edits research doc with findings + test manifests       │
-│       │   Agent runs fresh-eyes follow-up in same session               │
-│       │                                                                 │
-│   DONE: Research doc is optimized and test-strategy-complete            │
-│                                                                         │
-│   THEN: /harmonymaxer or /featuremaxxer (human decision)                │
-│                                                                         │
-└─────────────────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────────────────────┐
+│                                                                                  │
+│   /researchmaxer path/to/research-doc.md                                         │
+│       │                                                                          │
+│       ├── Phase 0-2: Derive feature slug, pick parent dir,                       │
+│       │             deep research (codebase, docs, subagents)                    │
+│       │                                                                          │
+│       ├── Creates folder: {parent_dir}/{feature-slug}-researchmaxer/             │
+│       │                                                                          │
+│       ├── Generates: 01-improvement-pass.md                                      │
+│       ├── Generates: 02-audit-test-pass.md                                       │
+│       ├── Generates: manifest.yaml (research metadata + findings summary)        │
+│       └── Generates: EXECUTION-GUIDE.md (per-feature operating manual)           │
+│                                                                                  │
+│   USER RUNS 01-improvement-pass.md                                               │
+│       │   Agent researches → improves feature → edits target doc                 │
+│       │   Agent runs fresh-eyes follow-up in same session                        │
+│       │                                                                          │
+│   USER RUNS 02-audit-test-pass.md                                                │
+│       │   Agent audits → finds gaps → defines testing strategy                   │
+│       │   Agent edits target doc with findings + test manifests                  │
+│       │   Agent runs fresh-eyes follow-up in same session                        │
+│       │                                                                          │
+│   DONE: Target doc is optimized and test-strategy-complete                       │
+│                                                                                  │
+│   THEN: /harmonymaxer or /featuremaxxer (human decision)                         │
+│                                                                                  │
+│   Multiple research docs can be in-flight simultaneously — each lives in its     │
+│   own folder. No global state, no run counter, no archive collisions.            │
+│                                                                                  │
+└──────────────────────────────────────────────────────────────────────────────────┘
 ```
 
 **Each handoff prompt is PACKED with research findings.** The executing agent gets:
@@ -98,18 +110,41 @@ DO NOT use researchmaxer when:
 - Tension analysis and quality gap identification
 - Concrete improvement directives (not generic "improve this")
 
-### File Structure
+### File Structure (Per-Feature Isolation)
+
+**Each target document gets its own folder so multiple research docs can be optimized in parallel without collision.** Matches the pipemaxxer/featuremaxxer convention.
 
 ```
-researchmaxer/                       (lives at project root or docs/researchmaxer/)
-├── active/                          (current run)
-│   ├── improvement-pass.md          (Pass 1: improve feature from every dimension)
-│   └── audit-test-pass.md           (Pass 2: audit gaps + define testing strategy)
-├── archived/                        (previous runs)
-│   ├── run-001/
-│   └── run-002/
-└── .run                             (counter file: current run number)
+{parent_dir}/{feature-slug}-researchmaxer/        (parent picked per §0.5; slug derived per §0.5)
+├── manifest.yaml                                   (research metadata, findings summary, pass deliverables)
+├── EXECUTION-GUIDE.md                              (run order, contracts, checkpoints, findings reference)
+├── 01-improvement-pass.md                          (Pass 1: improve feature from every dimension)
+└── 02-audit-test-pass.md                           (Pass 2: audit gaps + define testing strategy + E2E manifests)
 ```
+
+**`{parent_dir}` resolution priority** (use first that exists; create if needed):
+1. `prompts/` (recent pipemaxxer/featuremaxxer convention — recommended default)
+2. `docs/plan-hub/` (older convention)
+3. `thoughts/handoffs/` (oldest convention)
+4. Create `prompts/` if it can be created
+5. Fall back to `{cwd}/`
+
+**`{feature-slug}` derivation** from the target doc filename:
+- `docs/research/2026-05-10-vgx-human-production-rework-research.md` → `vgx-human-production-rework`
+- Strip leading date `YYYY-MM-DD-` if present
+- Strip trailing `-research` / `-spec` / `-feature` / `-doc` if present
+- Lowercase, hyphenate, alphanumeric-only
+
+Or override with `--name <slug>` and `--into <dir>` flags.
+
+**No more `researchmaxer/active/`**, **no more `researchmaxer/archived/`**, **no more `.run` counter**. Each feature folder is self-contained and parallelizable.
+
+**Parallel research-doc optimization** — multiple folders coexist with no conflict:
+- `prompts/console-dock-researchmaxer/` (target A — Pass 1 complete, ready for Pass 2)
+- `prompts/canvas-substrate-researchmaxer/` (target B — both passes complete)
+- `prompts/vgx-rework-researchmaxer/` (target C — just generated)
+
+Agents pick which folder they're working from via the EXECUTION-GUIDE.md inside each folder.
 
 ---
 
@@ -118,15 +153,47 @@ researchmaxer/                       (lives at project root or docs/researchmaxe
 ```
 /researchmaxer <target-doc-path> [flags]
 
+Flags:
+  --name <slug>           Override the derived feature slug
+                          (default: derived from target doc filename)
+  --into <dir>            Override the parent directory for the feature folder
+                          (default: prompts/ | docs/plan-hub/ | thoughts/handoffs/ | cwd)
+  --folder <path>         Skip discovery — operate directly on the named feature folder
+                          (useful for re-runs when the folder already exists)
+  --improvement-only      Generate only stage 01 (improvement pass)
+  --audit-only            Generate only stage 02 (audit & test pass);
+                          requires {feature_folder} to exist with stage 01 result
+  --native                Include "write MD" directive in the pass prompts
+
 Examples:
-  /researchmaxer docs/research/console-dock-research.md       Full run — both passes
-  /researchmaxer thoughts/canvas-research.md                   Target a specific doc
-  /researchmaxer feature-spec.md --improvement-only            Only generate Pass 1
-  /researchmaxer feature-spec.md --audit-only                  Only generate Pass 2
-  /researchmaxer feature-spec.md --native                      Include "write MD" directive
+  /researchmaxer docs/research/console-dock-research.md
+      Full run — creates prompts/console-dock-researchmaxer/ with both passes
+
+  /researchmaxer thoughts/canvas-research.md --name canvas-v2 --into thoughts/handoffs/
+      Override slug + parent: thoughts/handoffs/canvas-v2-researchmaxer/
+
+  /researchmaxer feature-spec.md --improvement-only
+      Only generate stage 01 (Pass 1 — improvement)
+
+  /researchmaxer feature-spec.md --audit-only
+      Only regenerate stage 02 (Pass 2 — audit & test); requires the
+      feature folder to already exist
+
+  /researchmaxer --folder prompts/console-dock-researchmaxer/ --audit-only
+      Operate directly on a known folder (skip discovery + slug derivation)
+
+  /researchmaxer feature-spec.md --native
+      Include "write MD" directive in both pass prompts (for native model agents)
 ```
 
-**The target document path is REQUIRED.**
+**The target document path is REQUIRED** unless `--folder <path>` is provided (in which case the target doc is read from the folder's `manifest.yaml`).
+
+**Parallel target docs:** Each target gets its own folder. You can run researchmaxer for doc A, then immediately for doc B, and both folders coexist:
+- `prompts/console-dock-researchmaxer/` (target A — both passes complete)
+- `prompts/canvas-substrate-researchmaxer/` (target B — only Pass 1 generated)
+- `prompts/vgx-rework-researchmaxer/` (target C — fresh run)
+
+Agents pick which folder they're working from via the EXECUTION-GUIDE.md and manifest.yaml inside each folder. No global state, no run counter, no archive collisions.
 
 ---
 
@@ -202,13 +269,92 @@ CODEBASE INVENTORY:
   CI configuration: .github/workflows/, .gitlab-ci.yml
 ```
 
-#### Step 0.5: Identify Output Location
+#### Step 0.5: Derive Feature Slug + Parent Directory + Feature Folder
 
 ```
-Location priority:
-  1. researchmaxer/ (if exists)
-  2. docs/researchmaxer/ (if docs/ exists)
-  3. Create researchmaxer/ at project root
+FEATURE SLUG:
+  If --name <slug> flag provided: use it verbatim
+  Else if --folder <path> provided: extract slug from folder basename
+       (strip trailing "-researchmaxer")
+  Else derive from target doc filename:
+    1. Strip path:           docs/research/2026-05-10-vgx-human-production-rework-research.md
+                             → 2026-05-10-vgx-human-production-rework-research.md
+    2. Strip extension:      → 2026-05-10-vgx-human-production-rework-research
+    3. Strip YYYY-MM-DD-:    → vgx-human-production-rework-research
+    4. Strip -research / -spec / -feature / -doc suffix:
+                             → vgx-human-production-rework
+    5. Lowercase, hyphenate, alphanumeric+hyphen-only.
+    6. If empty/invalid: ASK user for a slug.
+
+PARENT DIRECTORY (mirrors pipemaxxer/featuremaxxer convention):
+  If --into <dir> flag provided: use it
+  Else if --folder <path> provided: use the path's parent
+  Else check in order (use first that exists):
+    1. prompts/                (recent pipemaxxer/featuremaxxer convention — recommended default)
+    2. docs/plan-hub/          (older convention)
+    3. thoughts/handoffs/      (oldest convention)
+    4. Create prompts/ if writable
+    5. Fall back to {cwd}/
+
+FEATURE FOLDER:
+  full_path = {parent_dir}/{feature-slug}-researchmaxer/
+
+  If folder does NOT exist: create it. Continue.
+
+  If folder ALREADY exists:
+    - First-run mode (no --improvement-only / --audit-only / --folder): ASK user
+      "Folder {full_path} already exists. (a) Re-use and overwrite pass files,
+       (b) Pick a different slug, (c) Abort"
+    - --improvement-only / --audit-only / --folder: re-use (this is expected)
+```
+
+#### Step 0.6: Detect Existing Pass State
+
+Check if earlier pass outputs exist (for `--improvement-only` / `--audit-only` re-runs):
+
+```
+EXISTING IMPROVEMENT PASS:
+  {feature_folder}/01-improvement-pass.md
+  If found: prior Pass 1 exists. --audit-only is the natural follow-up.
+
+EXISTING AUDIT PASS:
+  {feature_folder}/02-audit-test-pass.md
+  If found: prior Pass 2 exists. Both passes have been generated.
+
+EXISTING MANIFEST:
+  {feature_folder}/manifest.yaml
+  If found: load existing metadata to preserve user edits;
+  this run UPDATES (does not overwrite wholesale) stage entries.
+```
+
+#### Step 0.7: Apply Re-Run Skip Logic
+
+If invoked with `--improvement-only` or `--audit-only`, focus the run:
+
+```
+RE-RUN ROUTING:
+
+  --improvement-only:
+    SKIP: Phase 3 stage-02 generation
+    GENERATE: Only stage 01 (improvement pass)
+    UPDATE: manifest.yaml stage 01 deliverable (mark regenerated, bump timestamp)
+
+  --audit-only:
+    REQUIRES: {feature_folder} exists (manifest.yaml + 01-improvement-pass.md)
+    If missing: ERROR — "Run /researchmaxer first to generate stage 01."
+
+    SKIP: Phase 3 stage-01 generation
+    GENERATE: Only stage 02 (audit & test pass)
+    UPDATE: manifest.yaml stage 02 deliverable
+
+    Phase 1 (Deep Research) still runs — but the agent should NOT redo
+    work that was captured in manifest.yaml's findings_summary if it's
+    still accurate. Read existing 01-improvement-pass.md to understand
+    what changed in the target doc, then layer audit findings on top.
+
+  (no flag — full run):
+    Execute all phases. Create feature folder, write manifest.yaml +
+    EXECUTION-GUIDE.md + both pass prompts.
 ```
 
 ---
@@ -604,27 +750,195 @@ The audit & test pass prompt must contain:
 ## Phase 4: OUTPUT & MANIFEST
 
 **Duration:** 5-10 minutes
-**Goal:** Archive previous run (if any), write both prompts, report to user
+**Goal:** Create the feature folder (if new), write both pass prompts + manifest + execution guide, report to user
 
-### Archive Previous Run
-
-If `researchmaxer/active/` has content:
-1. Read run counter from `.run` (default 0)
-2. Move `active/` to `archived/run-{NNN}/`
-3. Increment counter
-4. Recreate empty `active/`
-
-### Write Prompts
+### Create Feature Folder (Per-Feature Isolation)
 
 ```
-researchmaxer/active/improvement-pass.md    (Pass 1)
-researchmaxer/active/audit-test-pass.md     (Pass 2)
+1. RESOLVE feature folder path: {parent_dir}/{feature-slug}-researchmaxer/
+   (parent + slug derived in §0.5)
+
+2. IF folder does NOT exist:
+   a. CREATE {parent_dir}/{feature-slug}-researchmaxer/
+   b. CREATE manifest.yaml (see Manifest Schema below)
+   c. CREATE EXECUTION-GUIDE.md (see Execution Guide Schema below)
+
+3. IF folder ALREADY exists (re-run mode):
+   a. PRESERVE existing files in folder
+   b. OVERWRITE only the pass files this run is regenerating (per --flag)
+   c. UPDATE manifest.yaml: mark regenerated stage entries with new timestamps
+   d. APPEND a "Re-run note" entry to the EXECUTION-GUIDE.md change log
+
+4. NO archive directory needed — each target doc is already isolated by folder.
+   To "archive" a completed research-maxxing run, just leave the folder in place —
+   it serves as historical reference for how the target doc was optimized.
+```
+
+### File Names
+
+Numbered prefixes match pipemaxxer/featuremaxxer convention so the run order is obvious from `ls` alone:
+
+```
+{feature_folder}/manifest.yaml
+{feature_folder}/EXECUTION-GUIDE.md
+{feature_folder}/01-improvement-pass.md
+{feature_folder}/02-audit-test-pass.md
+```
+
+### Manifest Schema
+
+`manifest.yaml` contains research metadata + findings summary + pass deliverables. Template:
+
+```yaml
+name: {feature-slug}-researchmaxer
+target: {Target Document Title — human-readable}
+pipeline: researchmaxer
+classification: {brief | structured | deep-research}
+created: {YYYY-MM-DD}
+
+source:
+  target_doc: {path/to/target-doc.md}
+  lines: {N}
+  classification: {brief | structured | deep-research}
+
+context_docs:
+  - path: {path/to/context-doc.md}
+    relevance: {one-line — how it relates to target}
+  # ... or `[]` if GREENFIELD
+
+codebase_research:
+  subagents_launched: {N}
+  files_examined: {N}
+  modules_touched: {N}
+  integration_surfaces: {N}
+  existing_tests_analyzed: {N}
+  test_frameworks: [{list}]
+
+findings_summary:
+  value_proposition: {one-line description}
+  tensions_identified:
+    - {tension 1 — one-line}
+    - {tension 2 — one-line}
+    # ... 3-5 for structured, 5+ for deep research
+  quality_gaps:
+    - {gap 1}
+    - {gap 2}
+  critical_integration_surfaces:
+    - {file_path} — {what changes}
+    # ... key files only
+  improvement_directives_count: {N}
+
+deliverables:
+  - id: "01"
+    file: 01-improvement-pass.md
+    stage: improvement-pass
+    role: producer
+    produces: [improved target doc]
+    consumes:
+      - target_doc
+      - context_docs (read-only)
+      - codebase (read-only via Explore agents)
+    duration_estimate_minutes: 60-120
+    status: generated   # generated | regenerated | pending
+    last_generated_at: {ISO-8601 timestamp}
+  - id: "02"
+    file: 02-audit-test-pass.md
+    stage: audit-test-pass
+    role: producer
+    produces:
+      - audit findings appended to target doc
+      - E2E test manifests appended to target doc
+      - verification criteria appended to target doc
+    consumes:
+      - improved target_doc (from stage 01)
+      - existing test suite (read-only)
+    depends_on: ["01"]
+    duration_estimate_minutes: 60-90
+    status: generated
+    last_generated_at: {ISO-8601 timestamp}
+
+isolation_contract:
+  - "Target doc is the ONLY editable artifact."
+  - "Existing project docs are READ-ONLY context."
+  - "No codebase changes."
+
+next_steps:
+  - "/harmonymaxer to integrate into project docs"
+  - "/featuremaxxer to produce implementation pipeline"
+  - "/pipemaxxer to produce full 3-SOT pipeline"
+```
+
+### Execution Guide Schema
+
+`EXECUTION-GUIDE.md` is the per-feature operating manual. Template:
+
+```markdown
+# {Target Title} — Researchmaxer Execution Guide
+
+**Target document:** {path} ({line count}, {classification})
+**Pipeline:** Researchmaxer (2-pass: improvement + audit/test)
+**Generated:** {YYYY-MM-DD}
+
+## Run Order
+
+01 → improved target doc
+   ↓
+02 → audited target doc + E2E test manifests + verification criteria
+
+## Critical Contracts
+
+- **Target doc is the ONLY editable artifact.** Existing project docs are READ-ONLY context.
+- **No codebase changes.** Researchmaxer is doc-only; implementation comes later via /featuremaxxer or /pipemaxxer.
+- **Each pass runs fresh-eyes follow-up** in the same session before reporting done.
+- **Real E2E test manifests** — no mocked/stubbed simulations.
+
+## Embedded Findings (in pass prompts)
+
+The pass prompts ALREADY contain the research findings — agents don't need to re-research:
+- Integration surface map ({N} files)
+- Testing landscape ({N} existing tests, {N} new tests needed)
+- {N} tensions
+- {N} quality gaps
+- {N} improvement directives
+
+## Required Skills (Invoke Per Pass)
+
+| Pass | Required Skills |
+|---|---|
+| 01 Improvement | (depends on feature domain — pass prompt names specific skills) |
+| 02 Audit & Test | (depends on testing surface — pass prompt names specific skills) |
+
+## Checkpoints
+
+After each pass, the agent should report and stop for human review before starting the next:
+
+- **After 01:** report what changed in target doc + any deferred issues + Pass 2 risk notes
+- **After 02:** report audit findings + E2E manifest summary + verification criteria + ready-for-handoff signal
+
+## Verification
+
+- Re-read target doc with fresh eyes after EACH pass
+- Confirm: no contradictions, terminology aligned, integration surfaces precise
+- Confirm: NO existing project doc was edited
+- Confirm: E2E manifests are REAL (not stubs)
+
+## When You're Done
+
+Both passes complete → target doc is optimized and test-strategy-complete.
+
+Next step is a HUMAN DECISION:
+- `/harmonymaxer` to integrate the improved target doc into project docs
+- `/featuremaxxer` to take it through the implementation pipeline (5 stages)
+- `/pipemaxxer` to take it through the full 3-SOT pipeline (15 stages)
+
+This folder remains as historical record. No archival needed.
 ```
 
 ### Report to User
 
 ```
-RESEARCHMAXER OUTPUT (run {N}):
+RESEARCHMAXER OUTPUT:
+  Feature folder: {parent_dir}/{feature-slug}-researchmaxer/
   Target document: {path} ({line_count} lines, {classification})
   Context docs read: {N} files
   Codebase explored: {N} files across {N} modules (via {N} subagents)
@@ -634,28 +948,36 @@ RESEARCHMAXER OUTPUT (run {N}):
   Quality gaps found: {N}
 
   Generated:
-    1. researchmaxer/active/improvement-pass.md
-       → Run FIRST: improves feature doc from every dimension
+    1. 01-improvement-pass.md
+       → Run FIRST: improves target doc from every dimension
        → Agent researches → improves → edits doc → fresh-eyes verify
        → Best with: model with deep reasoning + codebase access
 
-    2. researchmaxer/active/audit-test-pass.md
-       → Run AFTER improvement pass
+    2. 02-audit-test-pass.md
+       → Run AFTER stage 01 completes
        → Agent audits gaps → defines testing strategy → edits doc
        → Produces: E2E test manifests, verification criteria
        → Best with: model with deep reasoning + codebase access
 
+  Plus: manifest.yaml + EXECUTION-GUIDE.md
+
   Workflow:
-    1. Run improvement-pass.md (agent edits the research doc directly)
-    2. Run audit-test-pass.md (agent audits + adds testing strategy)
-    3. Research doc is now optimized and test-strategy-complete
+    1. Run 01-improvement-pass.md (agent edits the target doc directly)
+    2. Run 02-audit-test-pass.md (agent audits + adds testing strategy)
+    3. Target doc is now optimized and test-strategy-complete
     4. → /harmonymaxer to integrate into project docs
-       → /featuremaxxer to produce implementation pipeline
+       → /featuremaxxer to produce implementation pipeline (5 stages)
+       → /pipemaxxer to produce full 3-SOT pipeline (15 stages)
 
   Key findings embedded in prompts:
     Integration surfaces: {brief list}
     Critical tensions: {brief list}
     Biggest quality gaps: {brief list}
+
+  Parallel research-doc optimization:
+    Each target doc lives in its OWN folder — multiple target docs can be in-flight
+    at the same time without collision. Agents pick the folder they're working from
+    via the EXECUTION-GUIDE.md and manifest.yaml inside each folder.
 ```
 
 ---
@@ -666,7 +988,11 @@ RESEARCHMAXER OUTPUT (run {N}):
 - [ ] Target document located with path and line count
 - [ ] Context docs cataloged (or GREENFIELD noted)
 - [ ] Codebase structure mapped (source, tests, build, CI)
-- [ ] Output location determined
+- [ ] Derived feature-slug (from filename or `--name` flag)
+- [ ] Resolved parent directory (`prompts/` | `docs/plan-hub/` | `thoughts/handoffs/` | cwd)
+- [ ] Resolved feature folder path `{parent_dir}/{feature-slug}-researchmaxer/`
+- [ ] Verified folder either doesn't exist (will create) OR existing folder confirmed re-usable
+- [ ] Detected existing pass state (01/02 prior outputs, manifest.yaml) for re-run flag routing
 
 ### Gate 1 → 2: Deep Research Complete
 - [ ] Target doc read fully (at least twice)
@@ -695,6 +1021,14 @@ RESEARCHMAXER OUTPUT (run {N}):
 - [ ] Audit pass has verification criteria for every feature subsystem
 - [ ] Audit pass has fresh-eyes follow-up section
 - [ ] Neither prompt tells the agent to edit existing project docs
+
+### Gate 4 → Done: Output & Manifest Complete
+- [ ] Feature folder created at `{parent_dir}/{feature-slug}-researchmaxer/`
+- [ ] manifest.yaml written with target doc metadata, codebase research stats, findings summary, deliverables, isolation contract, next steps
+- [ ] EXECUTION-GUIDE.md written with run order, contracts, embedded findings reference, skills table, checkpoints, verification, next-step decision tree
+- [ ] Both pass prompts written with numbered prefixes (01- and 02-)
+- [ ] No `researchmaxer/active/` or `researchmaxer/archived/` or `.run` references anywhere in generated files
+- [ ] User report includes the feature folder path so they can navigate to it
 
 ---
 
@@ -765,6 +1099,8 @@ research in Phase 1.3 is non-negotiable.
 
 ## Version History
 
-- v2.0.0 — Complete rewrite: replaced planmaxer-style multi-domain iteration with two-pass workflow (improvement + audit/test). Added mandatory subagent codebase exploration. Prompts now embed actual research findings instead of templates. Added E2E test manifest requirements.
-- v1.1.0 — Fresh-eyes audit: Five WHYs, greenfield handling, cross-repo generalization
-- v1.0.0 — Initial skill definition (planmaxer-style, deprecated)
+See `metadata.changelog` in the frontmatter for the canonical version history. Highlights:
+
+- **v3.0 (2026-05-11)** — Per-feature folder convention. Each target doc gets `{parent_dir}/{feature-slug}-researchmaxer/` with `manifest.yaml` + `EXECUTION-GUIDE.md` + numbered pass files (`01-improvement-pass.md`, `02-audit-test-pass.md`). Replaces shared `researchmaxer/active/` + `archived/` + `.run` pattern. Supports parallel research-doc optimization. Adds `--name`, `--into`, `--folder` flags. Matches pipemaxxer/featuremaxxer convention.
+- **v2.0** — Complete rewrite: two-pass workflow (improvement + audit/test), mandatory subagent codebase exploration, prompts embed actual research findings, E2E test manifest requirements.
+- **v1.x** — Initial skill (planmaxer-style, deprecated).

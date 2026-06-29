@@ -1,11 +1,51 @@
 ---
 name: idea-to-research
-description: Transform feature ideas into comprehensive research documents. Deep intent analysis, internal codebase study, external tech stack research, and synthesized research output. Works on any codebase.
+description: Transform feature ideas into comprehensive research documents. Deep intent analysis, internal codebase study, external tech stack research, and synthesized research output. Every research doc MUST declare its mode (CANONICAL or EXPLORATORY) so downstream research-to-spec can enforce the right faithfulness contract. Works on any codebase.
 ---
 
 # Idea to Research Skill
 
 > Transform the seed of a feature idea into a comprehensive, high-fidelity research document.
+
+---
+
+## REQUIRED FRONTMATTER (added 2026-05-08 — anti-drift contract)
+
+Every research document this skill produces MUST include this frontmatter at the top:
+
+```yaml
+---
+research_mode: CANONICAL  # or EXPLORATORY
+research_authority_rationale: |
+  Why this mode? Examples for CANONICAL: "binds to swarm2 graph nodes", "reviewed by product",
+  "audited 3 times", "anchors layout structure". Examples for EXPLORATORY: "first-pass brainstorm",
+  "concept exploration", "not yet committed scope".
+canonical_anchors:    # required if mode == CANONICAL
+  - swarm2 VXG graph (shell-* nodes — list specific keys you cite)
+  - {.pen design files used as visual reference}
+  - {API contracts you bind to}
+  - {existing UVP packages whose path globs you preserve}
+last_audited: {date}
+---
+```
+
+**Why this matters**: the downstream `research-to-spec` skill enforces faithfulness based on `research_mode`. CANONICAL mode means the spec must encode every structural enumeration verbatim; EXPLORATORY mode allows the spec author to redesign scope. **Default to CANONICAL when in doubt** — over-faithfulness is recoverable; silent descoping isn't.
+
+**When to choose CANONICAL**:
+- Research cites specific graph nodes by ID/key
+- Research enumerates structural lists (slots, layout modes, page variants, etc.)
+- Research references audited or committed artifacts
+- Research has gone through ≥2 iteration cycles
+- The user has authored visual designs or graph structure that the implementation must match
+
+**When to choose EXPLORATORY**:
+- First-pass brainstorm, no anchors yet
+- Open-ended technical investigation
+- Research is asking "what if" rather than "build this"
+
+If the research has both — some sections canonical, some exploratory — split into separate documents OR mark sections individually with `<!-- CANONICAL -->` / `<!-- EXPLORATORY -->` HTML comments. Default sections to CANONICAL.
+
+When the research is canonical AND cites a graph or design: the research MUST go fetch the live snapshot (e.g. `agent-swarm vxg node list --vxg <project> --type shell`) and embed the exact node IDs, keys, slot lists, and layout modes — not a paraphrase. Downstream specs are required to bind to those identifiers verbatim.
 
 ---
 

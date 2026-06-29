@@ -21,11 +21,11 @@ br list --json | jq length
 # Check mail server
 curl -s http://127.0.0.1:8765/health/liveness | grep ok
 
-# Check ready beads
-br ready --json | jq length
+# Check ready feature task beads
+br ready --limit 0 --parent <root-epic-id> --recursive --type task --json | jq length
 
 # Check for cycles
-bv --robot-insights | jq '.Cycles'  # MUST be []
+br dep cycles --json  # MUST have count 0
 ```
 
 ---
@@ -65,7 +65,7 @@ bv --robot-insights | jq '.Cycles'  # MUST be []
 - [ ] **Codebase structure**: Directory tree of what exists AND what this feature creates
 - [ ] **Stack and toolchain**: Actual tools, versions, package manager
 - [ ] **AgentMail registration**: Both `ensure_project` + `register_agent` AND `macro_start_session` paths shown, with project key
-- [ ] **Beads & triage tools**: br/bv commands with bead prefix filter
+- [ ] **Beads & triage tools**: scoped unlimited br ready commands with bead prefix/root filter
 - [ ] **Bead listing by phase**: Actual bead IDs, titles, dependencies, ready status
 - [ ] **Work loop**: Coordinate → implement → verify → complete → announce → repeat
 - [ ] **Quality gate commands**: Actual shell commands (not placeholders)
@@ -88,7 +88,7 @@ bv --robot-insights | jq '.Cycles'  # MUST be []
 - [ ] **Starts with**: "Re-read AGENTS.md"
 - [ ] **Project key**: Exact absolute path
 - [ ] **Bead prefix filter**: Only `{prefix}.*` beads, lists which prefixes to ignore
-- [ ] **7-step action list**: Finish → Check inbox → br ready → Claim → Read → Study → Implement loop
+- [ ] **7-step action list**: Finish → Check inbox → scoped ready query → Claim → Read → Study → Implement loop
 - [ ] **Quality gate commands**: Actual shell commands
 - [ ] **"Do NOT stop" directive**: Explicit "don't ask, don't wait, just keep going"
 - [ ] **Fallback when blocked**: QA checks, missing tests, Session Landing Protocol
@@ -137,8 +137,8 @@ bv --robot-insights | jq '.Cycles'  # MUST be []
 |-------|---------|----------|
 | Mail server | `curl http://127.0.0.1:8765/health/liveness` | `ok` |
 | Beads exist | `br list --json \| jq length` | `> 0` |
-| Ready work | `br ready --json \| jq length` | `> 0` |
-| No cycles | `bv --robot-insights \| jq '.Cycles'` | `[]` |
+| Ready work | `br ready --limit 0 --parent <root-epic-id> --recursive --type task --json \| jq length` | `> 0` |
+| No cycles | `br dep cycles --json` | `count: 0` |
 | Kickoff exists | `ls docs/plan-hub/prompts/*-kickoff.md` | File exists |
 | Push exists | `ls docs/plan-hub/prompts/*-push.md` | File exists |
 | Status exists | `ls docs/plan-hub/prompts/*-pipeline-status.yaml` | File exists |
@@ -194,9 +194,11 @@ lsof -p $(lsof -i :8765 -t) 2>&1 | grep sqlite
 ```
 
 ### No ready beads
+- First verify you used `br ready --limit 0 --parent {root-epic} --recursive --type task --json`; bare `br ready --json` can hide feature tasks behind unrelated ready work.
 - Check dependencies: `br dep tree {root-epic}`
 - Check parent status: `br show {parent-id}`
-- Run insights: `bv --robot-insights`
+- Remember parent-child links are hierarchy, not blockers.
+- Run cycle check: `br dep cycles --json`
 
 ### Cycles detected
 - Review dependency chain in `bv` output
