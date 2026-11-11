@@ -6,8 +6,8 @@ Use Python 3.10+ and Git. Clone the repository to a permanent location:
 git clone https://github.com/niksteel123/maxer-skills.git
 cd maxer-skills
 python3 scripts/validate.py
-python3 scripts/install.py --preset everyday --target shared --dry-run
-python3 scripts/install.py --preset everyday --target shared
+python3 scripts/install.py --preset starter --target shared --dry-run
+python3 scripts/install.py --preset starter --target shared
 ```
 
 `shared` installs into `~/.agents/skills`, `claude` into `~/.claude/skills`, and
@@ -16,8 +16,13 @@ Code and Codex together, run the installer once with `--target claude` and once
 with `--target shared`. Older/custom Codex setups may require `--target codex`.
 Do not blindly maintain divergent copies in multiple discovery roots.
 
-The installer defaults to the everyday preset, includes declared bundled
-prerequisites, and copies only actual skill folders. It never installs
+The installer defaults to the five-skill starter preset (`everyday` is an alias),
+includes required bundled prerequisites, and copies only actual skill folders.
+Optional `related` helpers do not expand automatically. The core recommendation
+also includes the externally installed no-process-porn/ceremony skill; the
+installer reports it but does not download it. A successful exit confirms bundled
+installation only. See the [new-project guide](NEW-PROJECT.md) for the upstream
+step and the [integration guide](INTEGRATION.md) for an existing codebase. It never installs
 proprietary/external skills, CLIs, MCP servers, plugins or credentials. It does
 not write or replace AGENTS.md, CLAUDE.md or global harness configuration.
 
@@ -45,8 +50,8 @@ git diff HEAD..origin/main -- README.md skills.json docs
 # With a clean checkout and the inspected upstream:
 git pull --ff-only
 python3 scripts/validate.py
-python3 scripts/install.py --preset everyday --target shared --dry-run
-python3 scripts/install.py --preset everyday --target shared --replace
+python3 scripts/install.py --preset starter --target shared --dry-run
+python3 scripts/install.py --preset starter --target shared --replace
 ```
 
 New sessions discover changed skills; already-running agents may retain their
@@ -57,7 +62,10 @@ a skill is not evidence that its CLI, account, service or runtime is operational
 
 Read [the project starter](../examples/AGENTS.md), adapt it to the real repository,
 and merge the useful parts into its existing AGENTS.md. For a project that wants
-both harness files, keep its CLAUDE.md synchronized with that adopted policy.
+both harness files, keep its CLAUDE.md synchronized with that adopted policy or,
+if its conventions allow, use [a CLAUDE.md import bridge](../examples/CLAUDE.md).
+The [integration guide](INTEGRATION.md#shared-policy-and-private-machine-notes)
+explains explicit local-note loading, ignored files and per-machine configuration.
 Do not overwrite existing instructions, copy personal machine settings, or adopt
 standing approvals from another project. The root AGENTS.md/CLAUDE.md in this
 repository govern maintenance of this collection, not consumer projects.

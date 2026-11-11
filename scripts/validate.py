@@ -28,6 +28,9 @@ def main():
             errors.append(f'{name}: frontmatter name differs from folder')
         if not re.search(r'^description:\s*\S', parts[1], re.M):
             errors.append(f'{name}: missing description')
+        for related in manifest['skills'][name].get('related', []):
+            if related not in manifest['skills']:
+                errors.append(f'{name}: unknown related skill {related}')
         try:
             select(manifest, [name], [])
         except ValueError as error:
@@ -37,6 +40,12 @@ def main():
             select(manifest, [], [preset])
         except ValueError as error:
             errors.append(str(error))
+    for preset, required in manifest.get('external_requirements', {}).items():
+        if preset not in manifest['presets']:
+            errors.append(f'Unknown preset for external requirements: {preset}')
+        for name in required:
+            if name not in manifest.get('external_skills', {}):
+                errors.append(f'Unknown external core companion: {name}')
     if (ROOT / 'AGENTS.md').read_bytes() != (ROOT / 'CLAUDE.md').read_bytes():
         errors.append('AGENTS.md and CLAUDE.md differ')
     for path in ROOT.rglob('*'):

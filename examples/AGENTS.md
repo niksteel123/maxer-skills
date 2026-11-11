@@ -14,8 +14,12 @@ its acceptance, ownership, safety, review or publication policy.
 - Use contractmaxxer only where the project adopts its contract/UVP pipeline.
 - Use fleet-controller before delegation; select an available authorized model
   and effort, then the adapter. A single bounded task does not need a swarm.
-- Load optional just-say-no-to-process-porn-and-ceremony or
-  reality-check-for-project only if installed from the authorized upstream.
+- Use disk-janitor when storage pressure requires it; keep cleanup within actual
+  ownership and deletion authority.
+- The core recommendation includes just-say-no-to-process-porn-and-ceremony from
+  its authorized upstream. Use it for relevant ceremony/evidence checks when
+  available; report missing access honestly without blocking unrelated work.
+- Load optional reality-check-for-project only if installed from its authorized upstream.
 - Use task-specific browser, design or deployment skills when they apply.
   Missing optional helpers block only the operations that consume them.
 
@@ -39,3 +43,10 @@ private model registries and runbooks outside public agent instructions.
 
 Document the real setup, build, lint, test and focused verification commands.
 State required independent review and any final integration/release evidence.
+
+## Local operating context
+
+After reading the shared rules, read AGENTS.local.md in this directory if it
+exists. Use it for private machine/checkout facts, not changes to team requirements
+or permissions. Keep secrets out of instruction files. The local filename itself
+is not an automatic-discovery guarantee; this paragraph requests the explicit read.

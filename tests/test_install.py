@@ -3,6 +3,7 @@ from contextlib import redirect_stdout
 import io
 from pathlib import Path
 import sys
+import subprocess
 import tempfile
 import unittest
 
@@ -34,11 +35,48 @@ class InstallationTests(unittest.TestCase):
     def test_everyday_includes_git_contract_dependencies_and_no_external_bundle(self):
         names = install.select(install.inventory(), [], ['everyday'])
         self.assertIn('git-contractmaxxer', names)
-        self.assertIn('verify-ops', names)
+        self.assertNotIn('verify-ops', names)
+        self.assertNotIn('fleet-accounts', names)
         self.assertIn('fleet-controller', names)
         self.assertNotIn('just-say-no-to-process-porn-and-ceremony', names)
         install.install(names, self.dest, dry_run=True)
         self.assertFalse(self.dest.exists())
+
+    def test_default_cli_installs_exactly_the_documented_starter(self):
+        result = subprocess.run(
+            [sys.executable, str(install.ROOT / 'scripts/install.py'), '--dest', str(self.dest)],
+            capture_output=True, text=True, check=True,
+        )
+        self.assertIn('install:', result.stdout)
+        self.assertIn('External core companion: just-say-no-to-process-porn-and-ceremony', result.stdout)
+        self.assertIn('not found at this destination', result.stdout)
+        self.assertEqual(
+            {'git-contractmaxxer', 'product-board', 'fleet-controller', 'intent-to-handoff', 'disk-janitor'},
+            {path.name for path in self.dest.iterdir()},
+        )
+        self.assertTrue((self.dest / 'git-contractmaxxer/TAKEOVER.md').is_file())
+        self.assertFalse((self.dest / 'verify-ops').exists())
+        self.assertFalse((self.dest / 'codex-first').exists())
+
+    def test_external_core_companion_is_reported_without_modifying_it(self):
+        external = self.dest / 'just-say-no-to-process-porn-and-ceremony'
+        external.mkdir(parents=True)
+        (external / 'SKILL.md').write_text('local external-skill sentinel')
+        result = subprocess.run(
+            [sys.executable, str(install.ROOT / 'scripts/install.py'), '--preset', 'starter',
+             '--dest', str(self.dest)], capture_output=True, text=True, check=True,
+        )
+        self.assertIn('found at this destination; provenance/version not verified', result.stdout)
+        self.assertEqual('local external-skill sentinel', (external / 'SKILL.md').read_text())
+
+    def test_optional_adapters_are_not_pulled_in_as_dependencies(self):
+        names = install.select(install.inventory(), ['git-contractmaxxer'], [])
+        self.assertIn('fleet-controller', names)
+        for name in ['fleet-accounts', 'verify-ops', 'verify-authoring', 'research-to-contract']:
+            self.assertNotIn(name, names)
+        contract = install.select(install.inventory(), [], ['contract'])
+        self.assertIn('verify-ops', contract)
+        self.assertNotIn('codex-first', contract)
 
     def test_conflict_preflight_prevents_partial_install(self):
         changed = self.dest / 'product-board'

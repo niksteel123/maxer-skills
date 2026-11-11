@@ -96,6 +96,19 @@ def install(names, destination, replace=False, dry_run=False):
                 shutil.rmtree(staging)
 
 
+def report_external_requirements(manifest, presets, destination):
+    names = sorted({name for preset in presets
+                    for name in manifest.get('external_requirements', {}).get(preset, [])})
+    for name in names:
+        source = manifest['external_skills'][name]['source']
+        present = (destination.expanduser() / name / 'SKILL.md').is_file()
+        status = ('found at this destination; provenance/version not verified'
+                  if present else 'not found at this destination')
+        print(f'External core companion: {name} ({status}).')
+        print(f'  Install/update through the authorized upstream: {source}')
+        print('  This installer does not download or redistribute it; verify discovery in your harness.')
+
+
 def main():
     manifest = inventory()
     parser = argparse.ArgumentParser(description=__doc__)
@@ -112,13 +125,16 @@ def main():
     if args.list:
         print('Presets: ' + ', '.join(manifest['presets']))
         print('\n'.join(manifest['skills']))
+        for preset, names in manifest.get('external_requirements', {}).items():
+            print(f'External core companions for {preset}: ' + ', '.join(names))
         return
-    presets = args.preset or ([] if args.skill or args.all else ['everyday'])
+    presets = args.preset or ([] if args.skill or args.all else ['starter'])
     try:
         names = select(manifest, args.skill, presets, args.all)
         roots = {'claude': '.claude', 'codex': '.codex', 'shared': '.agents'}
         destination = args.dest if args.dest is not None else Path.home() / roots[args.target] / 'skills'
         install(names, destination, args.replace, args.dry_run)
+        report_external_requirements(manifest, presets, destination)
     except (ValueError, OSError) as error:
         print(f'ERROR: {error}', file=sys.stderr)
         sys.exit(1)

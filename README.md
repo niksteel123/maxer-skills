@@ -34,9 +34,10 @@ or disable installer entries. `--all` still includes legacy skills.
 | Ground an uncertain proposal | [research-hardening](research-hardening/) | Check current intent, code and inputs; use its full stage only when adopting the contract pipeline |
 | Preserve continuity or explain a failure | [intent-to-handoff](intent-to-handoff/), [error-manifest](error-manifest/) | Focused handoff and debugging utilities; use when a recipient needs them |
 
-The external **no-process-porn/ceremony** and **reality-check-for-project** skills
-are useful optional complements, installed through their authorized upstream.
-See [dependencies](docs/DEPENDENCIES.md#optional-everyday-skills-install-from-the-owner).
+The external **no-process-porn/ceremony** skill is part of the recommended core,
+with a separate authorized upstream install. **reality-check-for-project** is an
+optional complement.
+See [dependencies](docs/DEPENDENCIES.md#everyday-external-skills-install-from-the-owner).
 
 ### Current, but only for the relevant task or stack
 
@@ -89,11 +90,21 @@ featuremaxxer, layermaxxer and pipemaxxer as the easiest route for new work.
 
 ## Installation
 
+### Recommended core pack for a new project
+
+Use **`--preset starter`** for five bundled skills: **git-contractmaxxer**,
+**product-board**, **fleet-controller**, **intent-to-handoff**, and **disk-janitor**.
+**just-say-no-to-process-porn-and-ceremony** is also a core recommendation,
+installed separately through its authorized upstream because it cannot be redistributed.
+
+The installer defaults to `starter`; `everyday` is an alias for the same selection.
+No legacy workflow, account manager, UVP/Beads or platform adapter is pulled in.
+
 ```sh
 git clone https://github.com/niksteel123/maxer-skills.git
 cd maxer-skills
-python3 scripts/install.py --preset everyday --target shared --dry-run
-python3 scripts/install.py --preset everyday --target shared
+python3 scripts/install.py --preset starter --target shared --dry-run
+python3 scripts/install.py --preset starter --target shared
 # Claude Code: use --target claude instead of --target shared.
 ```
 
@@ -101,9 +112,14 @@ Requires Python 3.10+. The installer includes bundled dependencies, skips matchi
 copies, and refuses to overwrite differing installations without explicit
 `--replace` (which keeps backups). Use `--all` for all bundled skills or
 `--preset contract`, `--preset legacy`, `--preset swarm` for a narrower workflow.
-External/proprietary skills and their CLIs are installed separately.
+External/proprietary skills and their CLIs are installed separately. Optional
+`related` helpers do not expand automatically. The installer reports the external
+core companion; a successful exit confirms bundled installation only.
 
-See [setup/update instructions](docs/SETUP.md), [dependency map](docs/DEPENDENCIES.md),
+See the [core install list and upstream step](docs/NEW-PROJECT.md). For a current
+codebase, follow the [integration guide](docs/INTEGRATION.md), including shared
+AGENTS.md/CLAUDE.md changes and private machine notes. See also
+[setup/update instructions](docs/SETUP.md), [dependency map](docs/DEPENDENCIES.md),
 [project AGENTS.md starter](examples/AGENTS.md), and [source audit](docs/source-snapshot.json).
 Do not copy private machine or global agent configuration into another project.
 
@@ -286,5 +302,5 @@ Skills for running long, multi-agent implementations without the run degrading u
 ## License
 
 Original contributions: [MIT](LICENSE). Third-party materials retain their own
-licenses; see [THIRD_PARTY.md](THIRD_PARTY.md). Proprietary optional skills are linked
+licenses; see [THIRD_PARTY.md](THIRD_PARTY.md). Proprietary external skills are linked
 in the dependency guide and are not bundled.

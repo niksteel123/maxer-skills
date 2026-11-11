@@ -2,15 +2,19 @@
   "format": 1,
   "updated": "2026-11-11",
   "presets": {
+    "starter": [
+      "git-contractmaxxer",
+      "product-board",
+      "fleet-controller",
+      "intent-to-handoff",
+      "disk-janitor"
+    ],
     "everyday": [
       "git-contractmaxxer",
-      "fleet-controller",
-      "fleet-accounts",
       "product-board",
-      "disk-janitor",
+      "fleet-controller",
       "intent-to-handoff",
-      "researchmaxer",
-      "error-manifest"
+      "disk-janitor"
     ],
     "contract": [
       "contractmaxxer",
@@ -97,7 +101,9 @@
         "product-board",
         "verify-authoring",
         "verify-ops",
-        "disk-janitor",
+        "disk-janitor"
+      ],
+      "related": [
         "codex-first"
       ]
     },
@@ -124,7 +130,9 @@
     },
     "git-contractmaxxer": {
       "requires": [
-        "fleet-controller",
+        "fleet-controller"
+      ],
+      "related": [
         "product-board",
         "fleet-accounts",
         "verify-ops",
@@ -286,5 +294,13 @@
       "source": "https://github.com/googleworkspace/cli",
       "bundled": false
     }
+  },
+  "external_requirements": {
+    "starter": [
+      "just-say-no-to-process-porn-and-ceremony"
+    ],
+    "everyday": [
+      "just-say-no-to-process-porn-and-ceremony"
+    ]
   }
 }

@@ -1,8 +1,13 @@
 # Dependencies and everyday helpers
 
 `skills.json` is the install inventory. `requires` lists bundled installation
-companions, not universal runtime/start blockers. Presets expand those companions;
-external skills remain opt-in. Load only the skills needed for the current task.
+prerequisites, not universal runtime/start blockers. Presets expand only those
+prerequisites. `related` lists optional operation-specific adapters: they are not
+installed automatically. The starter/everyday core has five bundled skills plus
+one external companion; [the new-project guide](NEW-PROJECT.md) lists all six.
+`external_requirements` identifies that separate upstream step. The installer
+reports presence at the chosen destination without verifying license/version or
+downloading content; missing access does not prevent using the bundled subset. Load only the skills needed for the current task.
 
 See the [complete installed-skill coverage](INSTALLED-INVENTORY.md) for the audit inventory, including specialist skills not bundled here.
 
@@ -10,7 +15,7 @@ See the [complete installed-skill coverage](INSTALLED-INVENTORY.md) for the audi
 
 | Work | Entry point | Companions and runtime |
 | --- | --- | --- |
-| GitHub feature delivery/takeover | git-contractmaxxer | fleet-controller, product-board; research and proof adapters as used; authenticated GitHub CLI/MCP and Git |
+| GitHub feature delivery/takeover | git-contractmaxxer | fleet-controller is the bundled prerequisite; product-board is in the starter; account, research and proof adapters install only when used; authenticated GitHub CLI/MCP and Git |
 | Related product milestones | product-board | Existing GitHub board or repository document; preserve the current tracker |
 | Model/account/machine placement | fleet-controller | Repository's authorized pool/registry when adopted; available qualified launch adapter; fleet-accounts for CAAM work |
 | Account/session operations | fleet-accounts | CAAM and the relevant Claude/Codex CLI; private qualifications/configuration, not included here |
@@ -27,7 +32,10 @@ Fleet policy can guide a bounded native delegation without installing that
 executable dispatcher. Do not invent an available adapter or bypass project rules.
 Inspect the actual installed CLI help before copying a command from a skill.
 
-## Optional everyday skills: install from the owner
+## Everyday external skills: install from the owner
+
+No-process-porn/ceremony is part of the core recommendation; the other entries are
+optional additions for relevant work. Core status does not grant redistribution rights.
 
 These are useful parts of the working environment, not files redistributed by
 this repository. Follow the upstream's current install instructions and terms.
