@@ -1,6 +1,6 @@
 ---
 name: fleet-controller
-description: "Keep an agent swarm optimally sized via a LIVING fleet plan: predict per-step agent counts from the work DAG at planning time, write them down, then correct them against live reality on a cadence and on events. Four phases — PLAN (author the per-step staffing), STAFF (initial spawn), RECONCILE (resident: diff plan vs live frontier/reservations/lanes, patch the plan, recommend widen/narrow), FOLD-JIT (absorb unplanned fix beads, the ones nobody could forecast). Use when: orchestrating or running a multi-agent swarm over a bead/work graph, 'how many agents', 'are we parallelising optimally', authoring an execution/kickoff plan, launching a swarm, or whenever fix beads appear mid-run. Read BEFORE spawning lanes."
+description: "Choose models, providers, accounts and machines for delegated work, including native Claude/Codex children, then size and adjust a swarm against useful work and live capacity. Use before research, implementation or review delegation, at fleet reconciliation, and when fix work appears. The model registry drives selection before the launch adapter; a single delegation needs a short dispatch decision, not a fleet-plan document."
 ---
 
 # Fleet Controller — a LIVING fleet plan: predicted, then corrected
@@ -23,6 +23,9 @@ description: "Keep an agent swarm optimally sized via a LIVING fleet plan: predi
 
 ## The artifact — `<unit>-fleet-plan.md`
 
+For a single bounded delegation, use the existing dispatch note and the routing
+section below; a new fleet-plan document or resident controller is unnecessary.
+
 Lives in the pipeline folder beside the proof matrix (git-tracked, so it survives controller death
 and a fresh controller resumes instead of starting blank).
 
@@ -31,14 +34,14 @@ and a fresh controller resumes instead of starting blank).
 
 ## Caps
 contention: ~2 (all beads land in one crate pair — soft, build convoy)
-mode: max (≤6) · user: none · gate driver + janitor sit OUTSIDE the cap
+user cap: explicit if supplied · resource/claim limits apply to every lane
 
 ## Predicted steps (from `br dep tree`; width = concurrently claimable)
 | Step | Beads | Width | Staff | Model | Rationale |
-| 1 heads | .1 (A), .4 (C) | 2 | 2 | Opus 5 | Broad discovery still needs judgment during execution |
-| 2 after .1 | .2, .3 | 2 | 2 | Codex Sol | Decisions and acceptance criteria are now exact |
-| 3 convergence | .5, .6, .7 | 3 | 2 | Codex Sol | All touch service.rs → soft contention |
-| 4 gate | .8 | 1 | Fable gate driver (outside fleet) | Architecture and truthfulness synthesis |
+| 1 heads | .1 (A), .4 (C) | 2 | 2 | registry selection | Broad discovery needs reasoning capability |
+| 2 after .1 | .2, .3 | 2 | 2 | registry selection | Acceptance criteria are now exact |
+| 3 convergence | .5, .6, .7 | 3 | 2 | registry selection | All touch service.rs → contention |
+| 4 gate | .8 | 1 | 1 | registry selection | Independent acceptance review where required |
 
 ## CORRECTIONS  ← the controller appends; this is where forecast meets reality
 | When | Predicted | Observed | Action | Root cause |
@@ -48,42 +51,103 @@ mode: max (≤6) · user: none · gate driver + janitor sit OUTSIDE the cap
 
 The CORRECTIONS log is the point: it is the learning loop. Next unit's PLAN phase reads it.
 
-## Model routing — intelligence follows task ambiguity
+## Model, account and machine routing
 
-Model choice is a scheduling dimension, not an afterthought. Route each lane by how much
-architectural judgment and in-flight improvisation it still requires:
+Apply current repository/directory/local operating policy and sourced user
+overrides to the selected mode. Routing does not add an approval or review round,
+restore an overridden stage chain, or expand a worker's authority.
 
-| Model | Primary role | Use for | Do not spend it on |
-|---|---|---|---|
-| **Fable** | Orchestrator and architectural owner | Work-DAG synthesis, large cross-system architecture/proof review, scope and tradeoff decisions, conflicting-evidence resolution, gate-level truthfulness synthesis | Routine implementation, compile/test polling, inventory extraction, janitor sweeps |
-| **Opus 5** | General reviewer and exploratory executor | Broad or under-defined reviews, cross-cutting investigations, ambiguous bug diagnosis, live execution where new evidence is likely to require intelligent improvisation | A fully specified edit whose files, behavior, and acceptance tests are already fixed |
-| **Codex Sol** | Defined-task implementation workhorse | Exact beads with named files/symbols, concrete acceptance criteria, targeted red/green tests, bounded code review, deterministic repair and verification | Owning a vague multi-system mission or silently inventing architecture when the prompt has a decision gap |
-| **Cheaper bounded tier** | Mechanical operator | Disk-janitor sweeps, inventory extraction, status collection, and other rule-following work with a complete procedure | Architecture, scope changes, final gate judgment |
+For Git-native delivery or coordinator takeover, use the current workflow's
+authoritative feature/contract and existing live ownership. Apply this routing
+policy before native/CLI/remote delegation without forcing a new unit roadmap or
+private epic mirror. The executable `uvp-fleet` dispatcher still requires its
+claimed Beads task and live Agent Mail reservations; a GitHub issue assignment
+does not satisfy those checks. Use an explicit bounded private task mapping when
+choosing that dispatcher, or a qualified existing adapter with honest ownership
+and source observations. Preserve healthy workers when replacing the coordinator.
+See [git-contractmaxxer integrations](../git-contractmaxxer/INTEGRATIONS.md).
+Beads-specific frontier queries below apply to that task plane. For a Git-native
+swarm, derive the same useful-work width, ownership and reconciliation from its
+current issues/PRs and actual lane/resource observations; do not initialize Beads
+just to evaluate those principles or add another status/reconciliation schedule.
 
-Apply the routing as a living contract:
+Resolve the effective owner-approved registry from repository instructions and
+coordinator configuration; `docs/plan-hub/shared/MODELS.md` is the usual location,
+not a required path in every repository. Read it on each placement decision.
+When using the Beads/Agent Mail dispatcher, use `uvp-fleet` (repository
+source: `scripts/dev/uvp-fleet.py`). Inspect live `--help`; its `plan`, `dispatch`,
+`probe`, `sync` and `reconcile` surfaces are the integration point. NTM may invoke
+it from an existing controller; workflow identity, claims and receipts must
+remain independent of NTM sessions.
 
-1. Keep **one Fable orchestrator** as the spawn/retire and architecture owner. The
-   fleet-controller observes, patches the plan, and recommends; it does not become a second
-   orchestrator.
-2. Put the planned model and one-line ambiguity rationale in every fleet-plan row. At dispatch,
-   the spawn command must consume that choice, and the plan must record the actual runner. A model
-   column nobody passes to the runner is decoration.
-3. Start broad, under-defined work on **Opus 5**. Its first durable output should narrow the problem
-   into explicit decisions and bounded implementation tasks; hand those tasks to **Codex Sol**.
-4. If Codex Sol encounters an unstated product or architecture decision, it must return the seam to
-   Opus 5 or Fable rather than improvising a new contract. Conversely, do not keep a now-mechanical
-   lane on Opus merely because it started there.
-5. Fable may delegate source reading and evidence gathering, but it retains synthesis of
-   architecture, requirement/consumer coverage, model corrections, and gate conclusions.
-6. Janitor work follows the `disk-janitor` skill's cheap-tier routing. Do not burn Fable or Codex
-   Sol on routine sweeps; a floor-breach escalation returns to the orchestrator for the decision.
-7. Record every upgrade, downgrade, or unavailable-model substitution in `CORRECTIONS`, including
-   the observed reason. Never silently substitute a different model and continue as if the plan
-   was consumed.
+**Bounded selection before registry adoption:** if no registry governs this scope
+and the user explicitly authorizes choosing among existing available models, use
+that authorized pool for a bounded native or qualified existing CLI delegation.
+Record observed eligible options across available providers, selected model/effort,
+task fit and material limitations in the existing brief. Honor any user effort
+policy; otherwise choose a supported task-fit effort or observed adapter default
+and label that basis. Do not claim a registry score, registry-derived effort or
+isolated CAAM qualification. A template is not adopted policy. This route cannot
+bypass an existing registry or `uvp-fleet`'s required configuration,
+registry and ownership gates. With neither governing policy nor that authority,
+continue useful primary work while resolving selection rather than installing
+fleet infrastructure or inventing eligibility.
 
-The principle is not “always use the strongest model.” It is “use the least expensive model that
-can honestly own the remaining ambiguity, and move the task to a workhorse once the ambiguity has
-been removed.”
+Apply hard gates first: current availability, supported harness/model, required
+OS/architecture/tools, available memory/disk/slots, source identity, authoritative
+task ownership and live edit reservations under the selected adapter's contract.
+`uvp-fleet` specifically requires Beads and Agent Mail as described above. Then
+use registry preferences for reasoning, visual/3D judgment, review, speed and cost efficiency.
+Record the choice and pass the actual model/effort to the runner. Do not retain
+a model merely because the lane began with it, or silently substitute another.
+
+**Choose the model before the adapter.** This applies to every delegated task,
+including native Claude/Codex children, research and reviews. Use the governing
+pool across providers; when a registry applies, choose task-relevant weights/floors
+rather than the default intelligence/cost/speed mix for every specialty.
+`task_type` selects effort, not score weights. Then use the native tool,
+qualified CLI/CAAM route, NTM or remote
+adapter that can actually run the choice. A native tool's model menu does not
+define the full fleet; inherited parent settings are a selection, not an exemption.
+
+Use the existing dispatch note/receipt for task type, selected model/provider and
+effort, a short fit rationale, and material exclusions/availability limits. A brief
+comparison with the strongest eligible alternative is enough; no ranking report
+or mixed-provider quota. A deterministic compile/test is a command task. Preserve
+healthy current work rather than switching it merely to rebalance provider counts.
+
+**Read the effective pool.** Compare governed availability with enabled harnesses
+and current account/project/model qualifications. Inspect `plan` alternatives and
+rejected reasons before calling a placement registry-selected. A stale Sol-only
+config or expired qualification is a routing limitation, not evidence that other
+models are inferior. Use fleet-accounts to repair authorized stale routes at a safe
+point; if no repair is possible now, state the gap and choose among truly eligible
+routes. Do not bypass CAAM qualifications through undocumented native fallback or
+enable an untested model just because its row says yes. Native adapters need their
+own honest account/tool/effort observations; they are not isolated CAAM profiles.
+
+With a governing registry, resolve effort from its current model table: explicit
+task `effort`, otherwise `task_type` recommendation, otherwise `default_effort`;
+enforce `allowed_efforts` and verify provider support. This policy applies to every selected model,
+including Sol. Record placement/receipt `effort` and `effort_source`; do not
+hardcode competing effort flags in launch or resume argv. Use task types based
+on the actual decision complexity, not elapsed time or idle workers.
+Max requires `effort_reason` for an exceptional architecture/design/reasoning
+decision and must be allowed for the selected model; it is not routine escalation.
+
+Use `fleet-accounts` for CAAM. Vault records and isolated enrollment are distinct;
+`caam exec` requires qualified skills/MCP/Git-SSH/config parity plus explicit
+project-data/model authorization. Bounded eligible-account selection/rotation is
+enabled by default with configurable disable, attempt limit and cooldown. Treat
+usage exhaustion, authentication errors and missing model access separately.
+After dispatch, preserve conversation IDs and healthy children; checkpoint an
+unknown/failed outcome and resume only after outcome and replay safety are known.
+
+Keep second-machine operations in a dedicated qualified lane. Prefer an existing
+shared checkout with disjoint reservations; use a suitable clean idle root for
+fast-forward sync, or explicitly pin dirty content. A worktree needs an actual
+revision/isolation reason, owner, build root, storage budget and retention rule.
+Existing or apparently stale paths are not permission to delete files.
 
 ## Phase 1 — PLAN (at execution-prep, before any lane runs)
 
@@ -93,20 +157,38 @@ Walk `br dep tree` / `bv --robot-plan` and write the table above:
 3. **Order within a step by transitive-dependent count DESC** — critical path takes the first agent.
 4. **Discount for contention**: declared `Files:` overlap → treat as serial (they share one slot);
    same-crate-different-file → soft, tolerate ~2–3.
-5. **Staff = min(width_after_discount, user_cap, mode_cap)**.
-6. **Model = the lowest tier that can own the remaining ambiguity**, using the routing table above.
+5. **Staff = min(eligible claimed work, user cap, currently available resource slots)**.
+6. **Model = an eligible registry choice** for the remaining task requirements.
 7. **Label every number and model a PREDICTION and name its basis.** A prediction that hides its
    basis cannot be corrected honestly later.
 
 ## Phase 2 — STAFF (at swarm launch)
 
-The orchestrator reads step 1's `Staff` and `Model`, spawns that many with the planned model in the
-plan's critical-path order, and records the actual runner. Nothing clever — the thinking already
-happened in Phase 1.
+The orchestrator uses the plan as a forecast, then rechecks actual staffable work,
+source identity, capacity, model/account eligibility and live claims/reservations
+immediately before dispatch. Record the actual runner and any changed placement.
 
 ## Phase 3 — RECONCILE (JIT: a MONITOR watches; an agent only runs when it fires)
 
-**The cadence primitive is a `Monitor`, NOT a resident agent.** This matters practically:
+At the existing reconciliation cadence, compare active work with the next useful
+product result. If staffing is mostly adding edge/recovery checks or repeating
+reviews, ask what current promise/material risk each check protects and what
+decision another run changes. Redirect optional hardening toward useful work;
+reconcile overgrown required contracts explicitly. A blocked external input does
+not authorize inventing cleanup or verification projects to keep every lane busy.
+Record a changed decision in the existing checkpoint; no new watcher or worksheet.
+
+**Portable liveness path:** use `uvp-fleet probe` for current machine facts and
+`uvp-fleet reconcile` with owned process/receipt state, alongside authoritative
+Beads and live Agent Mail reads. Follow their installed help and private config.
+A controller can consume those observations through an existing NTM controller,
+local/SSH process adapter, or a bounded foreground loop. Preserve running work
+while awaiting its outcome; silence alone is not failure. Emit on meaningful
+change and keep the task open while required work remains in flight.
+
+**Optional Claude adapter:** the `Monitor` examples below apply only where that
+specific host primitive is available and its lifecycle has been verified. They
+are not portable fleet requirements and do not keep an agent turn alive.
 
 | | Resident **agent** loop | **Monitor** (shell poll) |
 |---|---|---|
@@ -116,8 +198,9 @@ happened in Phase 1.
 
 ### ⛔ THE REQUIRED PROBE SET — arming the frontier monitor alone is NOT armed
 
-**At swarm launch, arm ALL FOUR. Then verify the armed set against this table** (list your live
-monitors and check each row off — the arming step itself needs a consumer):
+For a long-running fleet, cover the relevant observations below through the
+chosen adapter. If using Claude Monitors, verify the actual armed set; a simple
+run may consume these facts directly without creating four background watchers:
 
 | Probe | Watches | Catches |
 |---|---|---|
@@ -151,12 +234,12 @@ patching it, spawning/resuming. No agent sits burning tokens to watch a queue.
 # NOTE the status filter: `br ready` does NOT exclude claimed beads (see the correction below).
 prev=0
 while true; do
-  [ -f /tmp/<run>-swarm-open ] || { sleep 300; continue; }   # phase gate — see the SENTINEL block
-  r=$(br ready --limit 0 --parent <unit-epic> --recursive --type task --json 2>/dev/null \
+  [ "$(cat /tmp/<run>-swarm-phase 2>/dev/null)" = open ] || { sleep 300; continue; }
+  r=$(br ready --limit 0 --label-any <unit-label> --type task --json 2>/dev/null \
       | jq '[.[] | select(.status=="open") | select((.assignee // "") == "")] | length' || true)
   if [ "${r:-0}" -gt 0 ] && [ "$prev" -gt 0 ]; then
-    echo "FLEET: $r ready+open+unassigned >5min — $(br ready --limit 0 --parent <unit-epic> \
-      --recursive --type task --json 2>/dev/null \
+    echo "FLEET: $r ready+open+unassigned >5min — $(br ready --limit 0 --label-any <unit-label> \
+      --type task --json 2>/dev/null \
       | jq -r '[.[] | select(.status=="open") | select((.assignee // "")=="") | .id] | join(" ")')"
   fi
   prev=${r:-0}; sleep 300
@@ -362,12 +445,13 @@ a peer; it noticed, held the overlap ~2 min, released all 6, and told the peer d
 report `HIDDEN SERIAL`.** This is the Consumer Rule in the coordination layer — the field exists,
 it is populated, and nothing reads it. A response you half-consume is a guarantee you don't have.
 
-### ⛔ THE CLAIM ATTEMPT IS THE ONLY AUTHORITATIVE FRONTIER TEST — RUN IT BEFORE ASSIGNING
+### Recheck The Actual Claim And Reservation Before Assigning
 
-**Never assign work off a *reported* frontier — not a plan, not a reconcile, not a lane's
-close-out note, not your own memory of the DAG.** `br update <id> --claim` refuses a blocked bead
-outright (`VALIDATION_FAILED: cannot claim blocked issue: <blocker>`). That refusal is free, instant,
-and authoritative; every other signal is a snapshot that was already stale when it was written.
+Never assign work from a reported frontier alone. Read the current task and real
+blockers, check the assignee, then claim within the coordinated reservation flow.
+The installed `br` may reject dependency-blocked work, but `--claim` is not CAS
+and can replace an assignee. Claim success alone never authorizes concurrent
+editing; verify ownership and conflict-free unexpired holds again at dispatch.
 
 ⛔ **And do NOT substitute a JSON dep query — `br show --json` has NO `blocked_by` key.** Deps live
 under **`dependencies`** / **`dependents`**; use **`br dep list <id>`** (or `br dep tree`, but never
@@ -393,7 +477,7 @@ bead gates everything, extra lanes polling it is pure waste and generates noise 
 progress. Say "N-wide, nothing claimable until X lands" plainly and stop. **Resume before spawn**
 when it does.
 
-### ⛔ THE GRAPH BLOCKS BEFORE THE FILES DO — CHECK `blocked_by` FIRST
+### Check Real Capability Blockers Before Staffing
 
 File contention is the *second* reason a bead may be unclaimable; a hard dep edge is the first, and
 it is cheaper to check: `br update <id> --claim` → `VALIDATION_FAILED: cannot claim blocked issue`.
@@ -539,47 +623,37 @@ another session's alibi.**):
 5. ⚠ **Codex's `-o` result file does NOT stream** — written only at completion; unchanged size
    proves nothing (verified 2026-07-15).
 
-```bash
-# Stall probe — fires ONLY when in-progress work has NO UNIT-ATTRIBUTED evidence of life
-inprog=$(br list --label-any <unit-label> --json | jq '[.[]|select(.status=="in_progress")]|length') || true
-work=0
-pgrep -f 'codex exec' >/dev/null && work=1
-[ $work -eq 0 ] && find <unit-worktree> -name '*.rs' -newermt '-15 minutes' | head -1 | grep -q . && work=1
-[ $work -eq 0 ] && for p in $(pgrep rustc); do lsof -p $p 2>/dev/null | grep -q <unit-worktree> && work=1 && break; done
-[ $work -eq 0 ] && git log --since='15 minutes ago' --oneline origin/main -- <unit paths> | grep -q . && work=1
-# accumulate quiet across polls; ≥30–45min with inprog>0 and work=0 → emit SUSPECT (never DEAD)
-```
+Build a work-specific probe from the actual owned runner receipt/process subtree,
+task identity and evidence location. Query the authoritative task status and
+attribute process/output observations to that run. Use `uvp-fleet reconcile` for
+its supported receipts. A global `pgrep codex` or another task's writes cannot
+establish this task's liveness. Unknown observation remains unknown, not healthy
+or dead by default.
 
 **Threshold ~45 min AND all evidence quiet** — both conditions, never time alone.
 
 **Report SUSPECT, never DEAD; the orchestrator verifies before acting.** It checks the specific
 agent's transcript before doing anything. Then:
-- **`SendMessage` (kick/resume) is safe in both directions** — a live agent reads it as a nudge at
-  its next tool round; a stopped one is *resumed*. Cheap either way, so prefer it.
+- A supported message can nudge an existing agent without replaying its task.
+  Verify whether that harness delivers to a running session or resumes an idle
+  one. Messaging, provider continuation and rerunning the original command are
+  different operations.
 ### ⛔ LANE CONTEXT HAS A LIFETIME — RETIRE AND RESPAWN PAST THE CLIFF
 
-**Resumes are cheap until the transcript is huge; then every resume inherits instability.** The
-tell: the SAME lane dying repeatedly with DIFFERENT transient errors (stream stall, then 500, then
-ENOTFOUND, then a silent 151-byte resume). That is not bad luck — it is a context near its limit
-choking the stream on every push. Measured (2026-07-16): a lane at ~300 tool uses / ~430k tokens
-died 4 ways in a row; each resume produced less than the last.
+Repeated transient failures warrant diagnosis. Distinguish authentication, usage,
+model access, transport and actual context problems before changing a lane.
+Failure count or transcript size alone does not identify the cause.
 
-**Fix: retire the lane with honors and spawn a FRESH one on the next bead.** This is exactly what
-the kickoff's agent-#2 test guarantees is possible — a cold agent can boot→claim→work from the
-kickoff alone. Re-claim over the stale assignee (claims aren't CAS; announce the takeover on the
-unit thread). Rule of thumb: after TWO transient deaths of the same lane in a row, respawn instead
-of a third resume; a fresh context is cheaper than debugging a dying one.
+Before replacing a failed frontend, reconcile its actual outcome and all owned
+children. Preserve healthy child work, conversation ID, checkpoints and source
+identity. Use a supported same-history continuation, or a verified history
+migration when changing account/host. Unknown post-dispatch outcomes forbid
+blind replay. Do not overwrite another assignee merely because a lane looks old.
 
-⛔ **RETIREMENT MUST BE ENFORCED, NOT ASSUMED — TaskStop the predecessor BEFORE spawning the
-successor.** Measured (2026-07-16, an hour after this entry was written): the orchestrator judged a
-lane dead from a 151-byte static transcript — but **a resume creates a FRESH output file; a tiny
-static transcript seconds after a resume is a lane BOOTING, not a corpse.** The "dead" lane was
-alive, relaunched a Codex continuation, and a successor was spawned onto the SAME bead — two lanes
-+ an orphaned Codex converging on one worktree. Rules: (1) after resuming a lane, judge its
-liveness only after a full probe cycle; (2) a successor is spawned only after `TaskStop` on the
-predecessor — a retirement the predecessor can outvote is a race, not a decision; (3) if an
-orphaned Codex survives the predecessor, the successor INHERITS its output as round 1 (review like
-any Codex diff) — never fire a colliding round while it runs.
+A successor that can mutate the same task starts only after an explicit ownership
+handoff and verified absence of conflicting live work. If scoped frontend shutdown
+is necessary, verify the harness primitive's effect first; `TaskStop`, pane restart
+and CAAM `--reload-daemon` are not interchangeable migration mechanisms.
 
 - **NEVER kill a lane on a stall suspicion.** A false kill destroys in-flight work and orphans a
   reservation; a false kick costs one sentence. The asymmetry is enormous — respect it.
@@ -592,8 +666,8 @@ close.
 are fire-and-forget: they outlive you *by design*, which is exactly what makes them a trap. An
 agent that arms one and then reasons "my monitors are holding the turn open, I can stop polling"
 is dead the moment it stops emitting tool calls — and this skill's own instruction to arm watches
-during prep is what sets that trap. After arming: **`touch` the sentinel, log it, and get back to
-your own work in the same turn.** A turn ends when you stop calling tools; nothing you spawn
+during prep is what sets that trap. After arming: **record the actual phase in the
+shared phase file, log it, and get back to your own work in the same turn.** A turn ends when you stop calling tools; nothing you spawn
 prevents that. (Real: a 07-prep agent died this exact way, 2026-07-16 — see `codex-first`'s ONE
 RULE block, variant 3.)
 
@@ -602,10 +676,10 @@ late" only disciplines the monitor you remember to arm late; anything else that 
 frontier check inherits nothing. Make the phase a fact on disk that every checker reads:
 
 ```bash
-# at swarm launch:            touch /tmp/<run>-swarm-open
-# at gate close / drain:      rm -f /tmp/<run>-swarm-open
+# at swarm launch:            printf '%s\n' open > /tmp/<run>-swarm-phase
+# at gate close / drain:      printf '%s\n' closed > /tmp/<run>-swarm-phase
 # in EVERY frontier check (fast monitor AND watchdog), first line of the loop body:
-[ -f /tmp/<run>-swarm-open ] || { echo "phase: swarm not open — frontier check skipped"; continue; }
+[ "$(cat /tmp/<run>-swarm-phase 2>/dev/null)" = open ] || { echo "phase: swarm not open — frontier check skipped"; continue; }
 ```
 
 A watchdog whose *only* job is liveness may still run its heartbeat-age check while the swarm is
@@ -632,7 +706,7 @@ different sentences and only one is an emergency. Split them.
 >
 > **THE RULE: never test something *correlated* with your condition — test the condition.** If you
 > cannot test it directly, *manufacture* a fact that means exactly what you mean (a sentinel someone
-> writes at the moment it becomes true, and deletes the moment it stops) and test that. When you
+> writes at the moment it becomes true, and updates when it stops) and test that. When you
 > catch yourself writing "well, if X exists then Y must have happened" — that is the disease
 > talking, and Y is what you should be testing.
 
@@ -660,16 +734,16 @@ must not exit the loop and kill the watch. Publish the epic id somewhere the wat
 
 ```
 read     <unit>-fleet-plan.md                 # what we believed
-observe  frontier  = br ready --limit 0 --parent <epic> --recursive --type task
+observe  frontier  = br ready --limit 0 --label-any <unit-label> --type task
          claims    = br list --status in_progress        # working vs PARKED
          holds     = agent-mail file reservations        # ← the ACTUAL mutex, the ground truth
          lanes     = live roster (dark ≠ alive)
 diff     staffable = frontier − { beads colliding with live holds }
-         target    = min(|staffable|, user_cap, mode_cap)
+         target    = min(|staffable|, user_cap, available_resource_slots)
 if plan holds        → stay SILENT (silence = the fleet is right)
 if plan diverged     → PATCH the plan (append a CORRECTION row, fix the affected step)
                        + recommend to the orchestrator
-sleep    bounded FOREGROUND (~10 min: `for i in $(seq 1 40); do sleep 15; done`)
+wait     bounded foreground calls within the harness limit; keep the turn open
 ```
 
 - **Poll ~5 min in the Monitor** (it is free) but only EMIT after a debounce — the notification is
@@ -731,16 +805,16 @@ double-staffing races. Send: current fleet → computed target, the ordered ids,
 
 - **Widening: RESUME before SPAWN.** A parked lane is a warm pool — context, AgentMail identity,
   reservations, seam knowledge all intact. Cheaper and faster than a cold agent.
-- **Narrowing is SELF-SERVICE — never recommend killing a lane.** Empty-queue=STOP drains the fleet
-  at bottlenecks by itself; a lane that hits a hidden serial parks its claim, which removes the
-  bead from the frontier so the math self-corrects. Killing mid-bead destroys work.
+- **Narrow by draining, not killing working lanes.** Keep their claims and
+  receipts visible. A parked claim remains in dependency-ready queries; explicit
+  status/assignee filtering and run liveness determine actual staffing.
 
 ## Make the graph learn
 
-Every observed collision is a resource dependency the graph missed. Report it; the orchestrator
-files the real `br dep` edge. An undeclared resource dependency that bites twice is a bug in the
-graph, not bad luck. Over a run this converts hidden serial bottlenecks into declared ones — and
-the next unit's Phase 1 forecast is right the first time.
+Record observed file/build/device contention in the fleet plan and reservation
+strategy. Add a permanent `br dep` edge only for a consumed capability. Repeated
+contention can justify narrower edits, another qualified resource or revised
+placement; it does not turn a temporary resource conflict into product sequencing.
 
 ## Anti-patterns
 

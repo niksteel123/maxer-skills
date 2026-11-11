@@ -1,0 +1,4 @@
+interface:
+  display_name: "Git Contractmaxxer"
+  short_description: "Deliver Git-native contracts or take over active work"
+  default_prompt: "Use $git-contractmaxxer to continue this feature from its current plan, contracts, PRs and live work."

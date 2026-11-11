@@ -1,0 +1,446 @@
+{
+  "checked_on": "2026-11-11",
+  "basis": "Installed owner-maintained Linux skill sources; not a claim of latest upstream third-party releases. AppleDouble and runtime caches excluded.",
+  "source_choices": {
+    "pipemaxxer": "Claude templates retain the later push-policy amendment; other copies have an older no-push template. Project/user publication policy still takes precedence.",
+    "vxg-project-ops": "Claude and Codex agree on the V2 shell additions missing from the shared root.",
+    "vxg-testing": "Claude contains expanded agentic verification and MCP parity guidance.",
+    "swarm-design-ops": "Claude contains revised project scoping and prototype-pipeline guidance."
+  },
+  "skills": [
+    {
+      "name": "agent-swarm-cli",
+      "source_root": ".agents/skills",
+      "files": {
+        "SKILL.md": "0e4a232074a1c4e8dd861c3d0160ccf1e772964b7cf070c566eabec2f8cf035e"
+      }
+    },
+    {
+      "name": "bead-completion-audit",
+      "source_root": ".agents/skills",
+      "files": {
+        "CHECKLIST.md": "fd1b4dde552039bc42632cb973c886e7065fa109031261707c04e69c7b92b096",
+        "METHODOLOGY.md": "d1f718d3487d4641bfe4c917d77d8619ec888f9861b1f901199b4707b1c4ba02",
+        "QA-VERIFICATION.md": "f2e5b59dfea6b1c3ab5eae3ac5724574d6a28300a039e51a28aea1f0cdd6f2a3",
+        "SKILL.md": "8d2cf038322ae921c1562be4c6ac2a56774d396062d606c0b29d8c401867f7c8",
+        "TEMPLATES.md": "026f4fffcdb1c353b9409953acd08b404cec5376753d1b50e6756dab3ec1dbe4"
+      }
+    },
+    {
+      "name": "bead-plan-audit",
+      "source_root": ".agents/skills",
+      "files": {
+        "CHECKLIST.md": "3479828190fb1f7b6034baecf530a4f4bceefd5176094f05f4e9af9e02dc5235",
+        "METHODOLOGY.md": "7cf54d2b391c3d86b42ea054c70117f71356e80a834e68be6d0d98fdef91c77e",
+        "SKILL.md": "4b71284f3bf3089b16d132827c220339eb129d7d13ed9cfafed511d63bc4a1d7",
+        "TEMPLATES.md": "79dbf39c83be9b58dbee11cbf4827419d11b479676044ca6f97ef7449f069b6b"
+      }
+    },
+    {
+      "name": "beads-from-sources",
+      "source_root": ".agents/skills",
+      "files": {
+        "EXAMPLES.md": "420fed6cb051b86235392324dfdaaf8c32382806eed4c03d3a382b33a94d07e7",
+        "METHODOLOGY.md": "0da50bfda782445dc4ef20b137da185dfbb756a83ca1ee0b734bc98dac24b8a9",
+        "SKILL.md": "13ade573cc0a995bf81dfa3e3977b7fb1e5e37e5308b663e1060b9da480cae52",
+        "TEMPLATES.md": "ae13f58608813b4d5ea86118ef0a60a34c82962880862a5a8a30bb8d8aa937d5"
+      }
+    },
+    {
+      "name": "beads-to-execution",
+      "source_root": ".agents/skills",
+      "files": {
+        "CHECKLIST.md": "8cab9b889583fa8e342354c16e330bbe59e0dc16c7fae00b8aea3ab939dd1a03",
+        "SKILL.md": "5b4197e8219772342a358bff92f75d24b5e5aff67868411d248645d3388043f7",
+        "TEMPLATES.md": "dd5589ff6a5b4db32468edc2c4f44d721ae916cb7d17bdfa060a92d657fa8134",
+        "WORKFLOW.md": "59579ca6133ce2f965c52964b7119b082da8171ba6dbc315ff7e298babd4f06e"
+      }
+    },
+    {
+      "name": "canvas-to-vxg",
+      "source_root": ".agents/skills",
+      "files": {
+        "SKILL.md": "1066ca6446c97285e3830dce177f6ec01e49486b37ee1dd56fe278630171b3b5",
+        "agents/openai.yaml": "3c27a90459c65996b53f4786a3da305356bb320f90d85d12be16be650978a2e1"
+      }
+    },
+    {
+      "name": "codebase-to-spec",
+      "source_root": ".agents/skills",
+      "files": {
+        "CHECKLIST.md": "8ce8fd004ce9e2c485e81ebc0b2535caecad02e59531a384e8278caca4c9eff2",
+        "METHODOLOGY.md": "580b1dd064008597fd96fdd2185087b3a9550e060923fe212389a1867cbed043",
+        "SKILL.md": "dc95402f983686325107910509151111fec61b2f3356ee6538702b0a24067f72",
+        "TEMPLATES.md": "9655aac1fef461b4020b1e6284e67e6df54872bb78d87fe5877b046cfdd73d2b",
+        "references/EXTRACTION-PATTERNS.md": "e066be88e6967bce45d0bf6a7737d11d6bd5f02861afb0c520171c06e8a87939",
+        "references/LANGUAGE-HEURISTICS.md": "3e21141571e6513805a60ff616a57b56483b50c6d0698ad5ee932bbb529131dc",
+        "references/SCOPE-GUIDE.md": "950ee2b8ccffcd77dc436af59eb788107fae67ec0ccbddd7ce89fcce824d3ac1"
+      }
+    },
+    {
+      "name": "codex-first",
+      "source_root": ".agents/skills",
+      "files": {
+        "SKILL.md": "4adcc46ff265a630f6b9cd5e1f9e0410232a78ebb7b863bf1bd18d1a73a06e7b"
+      }
+    },
+    {
+      "name": "contract-bead-audit",
+      "source_root": ".agents/skills",
+      "files": {
+        "SKILL.md": "aacf6889408736c095cf252ae03378b205645a40ec7cc6a09d48e57e802066c0"
+      }
+    },
+    {
+      "name": "contract-next-unit",
+      "source_root": ".agents/skills",
+      "files": {
+        "SKILL.md": "c3e67673c393eed71b43d5c8d38eeb7f5671d94d96941a3ef2b7746de8e890ff"
+      }
+    },
+    {
+      "name": "contract-to-beads",
+      "source_root": ".agents/skills",
+      "files": {
+        "SKILL.md": "2ed06b053a986b1561a4ca681359cdbfc3ecb23ef0298c7cbcf462c92bb899d5"
+      }
+    },
+    {
+      "name": "contract-to-execution",
+      "source_root": ".agents/skills",
+      "files": {
+        "SKILL.md": "8ce2ad2fd03eb7c7fef0a05dc153eb3b3d718ee952c7da79148eb06506e2d802"
+      }
+    },
+    {
+      "name": "contract-to-uvp",
+      "source_root": ".agents/skills",
+      "files": {
+        "SKILL.md": "259bd63dad9dcb4fda9f9e01578e8290190d7db0c036d383db8131d22221ae21"
+      }
+    },
+    {
+      "name": "contractmaxxer",
+      "source_root": ".agents/skills",
+      "files": {
+        "SKILL.md": "4c2baab2d24e9e52c5c7b0b718a962b3092a0a250b1a3d1e8c3fd67bcb9f4531",
+        "TEMPLATES.md": "fbf6f0787c48f29dfb6d44b651bf905cb9d28e9436d98d82efac18de2fcdb908"
+      }
+    },
+    {
+      "name": "design-consistency",
+      "source_root": ".agents/skills",
+      "files": {
+        "CHECKLIST.md": "ed674a0e05bfaed43e00d76929f67a2ac3593e0f71e962957f95d1b6aa4c501f",
+        "DIFF-ANALYSIS.md": "2b7550568e5a55a457f7a87768c1df96ae0fb6d21351d73169d76838d0aa9b04",
+        "METHODOLOGY.md": "5dc342ad8d824c2076206bb87d49abe4b0dccee8bbe820505879e066ff6f773f",
+        "PLAYWRIGHT-SETUP.md": "17c0a2e130e99ced095965b356d18ed9600255f115c8a9a5b71577078a7ba7f3",
+        "SKILL.md": "889046fae2a3074f99823e389dd0a59ba79f31dfa9e094133f3c91d67fc4b3a5",
+        "scripts/visual-diff.ts": "d9c7e4a57e8c6804451c65202d2d6d27c5449cb866e360966962bc99c8d63db6",
+        "templates/comparison-test.spec.ts": "28c5e1324fb96b0aa246942b42f494c62b8b9f39e30301bd821ac79ccd7ef92e"
+      }
+    },
+    {
+      "name": "disk-janitor",
+      "source_root": ".agents/skills",
+      "files": {
+        "SKILL.md": "1e43cda3a3d7563ee6e62c6d3b3ee781067e0b638f851e405d942efc62d8988c"
+      }
+    },
+    {
+      "name": "error-manifest",
+      "source_root": ".agents/skills",
+      "files": {
+        "CHECKLIST.md": "c5e98f23a3ae4bb3d26e9a04e0373228c6469a44061a86738814f7aea6b8240c",
+        "METHODOLOGY.md": "935753ef31a480820100d6157744ea1d8f4da11411583d098ad37baa56ecefb0",
+        "SKILL.md": "6ce06a080f6e08132e2c6c575a7cf9e5005c51ed0e0b50dce308658835e8a025",
+        "TEMPLATE.md": "e8de6bbab1888b5a3d148df5ce70b5d62dd3d9ab8ea478fd8168a48db87eb08e"
+      }
+    },
+    {
+      "name": "featuremaxxer",
+      "source_root": ".agents/skills",
+      "files": {
+        "SKILL.md": "a80f013643d5c9d566151a382c8a2370712d77b62be0361a39728fff1a74ea3a",
+        "references/TEMPLATES.md": "69c1b15efb600b85e525004659e97921926354032ff33bf3802e5cc7fe2d9a14"
+      }
+    },
+    {
+      "name": "fleet-accounts",
+      "source_root": ".agents/skills",
+      "files": {
+        "SKILL.md": "970c04df68c4c8885353d521a7de1aabb7e69fe4ab08e3cf80dd80766240e9a6"
+      }
+    },
+    {
+      "name": "fleet-controller",
+      "source_root": ".agents/skills",
+      "files": {
+        "SKILL.md": "6872dfe1b6df9d43c9a2fe0eda77ba77471df9968f03c49bf9e33a242d8cdbb9"
+      }
+    },
+    {
+      "name": "frontend-design",
+      "source_root": ".agents/skills",
+      "files": {
+        "SKILL.md": "a63fca2ea314529c555d3e3282769d04205db236c3b5de61cd377da4e370a755"
+      }
+    },
+    {
+      "name": "git-contractmaxxer",
+      "source_root": ".agents/skills",
+      "files": {
+        "INTEGRATIONS.md": "6fad6917a0e5046af0edf50ca6326860909cda33acb865f22677730c5a7fd00d",
+        "SKILL.md": "9a3a23ee198ccef8190b1f88a7d2d1d4da803b560637ba10622147fff7807614",
+        "TAKEOVER.md": "fc96e60aa2554de43cf58dcabda7a7615586cc659efd34f2fe475021ff230e84",
+        "TEMPLATES.md": "227e17f6ee7c8db597e19cfc6ba4746ed8a430db709b15c6b9ff09d43343a436",
+        "agents/openai.yaml": "4953fa7d8f251f0f8f309696251c0f16958c50ebe173a307fe519871fccb0443"
+      }
+    },
+    {
+      "name": "harmonymaxer",
+      "source_root": ".agents/skills",
+      "files": {
+        "SKILL.md": "2df87f2cd814aa77eaa9e347f0e2fb0b9a4b30cc4b324c91aa7b30f033edf47d",
+        "references/TEMPLATES.md": "8ebf6ae4efc009434ca6904102b4ccf5ea07bc8cc691e361164e70ad4c7c7f96"
+      }
+    },
+    {
+      "name": "idea-to-research",
+      "source_root": ".agents/skills",
+      "files": {
+        "SKILL.md": "53cdc24647b6429f1986e360de53b59b921ef7485201155d43cbdc0169b13e22",
+        "references/INTENT-QUESTIONS.md": "a5c0644bc1b9445ec46424786ba5292df87d348b8782b3598beb51ab547e52f8",
+        "references/RESEARCH-TEMPLATE.md": "167bb11d51fed9468709bd80c1ad8dbceac77761655d6dca05f8a30f058d1f66",
+        "references/TECH-RESEARCH-GUIDE.md": "b5ff9e82cb1654e8ecccde7aa77df8f99ab0979ae7119174b700ab4bf6284b1b"
+      }
+    },
+    {
+      "name": "intent-to-handoff",
+      "source_root": ".agents/skills",
+      "files": {
+        "CHECKLIST.md": "1aaec98bfc3fc3a0de1bb9f0bf68bdfc0275fe851e6b2de320c728d495441711",
+        "METHODOLOGY.md": "b34478500e717307148e2cd223d73aea3d3d92cab1e1ee88f861b44de49e49d5",
+        "SKILL.md": "493cfe7b504dc30314308c4341771599c4177557e4868770df0231b0fb44c465",
+        "TEMPLATES.md": "faea98cc8767707bb3bce4d6ed16d2f65392fa3dd62e6984c21bbc634ae41a78"
+      }
+    },
+    {
+      "name": "layermaxxer",
+      "source_root": ".agents/skills",
+      "files": {
+        "SKILL.md": "7010c3008a4b7e597189285c5a8da70c012e9d923e93f2f56b2e4cee72335347",
+        "references/TEMPLATES.md": "0b2f5891ff5645f31ac6e06461714c6dcfa4c96588ac7cebbf3cdb0335843087"
+      }
+    },
+    {
+      "name": "master-workflow",
+      "source_root": ".agents/skills",
+      "files": {
+        "DECISION-TREE.md": "e6b8c0b35bb148c2f4897bea648f83be12438d6cc8f810360c63eb0565ff910b",
+        "QUICK-REFERENCE.md": "13f9ec0cd378ce2418b4e13658745c80b0bee5134e13a1c47cdb6e4779da6672",
+        "SKILL.md": "26dda0867c9f5a1b376e997d1d6427ac8095e96c6c4fec2cc216e45dc146eae2",
+        "WORKFLOW.md": "b039e92f8e45a58382f1e5777f580788c9eac8e67db4bf6b36761f2069393663"
+      }
+    },
+    {
+      "name": "pipemaxxer",
+      "source_root": ".claude/skills",
+      "files": {
+        "METHODOLOGY.md": "bc92403d797303b9d219ad68a843d261e9714dc9b08f7aae474434f10f0f39aa",
+        "SKILL.md": "9f22d70f509835152b17b4a4d18cc573d3cd2ae00d794caf4e9094b6a4e0a3d7",
+        "TEMPLATES.md": "d3490287e6d4f3949dede7032855800a5da4afdc331e8188cf3c279acd90806a",
+        "references/PATTERNS.md": "ba573b7433f58a3c617f3f726f83fc0ded73ab84fe37b216041517481d7ab053"
+      }
+    },
+    {
+      "name": "planmaxer",
+      "source_root": ".agents/skills",
+      "files": {
+        "SKILL.md": "b555afb6080004259484210b418e20165ad5c1655f0d8891a4e118c13cd7b0aa",
+        "references/TEMPLATES.md": "a8bd63da2761a7cb1ec9cf76bebe0a2205009bcadd5e9a8516303c9187b1f035"
+      }
+    },
+    {
+      "name": "playwright-interactive",
+      "source_root": ".agents/skills",
+      "files": {
+        "LICENSE.txt": "9a7110fc2d2f964038e5dc49128f908f29f47a574c961cba16085914e879cbda",
+        "NOTICE.txt": "7fe676d2e5359fb6aa0bdf5b0881b26e14c272dd36b04408366d4b0e26738322",
+        "SKILL.md": "301e2e453af392d1eb8c7523bb7f73510d45ca6789dc77a43b8b12aacecce282",
+        "agents/openai.yaml": "7342e0a2c2cb8f3e20982317467f58b06c8bf71ba308ed8fcc1cda4a6e9397d8",
+        "assets/playwright-small.svg": "0744d0d4cc1433e2130c3522196e1571222d502f1461f39274f680520e728588",
+        "assets/playwright.png": "29b51cdeeb4e541565d1d419e5150e11913af50f72ebb4d27cfcc8813185ffd6"
+      }
+    },
+    {
+      "name": "product-board",
+      "source_root": ".agents/skills",
+      "files": {
+        "BOARD-TEMPLATE.md": "2d45d6eee830dbf91d6db4e0bcdbeda81c725c3c5b44208084cc5fc44cbc3fa0",
+        "SKILL.md": "de04db33b28c4828857d8e285658d55b6a922904f680b44b47c53d042427ff36"
+      }
+    },
+    {
+      "name": "project-ops",
+      "source_root": ".agents/skills",
+      "files": {
+        "SKILL.md": "6cfd62c7e10839761bb691a9d5b142e1c28d6c7104740a0f40fcaf53c373c311"
+      }
+    },
+    {
+      "name": "research-hardening",
+      "source_root": ".agents/skills",
+      "files": {
+        "SKILL.md": "8bb2510444eef5c12ac2598fc48f651a1bd6f8ffc29d798bd9f031b9fbeb2348"
+      }
+    },
+    {
+      "name": "research-to-contract",
+      "source_root": ".agents/skills",
+      "files": {
+        "SKILL.md": "ed696f88cd6f7092c5f02ce73c9a34d5a58ac0a25732a9dc973f29e929b4dc7f"
+      }
+    },
+    {
+      "name": "research-to-spec",
+      "source_root": ".agents/skills",
+      "files": {
+        "CHECKLIST.md": "28af92bce19cdb1c9fa4076e70c468798eb1a8585baea73c946075f7afeb33f0",
+        "METHODOLOGY.md": "62c82c5aa4a5180d66236449a007ac5c3d8e4c252f73ed58024635864236f811",
+        "SKILL.md": "cc5f5f7f72f5ef80f5c820e25e80347c5da4e18da27dae6d18914dd83c4b88f8",
+        "TEMPLATES.md": "a6f7a068fc2adbb144920b26367aed8f3e7b9b0eee9e188acc9a1930ebe53bc8"
+      }
+    },
+    {
+      "name": "researchmaxer",
+      "source_root": ".agents/skills",
+      "files": {
+        "SKILL.md": "8d6ac415ab60c1f68c925dd3f31f8926decf31a8555b8050a3228a1dd7127a3e",
+        "references/TEMPLATES.md": "8cafef24056942ac49709159892ad100fc582a5c5cceceef13072d8060ee4df3"
+      }
+    },
+    {
+      "name": "skill-creator",
+      "source_root": ".agents/skills",
+      "files": {
+        "LICENSE.txt": "58d1e17ffe5109a7ae296caafcadfdbe6a7d176f0bc4ab01e12a689b0499d8bd",
+        "SKILL.md": "ba8bebb2c085444120743af8dc859dd7c2592d6290e93aa5e1c08403109bdce7",
+        "agents/analyzer.md": "bf68f4cac5a56c673a928c2e6d619586c5b93ea364026ab37547772cb45a663a",
+        "agents/comparator.md": "fe1fc9787c495d864c5d6eada47396478572325fde1b33a96d78bf4b849b7a3e",
+        "agents/grader.md": "57134da0c1a4eea33fbd74a1c9c44aa814f07d6bc64de303edb586f941e5d21a",
+        "assets/eval_review.html": "ce477dcc74dc1c0d1d3352646a79167b5a63634e936b1019160025065974e452",
+        "eval-viewer/generate_review.py": "fc9d1b9243fe5ab6012ebd579bd76d0035de1b79fd3b969de114defab26478fb",
+        "eval-viewer/viewer.html": "a53213426ee1100441d701a3a0d49cda7a842f992d2c36463f4d3cc0258575fa",
+        "references/schemas.md": "8e8876180a8989b406a4d3edddf875b04cdfd5805cc8616686d552b11ce4455f",
+        "scripts/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "scripts/aggregate_benchmark.py": "123ef128ea5ccc01a4b1ac212ef5567f21e9c13d3d240609780beeb3200c49aa",
+        "scripts/generate_report.py": "13df7118a3c50c83c4c3250a606d5f2b20b25a3d44cbc392b3d669ec75281453",
+        "scripts/improve_description.py": "0dc43232db7ac6361775c894f4a1dbac958cb510c51a1230ff9e7fb30a74a7e8",
+        "scripts/package_skill.py": "1a33059b0db1ef73375d46d513e5ea81369d2e8838c970597b0d52ddef8d1c0f",
+        "scripts/quick_validate.py": "67cf5703402013936c8fb75ad6a1afecd8841d45cc5e606b634eb05825fde365",
+        "scripts/run_eval.py": "43e3b8f80dbf69c343967ba77e268fae991d9fa3ed68b32a0ff02532cd48657f",
+        "scripts/run_loop.py": "bafdb8e25c740813c735c54bf0489b9e87146da4cf697265927513c5430112d7",
+        "scripts/utils.py": "3af8ae62c40c73ab712207436a0d9a981e845f25c5a7040229eb189cc8e45bb1"
+      }
+    },
+    {
+      "name": "spec-to-strategy",
+      "source_root": ".agents/skills",
+      "files": {
+        "EXAMPLES.md": "f0e74f24df7e59edb4fe9793696d33412c5710c5cc68bffafc14dac39a76e297",
+        "METHODOLOGY.md": "9bcfe914712ba41d6aa20bb63d7fc0bdd6faa4d310788afb320a39ca67931928",
+        "SKILL.md": "b7715679fac588e131785efaa464f8070b185ecf6d76eba37493613a93b13240",
+        "TEMPLATES.md": "6d35d34395e959efe758509ade3f1642f17f9b453a2ba8c9099a17f1bab9d12e",
+        "VERIFICATION.md": "36f5ad570560a3721faff66e9a0201929ea8685770c9c4df800c237defe05321"
+      }
+    },
+    {
+      "name": "spec-to-tdd",
+      "source_root": ".agents/skills",
+      "files": {
+        "EXAMPLES.md": "67bc6dbd5bac7bdd968eb70d0482378ab69529bdc49d173e46bb61e3292ed7a0",
+        "METHODOLOGY.md": "7fefd47a2bc23ac8bd679aaf6168bca511b84f0e85e1fa45c79cb257987426bf",
+        "SKILL.md": "a2363e67cb797056c07eb81546d60baebff4306d024ba19081a61799bc40bad7",
+        "TEMPLATES.md": "a685548e4a52ba0438197657921a9a00cec03ee9460630245e5bde357e677c67"
+      }
+    },
+    {
+      "name": "swarm-design-ops",
+      "source_root": ".claude/skills",
+      "files": {
+        "SKILL.md": "9c2671433db974dcf692ec32555c4f4c064dd4cfef208164710b849b0957f608"
+      }
+    },
+    {
+      "name": "swarm2-vxg-feature-shell",
+      "source_root": ".agents/skills",
+      "files": {
+        "SKILL.md": "d5d1b840499908f979909d8f0be0782f2ca2ece3df012bd119e9350500c6c6b5",
+        "agents/openai.yaml": "08d6b2404d0f380f880dbe1e5902bbcdab5e7c3dc9776b1e04c8b2d78373b9fb"
+      }
+    },
+    {
+      "name": "uvp-goal",
+      "source_root": ".agents/skills",
+      "files": {
+        "SKILL.md": "3eb64807bdc24cd760b82e67779f3d7e174796ce8141c9e7b9962683274ef648"
+      }
+    },
+    {
+      "name": "vcs-ops",
+      "source_root": ".agents/skills",
+      "files": {
+        "SKILL.md": "41cbd2d4385bdd57844cc8728ee0227853dd0288e49bf0f30e1cce822cae3537"
+      }
+    },
+    {
+      "name": "verify-authoring",
+      "source_root": ".agents/skills",
+      "files": {
+        "BACKEND.md": "d5ba5020a92deb78d46bfcba918c1855c4236d4a71e2bc9a6a43052b3b484d8d",
+        "CORE.md": "f0485cfa93a897984da3a477fe28dc021d0ff9ad701617489f2e6b34b4ff806b",
+        "EXAMPLES.md": "a5cc0b8f0587e0de891df7f189c2105c1461715956abc6a85d823e3e92234458",
+        "SKILL.md": "2b9cc2b140dac5e768f44b34b187d039c09c16bb97fb83956d015c013655315d",
+        "VXG-CANVAS.md": "5cb76b39702969fb6d79a92ffa20173034b8bab649f622261097d67d4c343fa3"
+      }
+    },
+    {
+      "name": "verify-ops",
+      "source_root": ".agents/skills",
+      "files": {
+        "SKILL.md": "242ac9477db89eb793210edc4985c107481f6b77ed6481b6ba63116ef6987b10"
+      }
+    },
+    {
+      "name": "vxg-project-ops",
+      "source_root": ".claude/skills",
+      "files": {
+        "SKILL.md": "b8625966ecec712c3810ff848a0038772554c345b6ab1be4e4fb1fc444e7f917"
+      }
+    },
+    {
+      "name": "vxg-testing",
+      "source_root": ".claude/skills",
+      "files": {
+        "SKILL.md": "e1911bf04dbdd6f0041e8cacaad3f9284d322c131700b2cbdd673d58102067c3"
+      }
+    }
+  ],
+  "public_adaptations": {
+    "canvas-to-vxg/SKILL.md": {
+      "reason": "Replace a private absolute plugin path with host-resolved BROWSER_RUNTIME_PATH and label legacy adapter availability.",
+      "published_sha256": "429678f7713033322ce028cce03d002871e9dc71c617d103237b87e3712f9d20"
+    },
+    "playwright-interactive/LICENSE.txt": {
+      "reason": "Normalize line endings to LF for Git publication; license text is unchanged.",
+      "published_sha256": "c16f8dcf1a368b83be78d826ea23de4079fe1b4469a0ab9ee20563f37ff3d44b"
+    }
+  },
+  "additional_notices": {
+    "frontend-design/LICENSE.txt": {
+      "source": "https://raw.githubusercontent.com/anthropics/skills/main/skills/frontend-design/LICENSE.txt",
+      "sha256": "0d542e0c8804e39aa7f37eb00da5a762149dc682d7829451287e11b938e94594"
+    }
+  }
+}

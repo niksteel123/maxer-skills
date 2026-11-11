@@ -2,34 +2,153 @@
 
 Agent skills for rigorous, spec-driven implementation pipelines — workflows that carry a feature from raw idea to production-audited code without spec drift.
 
-Two complete pipelines ship here:
+Three workflow entry points ship here:
 
-- **Contract-First** *(current)* — validation-first. Verification packages exist and validate **before** implementation. A unit ships only on a truthful greenlight.
-- **3-SOT** *(original)* — three sources of truth (Spec / TDD / Strategy) feeding self-contained execution units.
+- **Git Contractmaxxer (everyday delivery)** — plan, implement, review or take over
+  feature work through existing GitHub issues and PRs, without restarting a stage chain.
+- **Contract-First (specialist)** — adopt explicit contracts, verification packages and unit gates
+  where the project needs them.
+- **3-SOT (legacy)** — preserve existing Spec / TDD / Strategy projects; avoid as the default for new work.
+
+47 bundled skills, refreshed against the owner's installed sources on **2026-11-11**.
+Everyday third-party helpers, including **no process porn/ceremony**, are catalogued
+with upstream links in [dependencies](docs/DEPENDENCIES.md), subject to their licenses.
 
 Works with [Claude Code](https://code.claude.com) and [Codex](https://developers.openai.com/codex).
 
+## Which skills should I use now?
+
+These are maintainer recommendations as of **2026-11-11**, based on the current
+skill instructions and the recent usage check below. A recent copy is not
+necessarily a modern workflow, and an unused specialist is not necessarily obsolete.
+The labels guide selection; they do not delete skills, change existing contracts,
+or disable installer entries. `--all` still includes legacy skills.
+
+### Recommended current workflow
+
+| Need | Start here | Why |
+| --- | --- | --- |
+| Deliver or take over a feature | [git-contractmaxxer](git-contractmaxxer/) | Continues current issues, PRs, ownership and evidence; adapts the next action rather than generating a compulsory stage chain |
+| Plan related product outcomes | [product-board](product-board/) | Keeps the existing roadmap/work plane instead of creating another tracker |
+| Choose models or delegate work | [fleet-controller](fleet-controller/) | Uses current authorized options and task fit; replaces fixed provider-role assumptions |
+| Ground an uncertain proposal | [research-hardening](research-hardening/) | Check current intent, code and inputs; use its full stage only when adopting the contract pipeline |
+| Preserve continuity or explain a failure | [intent-to-handoff](intent-to-handoff/), [error-manifest](error-manifest/) | Focused handoff and debugging utilities; use when a recipient needs them |
+
+The external **no-process-porn/ceremony** skill is part of the recommended core,
+with a separate authorized upstream install. **reality-check-for-project** is an
+optional complement.
+See [dependencies](docs/DEPENDENCIES.md#everyday-external-skills-install-from-the-owner).
+
+### Current, but only for the relevant task or stack
+
+| Group | Skills | Use when |
+| --- | --- | --- |
+| Contract-first delivery | [contractmaxxer](contractmaxxer/) and the [contract stages](#the-contract-first-pipeline) | The repository actually adopts contract units and executable verification; a heavier option than everyday GitHub delivery |
+| Verification | [verify-authoring](verify-authoring/), [verify-ops](verify-ops/), [uvp-goal](uvp-goal/) | A compatible verification runtime exists; these are not a universal install-and-run test system |
+| Accounts/storage | [fleet-accounts](fleet-accounts/), [disk-janitor](disk-janitor/) | Account qualification or actual disk pressure requires them |
+| Research/document utilities | [idea-to-research](idea-to-research/), [codebase-to-spec](codebase-to-spec/), [skill-creator](skill-creator/) | The requested deliverable is research, an extracted specification or a skill |
+| UI/browser work | [playwright-interactive](playwright-interactive/), [frontend-design](frontend-design/) | The host supports the required tools; the bundled frontend-design body is a local variant, not certified latest upstream |
+| Swarm/VXG adapters | The eight skills in the [swarm preset](#swarm-operations) | The project actually uses agent-swarm/swarmd/VXG; unrelated projects do not need this stack |
+| Focused document improvement | [researchmaxer](researchmaxer/), [planmaxer](planmaxer/), [harmonymaxer](harmonymaxer/) | An explicit research/plan/doc integration task needs them; their older multi-pass/handoff defaults are not a requirement for every change |
+
+### What recent usage supports
+
+A local review of readable Codex and Claude Code histories on Linux and Mac
+covered **October 12–November 11, 2026**, ending before this maintenance chat.
+It found recurring invocation or explicit skill-read signals for **fleet-controller**,
+**git-contractmaxxer**, **agent-browser**, **intent-to-handoff**, **fleet-accounts**
+and **disk-janitor**. Research-hardening and Railway also appeared repeatedly;
+proof, account and contract-stage helpers remain task-specific.
+
+No explicit signal was found for featuremaxxer, layermaxxer, pipemaxxer,
+master-workflow or design-consistency in that window. Codex-first appeared in one
+Claude Code conversation. That supports changing the promoted default, but the
+rewrite recommendations below are based on the instructions themselves too.
+Planmaxer, harmonymaxer and researchmaxer had some observed use, so keep them as
+optional document tools rather than calling them useless.
+
+This is a conservative usage signal, not an execution-success audit: reading a
+skill does not prove applying it successfully, and implicit use, variable-built
+paths or unavailable/isolated history may be missed. Catalog listings and this
+audit's own reads were excluded. Raw conversations, session IDs and private
+machine details are not published.
+
+### Legacy or rewrite candidates — avoid as new defaults
+
+| Skill | Recommendation | Concrete reason / replacement |
+| --- | --- | --- |
+| [codex-first](codex-first/) | **Highest-priority rewrite or retirement** | Hard-codes Claude/Codex roles, model/effort assumptions and local launch conventions; even warns against `resume --last` while later showing it. Use fleet-controller with a qualified adapter and explicit session identity |
+| [design-consistency](design-consistency/) | **Rewrite before general use** | Uses a universal under-1% pixel-difference pass threshold and claims no human review is needed. Keep pixel comparisons for controlled screenshot regression; use browser interaction, DOM/state checks and the project's actual design/accessibility review for wider acceptance |
+| [featuremaxxer](featuremaxxer/) | **Legacy orchestration** | Five handoff files plus Beads and older blanket scope/push rules overlap Git Contractmaxxer. Prefer git-contractmaxxer for new delivery; it skips a separate TDD document, not testing itself |
+| [layermaxxer](layermaxxer/) | **Legacy orchestration** | Builds a six-prompt strategy/Beads/execution chain and shared active/archive structure. Prefer product-board plus git-contractmaxxer for incremental outcomes; use contractmaxxer when formal units are required |
+| [pipemaxxer](pipemaxxer/), [master-workflow](master-workflow/) | **Retain for existing 3-SOT projects** | Their fixed Spec → TDD → Strategy → Beads pipeline is the older architecture. Prefer git-contractmaxxer for new work, or contractmaxxer for an explicitly adopted proof-package workflow |
+| [research-to-spec](research-to-spec/), [spec-to-tdd](spec-to-tdd/), [spec-to-strategy](spec-to-strategy/), [beads-from-sources](beads-from-sources/), [bead-plan-audit](bead-plan-audit/), [beads-to-execution](beads-to-execution/), [bead-completion-audit](bead-completion-audit/) | **Legacy pipeline components; reuse selectively** | Still useful for a repository that consumes those artifacts. Avoid generating the whole chain solely to fit the tools; they are not all individually obsolete |
+
+I would retire or rewrite **codex-first first**, then **design-consistency**.
+Keep the older pipeline files available for existing consumers, but stop promoting
+featuremaxxer, layermaxxer and pipemaxxer as the easiest route for new work.
+
 ## Installation
 
-### Claude Code
-```bash
-git clone https://github.com/niksteel123/maxer-skills.git /tmp/maxer-skills-install
-cp -r /tmp/maxer-skills-install/*/ ~/.claude/skills/
-rm -rf /tmp/maxer-skills-install
+### Recommended core pack for a new project
+
+Use **`--preset starter`** for five bundled skills: **git-contractmaxxer**,
+**product-board**, **fleet-controller**, **intent-to-handoff**, and **disk-janitor**.
+**just-say-no-to-process-porn-and-ceremony** is also a core recommendation,
+installed separately through its authorized upstream because it cannot be redistributed.
+
+The installer defaults to `starter`; `everyday` is an alias for the same selection.
+No legacy workflow, account manager, UVP/Beads or platform adapter is pulled in.
+
+```sh
+git clone https://github.com/niksteel123/maxer-skills.git
+cd maxer-skills
+python3 scripts/install.py --preset starter --target shared --dry-run
+python3 scripts/install.py --preset starter --target shared
+# Claude Code: use --target claude instead of --target shared.
 ```
 
-### Codex
-```bash
-git clone https://github.com/niksteel123/maxer-skills.git /tmp/maxer-skills-install
-cp -r /tmp/maxer-skills-install/*/ ~/.agents/skills/
-rm -rf /tmp/maxer-skills-install
+Requires Python 3.10+. The installer includes bundled dependencies, skips matching
+copies, and refuses to overwrite differing installations without explicit
+`--replace` (which keeps backups). Use `--all` for all bundled skills or
+`--preset contract`, `--preset legacy`, `--preset swarm` for a narrower workflow.
+External/proprietary skills and their CLIs are installed separately. Optional
+`related` helpers do not expand automatically. The installer reports the external
+core companion; a successful exit confirms bundled installation only.
+
+See the [core install list and upstream step](docs/NEW-PROJECT.md). For a current
+codebase, follow the [integration guide](docs/INTEGRATION.md), including shared
+AGENTS.md/CLAUDE.md changes and private machine notes. See also
+[setup/update instructions](docs/SETUP.md), [dependency map](docs/DEPENDENCIES.md),
+[project AGENTS.md starter](examples/AGENTS.md), and [source audit](docs/source-snapshot.json).
+Do not copy private machine or global agent configuration into another project.
+
+## Everyday GitHub delivery
+
+| Skill | Purpose |
+| --- | --- |
+| [git-contractmaxxer](git-contractmaxxer/) | GitHub-native feature planning, delivery, steering and takeover from current state |
+| [product-board](product-board/) | Maintain useful product milestones in the existing shared work plane |
+| [fleet-controller](fleet-controller/) | Choose authorized models/providers/effort and size delegation to useful work |
+| [fleet-accounts](fleet-accounts/) | CAAM account enrollment, qualification and session/account operations |
+| [verify-ops](verify-ops/) | Operate adopted verification packages and evidence |
+| [disk-janitor](disk-janitor/) | Inspect storage pressure and ownership before cleanup |
+
+```text
+/git-contractmaxxer Continue this feature from its current issue, PRs and proof.
+/product-board Reconcile the next milestones against what actually works.
 ```
+
+Repository policy and scoped user authorization govern every workflow. A helper's
+stage chain, AUTO mode or install preset does not grant deployment, spend or
+publication permission.
 
 ---
 
 ## The Contract-First Pipeline
 
-The newer pipeline. Its central claim: **a unit is complete only on a truthful verification greenlight** — never on narrative, never on acceptance criteria, never on local tests alone. Proof obligations are written down and validated *before* any implementation exists, so there is nothing to negotiate afterwards.
+A current specialist workflow for projects that adopt executable proof packages.
+It is not a prerequisite for Git Contractmaxxer. Its central claim: **a unit is complete only on a truthful verification greenlight** — never on narrative, never on acceptance criteria, never on local tests alone. Proof obligations are written down and validated *before* any implementation exists, so there is nothing to negotiate afterwards.
 
 ```
 RESEARCH DOC  ──hardening──▶  ideal source doc (canonical)
@@ -63,19 +182,23 @@ RESEARCH DOC  ──hardening──▶  ideal source doc (canonical)
 
 ### Laws binding every stage
 
-1. The research doc is canonical. Downstream artifacts **cite** it, never restate it. Conflicts resolve upward: code → package → contract → research.
+1. Research records current canonical intent. Cite it without duplicating requirements; authorized steering or contrary evidence can revise it and reconcile affected artifacts.
 2. A unit completes **only** on truthful greenlight.
 3. *Blocked* is a valid truthful result. Mocks never substitute for missing prerequisites.
 4. Amendments are classed and logged. Red→green without a code change trips an automatic audit.
 5. Manual scenarios run on **real** subjects with real data.
-6. Each stage writes exactly **one** artifact class.
+6. Each normal stage has one primary artifact class. Substantial steering reconciles the affected artifact classes together.
 7. **The Consumer Rule — a declaration is not a mechanism.** Every claim must have a proven consumer. The test is never *"is it declared?"* but *"what breaks if I delete it?"* A schema field no executor evaluates, a guarantee no code reads, a rule living only in prose — all the same defect, all producing confident, vacuous greens.
 
 > **Note on stage 3.** `contract-to-uvp` and `uvp-goal` are written against a verification-package CLI internal to the repo they grew up in. Published here as **pattern references** — the discipline (author proof obligations first, prove the baseline is red, only then implement) ports anywhere; the exact commands do not. Substitute your own test-runner surface.
 
 ---
 
-## The 3-SOT Pipeline
+## The 3-SOT Pipeline (legacy)
+
+Retained for existing consumers. For new projects, start with Git Contractmaxxer
+or explicitly choose the contract-first workflow above. Individual stages remain
+usable when their artifacts serve a real consumer.
 
 ```
 Source of Truth #1 (SPEC)     — WHAT to build
@@ -118,21 +241,27 @@ If it's in the spec, it ships. No downstream document gets to make scope cuts.
 
 | Skill | Purpose |
 |-------|---------|
-| **[featuremaxxer](featuremaxxer/)** | Fast-track pipeline (skips TDD). For quick features. |
+| **[featuremaxxer](featuremaxxer/)** | **Legacy:** five-handoff feature/Beads pipeline; skips a separate TDD document, not tests. |
 | **[researchmaxer](researchmaxer/)** | Two-pass research/feature doc optimization. |
 | **[planmaxer](planmaxer/)** | Iterative plan/architecture optimization. |
-| **[layermaxxer](layermaxxer/)** | Decompose monoliths into shippable layers. |
+| **[layermaxxer](layermaxxer/)** | **Legacy:** layer decomposition through a strategy/Beads/handoff chain. |
 | **[harmonymaxer](harmonymaxer/)** | Cross-document consistency integration. |
 
 ## Swarm Operations
+
+The optional `swarm` preset also includes [agent-swarm-cli](agent-swarm-cli/),
+[project-ops](project-ops/), [vcs-ops](vcs-ops/), [vxg-project-ops](vxg-project-ops/),
+[vxg-testing](vxg-testing/), [swarm-design-ops](swarm-design-ops/),
+[canvas-to-vxg](canvas-to-vxg/) and [swarm2-vxg-feature-shell](swarm2-vxg-feature-shell/).
+They require compatible external services/runtimes; the skills do not ship those.
 
 Skills for running long, multi-agent implementations without the run degrading underneath you.
 
 | Skill | Purpose |
 |-------|---------|
-| **[fleet-controller](fleet-controller/)** | Keep a swarm optimally sized via a *living* fleet plan — predict per-step agent counts from the work DAG, then correct against live reality on a cadence and on events. Read before spawning lanes. |
+| **[fleet-controller](fleet-controller/)** | Current task-fit model/provider/effort routing and staffing. A bounded delegation needs a short decision, not a new fleet-plan document. |
 | **[disk-janitor](disk-janitor/)** | Autonomous disk-pressure relief for long runs. Reclaims by a safety-ranked ladder (regenerable caches → dead-owner build artifacts → stale worktrees), never touching declared-protected state. Declare load-bearing paths **at creation** — that declaration is what lets cleanup run unattended. |
-| **[codex-first](codex-first/)** | Route implementation work to Codex CLI; Claude specs, reviews, verifies. |
+| **[codex-first](codex-first/)** | **Rewrite/retire candidate:** historical fixed Claude/Codex role policy; prefer fleet-controller. |
 | **[uvp-goal](uvp-goal/)** | Author verification goals, realistic scenario tests, and evidence contracts from a feature idea. Pattern reference — see the stage-3 note above. |
 | **[verify-authoring](verify-authoring/)** | Author verification packages from scratch: manifest schema, proof kinds, execution modes, bindings, checklist items. Pattern reference. |
 
@@ -150,26 +279,28 @@ Skills for running long, multi-agent implementations without the run degrading u
 
 | Skill | Purpose |
 |-------|---------|
-| **[design-consistency](design-consistency/)** | Verify visual consistency between a reference design and implementation. Fully autonomous pixel-diff pass/fail. |
+| **[design-consistency](design-consistency/)** | **Rewrite candidate:** controlled pixel-diff regression technique; its universal threshold is insufficient for general UI acceptance. |
 | **[playwright-interactive](playwright-interactive/)** | Persistent browser and Electron interaction for fast iterative UI debugging. |
 | **[frontend-design](frontend-design/)** | Distinctive, production-grade frontend interfaces that avoid generic AI aesthetics. |
 
 ## Quick Start
 
-```bash
-# Contract-first pipeline from a research doc (recommended)
+```text
+# Recommended default: continue from the actual current work
+/git-contractmaxxer Continue this feature from its current issue, PRs and proof.
+
+# Product planning in the existing work plane
+/product-board Reconcile the next useful milestones.
+
+# Specialist: project has adopted contract units and a verification runtime
 /contractmaxxer path/to/research-doc.md
 
-# 3-SOT pipeline from a research doc
+# Legacy: only for an existing 3-SOT workflow
 /pipemaxxer path/to/research-doc.md
-
-# Quick feature (no TDD)
-/featuremaxxer path/to/feature-doc.md
-
-# Optimize a research doc before either pipeline
-/researchmaxer path/to/research.md
 ```
 
 ## License
 
-MIT — except `skill-creator/`, which is Apache-2.0 (see `skill-creator/LICENSE.txt`).
+Original contributions: [MIT](LICENSE). Third-party materials retain their own
+licenses; see [THIRD_PARTY.md](THIRD_PARTY.md). Proprietary external skills are linked
+in the dependency guide and are not bundled.

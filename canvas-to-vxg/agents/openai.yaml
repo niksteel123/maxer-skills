@@ -1,0 +1,8 @@
+interface:
+  display_name: "Canvas to VXG"
+  short_description: "Pixel-perfect design-to-VXG porting"
+  brand_color: "#14B8A6"
+  default_prompt: "Use $canvas-to-vxg to port this Paper or SwarmCanvas design into a pixel-perfect VXG feature with browser evidence."
+
+policy:
+  allow_implicit_invocation: true

@@ -1,0 +1,306 @@
+{
+  "format": 1,
+  "updated": "2026-11-11",
+  "presets": {
+    "starter": [
+      "git-contractmaxxer",
+      "product-board",
+      "fleet-controller",
+      "intent-to-handoff",
+      "disk-janitor"
+    ],
+    "everyday": [
+      "git-contractmaxxer",
+      "product-board",
+      "fleet-controller",
+      "intent-to-handoff",
+      "disk-janitor"
+    ],
+    "contract": [
+      "contractmaxxer",
+      "uvp-goal"
+    ],
+    "legacy": [
+      "pipemaxxer",
+      "master-workflow"
+    ],
+    "swarm": [
+      "agent-swarm-cli",
+      "project-ops",
+      "vcs-ops",
+      "vxg-project-ops",
+      "vxg-testing",
+      "swarm-design-ops",
+      "canvas-to-vxg",
+      "swarm2-vxg-feature-shell"
+    ]
+  },
+  "skills": {
+    "agent-swarm-cli": {
+      "requires": []
+    },
+    "bead-completion-audit": {
+      "requires": []
+    },
+    "bead-plan-audit": {
+      "requires": []
+    },
+    "beads-from-sources": {
+      "requires": []
+    },
+    "beads-to-execution": {
+      "requires": []
+    },
+    "canvas-to-vxg": {
+      "requires": [
+        "vxg-project-ops",
+        "vxg-testing",
+        "swarm-design-ops"
+      ]
+    },
+    "codebase-to-spec": {
+      "requires": []
+    },
+    "codex-first": {
+      "requires": []
+    },
+    "contract-bead-audit": {
+      "requires": []
+    },
+    "contract-next-unit": {
+      "requires": [
+        "product-board"
+      ]
+    },
+    "contract-to-beads": {
+      "requires": []
+    },
+    "contract-to-execution": {
+      "requires": [
+        "fleet-controller",
+        "disk-janitor",
+        "product-board"
+      ]
+    },
+    "contract-to-uvp": {
+      "requires": [
+        "verify-authoring",
+        "verify-ops"
+      ]
+    },
+    "contractmaxxer": {
+      "requires": [
+        "research-hardening",
+        "research-to-contract",
+        "contract-to-uvp",
+        "contract-to-beads",
+        "contract-bead-audit",
+        "contract-to-execution",
+        "contract-next-unit",
+        "fleet-controller",
+        "product-board",
+        "verify-authoring",
+        "verify-ops",
+        "disk-janitor"
+      ],
+      "related": [
+        "codex-first"
+      ]
+    },
+    "design-consistency": {
+      "requires": []
+    },
+    "disk-janitor": {
+      "requires": []
+    },
+    "error-manifest": {
+      "requires": []
+    },
+    "featuremaxxer": {
+      "requires": []
+    },
+    "fleet-accounts": {
+      "requires": []
+    },
+    "fleet-controller": {
+      "requires": []
+    },
+    "frontend-design": {
+      "requires": []
+    },
+    "git-contractmaxxer": {
+      "requires": [
+        "fleet-controller"
+      ],
+      "related": [
+        "product-board",
+        "fleet-accounts",
+        "verify-ops",
+        "verify-authoring",
+        "research-hardening",
+        "research-to-contract"
+      ]
+    },
+    "harmonymaxer": {
+      "requires": []
+    },
+    "idea-to-research": {
+      "requires": []
+    },
+    "intent-to-handoff": {
+      "requires": []
+    },
+    "layermaxxer": {
+      "requires": []
+    },
+    "master-workflow": {
+      "requires": []
+    },
+    "pipemaxxer": {
+      "requires": [
+        "research-to-spec",
+        "spec-to-tdd",
+        "spec-to-strategy",
+        "beads-from-sources",
+        "bead-plan-audit",
+        "beads-to-execution",
+        "bead-completion-audit"
+      ]
+    },
+    "planmaxer": {
+      "requires": []
+    },
+    "playwright-interactive": {
+      "requires": []
+    },
+    "product-board": {
+      "requires": []
+    },
+    "project-ops": {
+      "requires": []
+    },
+    "research-hardening": {
+      "requires": [
+        "product-board"
+      ]
+    },
+    "research-to-contract": {
+      "requires": [
+        "product-board"
+      ]
+    },
+    "research-to-spec": {
+      "requires": []
+    },
+    "researchmaxer": {
+      "requires": []
+    },
+    "skill-creator": {
+      "requires": []
+    },
+    "spec-to-strategy": {
+      "requires": []
+    },
+    "spec-to-tdd": {
+      "requires": []
+    },
+    "swarm-design-ops": {
+      "requires": []
+    },
+    "swarm2-vxg-feature-shell": {
+      "requires": [
+        "vxg-project-ops",
+        "vxg-testing",
+        "swarm-design-ops"
+      ]
+    },
+    "uvp-goal": {
+      "requires": []
+    },
+    "vcs-ops": {
+      "requires": []
+    },
+    "verify-authoring": {
+      "requires": []
+    },
+    "verify-ops": {
+      "requires": []
+    },
+    "vxg-project-ops": {
+      "requires": []
+    },
+    "vxg-testing": {
+      "requires": [
+        "verify-ops",
+        "swarm-design-ops"
+      ]
+    }
+  },
+  "external_skills": {
+    "just-say-no-to-process-porn-and-ceremony": {
+      "source": "https://jeffreys-skills.md",
+      "license": "https://jeffreys-skills.md/terms",
+      "bundled": false
+    },
+    "idea-wizard": {
+      "source": "https://jeffreys-skills.md",
+      "bundled": false
+    },
+    "reality-check-for-project": {
+      "source": "https://jeffreys-skills.md",
+      "bundled": false
+    },
+    "ntm": {
+      "source": "https://jeffreys-skills.md",
+      "bundled": false
+    },
+    "vibing-with-ntm": {
+      "source": "https://jeffreys-skills.md",
+      "bundled": false
+    },
+    "mcp-server-design": {
+      "source": "https://jeffreys-skills.md",
+      "bundled": false
+    },
+    "beads-workflow": {
+      "source": "https://github.com/Dicklesworthstone/agent_flywheel_clawdbot_skills_and_integrations/tree/main/skills/beads-workflow",
+      "bundled": false
+    },
+    "agent-browser": {
+      "source": "https://github.com/vercel-labs/agent-browser",
+      "bundled": false
+    },
+    "use-railway": {
+      "source": "https://github.com/railwayapp/railway-skills",
+      "bundled": false
+    },
+    "clerk": {
+      "source": "https://github.com/clerk/skills",
+      "bundled": false
+    },
+    "react-best-practices": {
+      "source": "https://github.com/vercel-labs/agent-skills",
+      "bundled": false
+    },
+    "web-design-guidelines": {
+      "source": "https://github.com/vercel-labs/agent-skills",
+      "bundled": false
+    },
+    "composition-patterns": {
+      "source": "https://github.com/vercel-labs/agent-skills",
+      "bundled": false
+    },
+    "gws-*": {
+      "source": "https://github.com/googleworkspace/cli",
+      "bundled": false
+    }
+  },
+  "external_requirements": {
+    "starter": [
+      "just-say-no-to-process-porn-and-ceremony"
+    ],
+    "everyday": [
+      "just-say-no-to-process-porn-and-ceremony"
+    ]
+  }
+}

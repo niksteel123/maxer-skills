@@ -45,21 +45,28 @@ VXG-scoped packages typically bind to one or more of:
 ```yaml
 bindings:
   scopes: [vxg/swarm2-main]
-  # Optional drift-only watches for the UI source tree:
+  # Declared scope; matched source-file content is not automatically hashed:
   path_globs:
     - "agent-swarm-ui/packages/ui/src/apps/vxg-map/**"
     - "agent-swarm-ui/packages/ui/src/canvas/shapes/**"
-  skeleton_layers:
+  territory_layers:
     - l2.5.vxg-map
 ```
 
 ## Pattern A — Checklist + Manual (visual/human-graded)
 
-Use when the proof is human-judgment-heavy: "does this look right?", "is the spacing consistent?", "does the shell chrome render at 1920x1080?".
+Use when acceptance requires visual judgment: "does this match the reference?",
+"is the spacing consistent?", or "is the avatar legible during this replay?".
+An agent may review retained captures; require a human only when the criterion
+needs human perception or physical interaction. Automate deterministic geometry
+or latency thresholds and retain their measurements separately from judgment.
 
 ### Suite frontmatter
 
 ```yaml
+evidence_contract:
+  run_root_glob: evidence/vxg-proof/*
+  required_artifacts: [preview.png]
 suites:
   - id: preview.checklist
     proof_kind: checklist
@@ -74,58 +81,63 @@ suites:
 
 ### Suite file format (checklist manifest)
 
-`suites/preview-checklist.md` is a plain Markdown file. **The parser reads Markdown bullet lines and ignores everything else** — no YAML frontmatter, no per-item metadata. Any line starting with `- `, `* `, or `+ ` becomes one checklist item. Every other line (headings, prose, code blocks) is skipped.
-
-Canonical pattern: `- **item-slug**: description that describes what to verify and how.`
+Use structured YAML frontmatter in `suites/preview-checklist.md` for new
+checklists. The opening `---` selects the structured parser; the Markdown body
+after the closing fence is commentary. Supported item fields are `title`,
+`description`, `severity`, `tags`, `required_capabilities` and `automation_hint`.
+Unknown fields, including authored `id`/`item_id`, reject at checklist parse time.
 
 ```markdown
+---
+items:
+  - title: title-bar-renders
+    description: Compare title bar width, icons and labels with the pinned reference at 1920x1080.
+    severity: high
+    tags: [layout, chrome]
+    required_capabilities: [capture.screenshot]
+    automation_hint: Cite preview.png after comparing the retained render with the reference.
+  - title: octagon-map-centered
+    description: Review centering, gradients and clipping at the same viewport.
+    severity: medium
+    automation_hint: Cite preview.png and record the visual comparison reasoning.
+---
 # Preview Checklist
 
-Proves the VXG map page renders correctly at 1920×1080. Human or AI verifier
-reads each item, inspects the browser, and records a verdict.
-
-## Layout items
-
-- **title-bar-renders**: Top title bar spans full canvas width with traffic lights, breadcrumb text, and action icons. Matches Pencil reference at 1920×1080.
-- **left-sidebar-width**: Left sidebar measures 280px at 1920×1080 viewport; tolerance ±4px. Capture via `capture.layout` / browser devtools.
-- **octagon-map-centered**: Octagon map shape is centered horizontally and vertically in the main area; glassmorphism container and gradient glow visible.
-
-## Interaction items
-
-- **click-node-opens-detail**: Clicking any VXG node opens the inspector drawer on the right within 200ms.
+Record the reference identity, capture inputs and actual reviewer observation.
 ```
 
 ### What authors CAN set
 
 | Part | Source | Notes |
 |---|---|---|
-| Item title | text between `**...**` | Becomes the machine `title` field. |
-| Item description | text after the closing `**` | `:`, `-`, or leading whitespace after `**` is stripped. If no `**...**` is present, the whole bullet body becomes the title with empty description. |
-| Item order | bullet order in the file | Determines the 1-based `ordinal`. |
-| Item slug (informal) | convention only | By convention, authors put a stable slug inside the `**...**` (e.g., `title-bar-renders`). The real `item_id` is auto-generated — see below. |
+| `title`, `description` | Structured item fields | Title is required and nonempty; both are trimmed. Keep criterion traceability without treating the title as a runtime ID. |
+| `severity` | Structured item field | `low`, `medium` (default), `high`, `critical`. |
+| `tags` | Structured item field | Defaults empty. |
+| `required_capabilities` | Structured item field | Inherits suite requirements when omitted; supplied values are normalized. |
+| `automation_hint` | Structured item field | Maps concrete artifact names from `evidence_contract.required_artifacts` to this item; prose is not an automatic test. |
 
-### What authors CANNOT set (parser ignores these today)
+### Legacy files and identity
 
-| Field | What happens | Why |
-|---|---|---|
-| `item_id` | Auto-generated as `<suite_id>-<ordinal>` (e.g., `preview.checklist-1`, `preview.checklist-2`). | See `generate_checklist_item_id` in `crates/swarm-services/src/verify/compiler.rs`. |
-| `severity` | Hardcoded to `VerificationSeverity::Medium` for every item. | Parser does not read per-item metadata. |
-| `tags` | Always empty. | Same. |
-| `required_capabilities` (per-item) | Inherited from the suite-level `required_capabilities` in `TESTS.md` frontmatter. | Same. |
-| `automation_hint` | Always `None`. | Same. |
+Without opening YAML frontmatter, the legacy parser extracts Markdown bullets
+`- `, `* ` and `+ `: bold text becomes title and the remainder description.
+Severity defaults to medium, capabilities inherit from the suite, and tags/hint
+are empty. Do not place unfenced YAML in that mode: its list lines can be
+misread as checklist items. Prefer structured fields over severity encoded in
+a title prefix.
 
-If your package needs severity differentiation today, encode it in the title slug (e.g., `- **[CRITICAL] title-bar-renders**: …`). A richer parser is pending infra work — see `prompts/verify-checklist-parser-gap-error-manifest.md` if you want to track the gap.
+Both modes return generated opaque `chk-*` IDs. Without a predecessor digest,
+IDs derive from suite ID and ordinal; with `lineage.previous_digest`, they derive
+from suite ID, trimmed title/description and a duplicate-content tiebreak. Parser
+mode alone does not choose identity. Inspect migration after inserting/reordering
+legacy items; preserve unchanged acceptance only when its inputs and evidence
+obligations match. A neighboring edit no longer implies a whole-checklist reset.
 
 ### Verdict targeting
 
-Because `item_id` is auto-generated, verdict CLI calls must use the derived id, not the slug the author put in bold. The mapping is `<suite_id>-<ordinal>`:
+Use the actual ID returned by checklist list, never a title or fabricated ordinal:
 
 ```bash
-# First bullet in preview.checklist becomes item_id = preview.checklist-1
-agent-swarm verify checklist verdict set \
-  --instance-id <id> --suite-id preview.checklist \
-  --item-id preview.checklist-1 --verdict pass \
-  --pass-id <pass_id>
+agent-swarm verify checklist list --instance-id <id> --suite-id preview.checklist --format json
 ```
 
 The full item list (with derived ids) is visible via `agent-swarm verify checklist list --instance-id <id> --suite-id <suite>` — always cross-reference it before writing verdicts.
@@ -141,9 +153,10 @@ agent-swarm verify checklist pass start --instance-id <id> --suite-id preview.ch
 agent-swarm verify checklist verdict set \
   --instance-id <id> \
   --suite-id preview.checklist \
-  --item-id title-bar-renders \
+  --item-id <item-id-from-list> \
   --verdict pass \
   --reasoning "Renders correctly at 1920x1080; matches reference screenshot." \
+  --evidence-ref evidence/vxg-proof/<run-id>/preview.png \
   --pass-id <pass_id>
 
 # 3. Close the pass with a summary
@@ -321,7 +334,10 @@ suites:
     checklist_refs: [browser.smoke]   # a11y pass should happen after browser state settles
 ```
 
-`checklist_refs` indicates ordering intent — the a11y checklist expects the browser smoke to have run first so the UI is in its settled post-interaction state.
+`checklist_refs` validates references to other suites; it does not schedule or
+prove prerequisite execution. If review depends on a capture or settled browser
+state, explicitly run that producer and review its retained artifact. Reuse the
+capture when its relevant inputs remain valid.
 
 ## Design-reference comparison
 
@@ -359,7 +375,9 @@ When verifying shell composition (navigation rails, top bars, status bars, conte
 - **shell-rail-right-width**: Right rail slot renders at 280px width.
 ```
 
-Suite-level `required_capabilities: [capture.screenshot, capture.layout]` apply to every bullet; the parser inherits them. Severity tagging and per-item capability overrides are not currently author-controllable — if you need them, see the infra-gap note earlier in this file.
+The bullets above illustrate criterion wording. Use structured frontmatter when
+the items need severity, tags, capability overrides or artifact hints. Legacy
+bullets inherit suite-level capabilities and medium severity.
 
 ## Interaction with `agent-browser` skill
 
@@ -370,7 +388,9 @@ For **local dev iteration** on a VXG package, `agent-browser` is faster than run
 - Inspect DOM / computed styles to validate layout constraints.
 - Iterate on the checklist items while the suite definition stabilizes.
 
-Once iteration converges, **codify the interactions** into a swarm_session suite so they run headless in CI.
+Codify repeatable deterministic interactions through a supported adapter when
+useful. Keep visual/video judgments as checklists; do not replace review with
+the fact that a screenshot or replay was generated.
 
 ## Viewport + breakpoint discipline
 
@@ -384,14 +404,22 @@ For checklist verdicts, the verifier can attach evidence refs (screenshots, DOM 
 agent-swarm verify checklist verdict set \
   --instance-id <id> \
   --suite-id preview.checklist \
-  --item-id title-bar-renders \
+  --item-id <item-id-from-list> \
   --verdict pass \
   --reasoning "Verified via screenshot: see CAS digest." \
-  --evidence-ref cas://<content-hash> \
+  --evidence-ref cas://verify/sha256/<retained-sha256> \
   --pass-id <pass_id>
 ```
 
-For swarm_session suites, evidence accumulates automatically via `evidence.screenshot()` / `evidence.dom()` / etc. Authors don't declare `named_evidence_refs` in the suite spec — they declare the capabilities that imply evidence emission.
+Required passing judgments resolve retained bytes through the service; the CAS
+ref must already resolve, or provide a readable retained path. Reviewer identity,
+reasoning and coverage of the item's declared artifact obligations are checked.
+Merely typing an artifact-looking string is insufficient. Declare the contract
+with `evidence_contract`, and do not hand-author `named_evidence_refs`.
+
+For swarm_session suites, verify that the selected adapter actually captures the
+required evidence. Capabilities and a generated capture are not acceptance by
+themselves.
 
 ## Gotchas specific to VXG/canvas authoring
 

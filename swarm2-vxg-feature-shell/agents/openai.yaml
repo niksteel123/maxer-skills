@@ -1,0 +1,8 @@
+interface:
+  display_name: "Swarm2 VXG Feature Shell"
+  short_description: "Reusable swarm2 VXG shell feature workflow"
+  brand_color: "#10B981"
+  default_prompt: "Use $swarm2-vxg-feature-shell to create a new swarm2 VXG feature that reuses the shared shell, octagon canvas wrapper, style tokens, and graph-backed page structure."
+
+policy:
+  allow_implicit_invocation: true

@@ -1,0 +1,19 @@
+# Private checkout context — example only
+
+Copy to AGENTS.local.md in the target checkout, exclude it from Git, and replace
+these examples with real non-secret facts. The project's shared AGENTS.md must
+explicitly instruct the agent to read this file; its name alone does not load it.
+
+## Local environment
+
+- This workstation has no GPU. Consult the configured private runbook for an
+  already-authorized execution host when a task genuinely needs one.
+- Use the existing project toolchain and lockfile. Record a local executable path
+  here only if it differs from the portable project command.
+- Local service instructions and checkout locations belong here when they differ
+  from the team's standard setup. Verify the actual current state before acting.
+- Keep account/model registries and machine access details in private configuration;
+  point to the configured reference without copying credentials into instructions.
+
+Shared checks and permissions still apply. These example preferences grant no
+permission to deploy, spend money, change accounts, delete files or message others.

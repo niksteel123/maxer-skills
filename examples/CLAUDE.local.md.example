@@ -1,0 +1,12 @@
+# Private Claude Code notes — example only
+
+Copy to CLAUDE.local.md only if needed and exclude it from Git. Keep the project's
+CLAUDE.md bridge to shared AGENTS.md so private notes do not hide shared policy.
+
+- Prefer the browser/MCP integration already configured for this user after
+  checking it is available. Do not require teammates to install it.
+- Use local/user harness settings for personal hooks and model/account choices.
+- Keep shared operating facts in AGENTS.local.md when both harnesses need them;
+  do not duplicate a private runbook into multiple instruction files.
+
+These notes supplement the shared project rules and grant no extra permissions.
