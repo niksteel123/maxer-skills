@@ -1,12 +1,8 @@
 # Verify Authoring — Backend Command Packages
 
-> ⚠ Fabric fields shipped 2026-07-19 — see SKILL.md § Durable-fabric frontmatter; this file
-> predates them. One claim below is corrected there: `path_globs` do NOT stale an instance on
-> source changes today — the shipped freshness inputs hash no watched-file content (D21,
-> measured; wiring is B6, Phase-2). Also follow SKILL.md's D19 selector discipline: exact
-> backing tests + matched-count assertion; `negative_assertions` is never evaluated.
-
-Authoring guidance for verification packages that run Rust tests via the nextest lane system. The only suite kind here is `(Automated, Command)`. Read SKILL.md + CORE.md first.
+Author deterministic proof as `(automated, command)`. Use either the repository's
+routed planner or an explicit command matrix with exact test selection. Both use
+the same UVP command executor and evidence path. Read SKILL.md + CORE.md first.
 
 ## When to author a backend command suite
 
@@ -20,59 +16,39 @@ Write an `execution_mode: command` suite when the proof is:
 - Persistence / event-store assertions via `cargo test`.
 - Anything that `cargo nextest` can run with a suitable profile.
 
-**Do NOT use command suites for:**
-- Browser UI proof → swarm_session (VXG-CANVAS.md)
-- Human-judgement visual review → checklist (VXG-CANVAS.md)
-- Raw shell commands that aren't cargo/nextest-routed → these bypass the planner and break CI routing
+Use a checklist for subjective visual acceptance. Browser automation can use an
+explicit project test runner or a supported `swarm_session` adapter; choose the
+consumer that actually executes the required product path (VXG-CANVAS.md).
+
+Explicit commands are supported, including narrow `cargo nextest` invocations,
+build checks, and other projects' test runners. Keep the command tied to an actual
+proof obligation. A version check or a script that merely writes a success file
+does not establish product behavior.
 
 ## Source of truth (code + config)
 
 - Lane definitions: `.config/nextest.toml`
 - Planner script: `scripts/dev/run-rust-tests.sh`
-- Verify command execution integration: `crates/swarm-services/src/verify/execution/command.rs` (approximate path)
-- Resource groups: `.config/nextest.toml` lines 76–82
+- Command schema/structural checks: `crates/swarm-services/src/verify/execution/command.rs`
+- Shared plan/execution wiring: `crates/swarm-services/src/verify/service/execution_plan.rs`
+- Command execution/evidence: `crates/swarm-services/src/verify/service.rs`, `execution/nextest.rs`
+- Resource groups and assignment overrides: `.config/nextest.toml`
 
-## Lane system — canonical six
+## Lane system
 
-| Lane | Retries | Slow timeout | Intended tier | When to use |
-|---|---|---|---|---|
-| `fast-local` | 0 | 30s | dev-loop | Inner loop during development. Fail-fast disabled; run the whole set quickly. |
-| `feature-local` | 1 | 60s | feature-gate | Feature-level local validation. One retry on flakes. |
-| `phase-gate` | 1 | 90s | phase-gate | Blocks phase progression. Higher timeout for deeper integration tests. |
-| `ci-fast` | 1 | inherit | hosted T1 | CI fast-path (PR pre-check). |
-| `ci-merge` | 1 | 120s | hosted T2 | Merge-gate validation. Must pass before merge to main. |
-| `nightly-extended` | 1 | 180s | hosted T4a | Nightly extended validation. Slow/heavy tests only. |
+Follow the project's testing policy: `fast-local` for narrow repair,
+`feature-local` for cross-crate pre-close proof, `phase-gate` for milestone
+validation, and `merge-gate` policy through the concrete `ci-merge` profile.
+`ci-fast` mirrors the conservative CI fast path; `nightly-extended` carries
+environment-gated heavy proof. Read current profile filters, retries, slow-timeout
+periods and termination counts from `.config/nextest.toml`.
 
-Verify never invents a new lane — it inherits from `.config/nextest.toml`. If you need a new test family, propose a lane addition there (Phase 0 backend-test-rework territory).
-
-### Lane decision tree
-
-```
-┌────────────────────────────────────────────────────────┐
-│ Is the test expected to run in CI (hosted)?            │
-└────────────────────────────────────────────────────────┘
-   │ no                                      │ yes
-   ▼                                         ▼
-┌──────────────────────┐          ┌────────────────────────────────┐
-│ Runtime < 30s,       │          │ Test runtime < 60s on CI?       │
-│ zero external deps?  │          └────────────────────────────────┘
-└──────────────────────┘            │ yes              │ no
-   │ yes         │ no               ▼                  ▼
-   ▼             ▼              ┌──────────┐   ┌──────────────────┐
-fast-local   feature-local      │ ci-fast  │   │ Nightly only?    │
-                                │ ci-merge │   └──────────────────┘
-                                └──────────┘      │ yes        │ no
-                                                  ▼            ▼
-                                            ┌────────────────┐  ┌──────────┐
-                                            │ nightly-       │  │ phase-   │
-                                            │ extended       │  │ gate     │
-                                            └────────────────┘  └──────────┘
-```
-
-Rule of thumb: start a new suite at `fast-local`. Escalate lanes only when real signals demand it:
-- Flakes → `feature-local` (one retry).
-- Slow (>30s) → `phase-gate` or `ci-merge`.
-- Very slow (>2min), external services, heavy resources → `nightly-extended`.
+The routed planner receives the declared `lane` as `--tier`. Policy may escalate
+it; `verify run plan` reports requested lane, resolved `routed.tier` and reasons.
+With an explicit command matrix, `lane` labels the plan; it does not rewrite a
+command's `--profile`, add `-p`, or enforce resource groups. Put the intended
+profile/package/target selection in the command itself and inspect the plan.
+Fix flakes rather than treating a retry or a slower lane as proof of correctness.
 
 ## Resource groups
 
@@ -87,30 +63,42 @@ For tests that cannot run in parallel (shared port, shared fixture, heavy resour
 | `fuse` | 1 | FUSE mount tests (Phase 2 / L2) |
 | `sandbox` | 1 | Sandbox-execution tests |
 
-Authors don't declare resource groups in suite files — they're set at the nextest test level via `#[test_group("name")]` attributes or in `.config/nextest.toml`'s `[test-groups]` section. Verify respects them automatically.
+This table is illustrative; the live config contains additional groups. Nextest
+groups are declared in `[test-groups]` and assigned through profile overrides with
+`filter` + `test-group` (and sometimes `threads-required`). There is no Rust
+`#[test_group]` mechanism to assume. An explicit nextest command consumes these
+settings through its selected profile; a generic shell command does not.
 
 If your test needs a resource group that doesn't exist, add it to `.config/nextest.toml` in the same PR as the suite; don't bypass.
 
 ## Command suite file format
 
-Minimal `suites/backend-fast.yaml`:
+Portable narrow suite, `suites/backend-fast.yaml`:
 
 ```yaml
 lane: fast-local
+commands:
+  - bash -lc "python3 -m unittest discover -s tests -p test_slug.py"
 ```
 
-That's enough. The planner resolves the lane to the nextest profile, runs relevant tests in the workspace, and emits evidence.
+This runs the named project's tests from the workspace root. Direct allowed tools
+include `bash`, `sh`, `bun`, `bunx`, `cargo`, `git`, `rg`, and `rustc`; wrap Python,
+Node or project scripts with the supported shell form. Check `nextest.rs` for the
+full allowlist and quoting rules. `run plan` shows commands but does not execute
+them or prove executable availability.
 
-### Extended form — all fields
+### Execution fields
 
-The full `VerificationCommandSuiteSpec` (`crates/swarm-services/src/verify/execution/command.rs:60-81`, `#[serde(deny_unknown_fields)]`):
+`VerificationCommandSuiteSpec` rejects unknown fields. Its execution fields are:
 
 ```yaml
-lane: feature-local                                 # Optional; omit for non-routed integrations
-paths:                                              # Optional; planner --paths filter
+lane: feature-local                                 # Optional requested lane
+paths:                                              # Routing hints, NOT test-name selectors
   - crates/swarm-services/src/verify
   - crates/swarm-cli/src/commands/verify.rs
 packages: [swarm-services, swarm-cli]               # Optional; planner --packages filter
+commands: []                                        # Explicit matrix overrides implicit routing
+resource_commands: []                               # Execute before commands; failure blocks body
 staged_configs:                                     # Optional; preflighted for parseability
   - configs/feature-x.toml
 staged_payloads:                                    # Optional; preflighted for accessibility
@@ -120,21 +108,62 @@ integration: routed                                 # Optional; routed (default)
 mcp_call: null                                      # VerificationMcpCallSuiteSpec
 http_probe: null                                    # VerificationHttpProbeSuiteSpec
 sql_probe: null                                     # VerificationSqlProbeSuiteSpec
+scope_plan: null                                    # Declared compile/test scope; see below
 ```
 
 | Field | Default | Purpose |
 |---|---|---|
-| `lane` | `None` | Nextest profile name. Required for `routed` integration in practice. |
-| `paths` | `[]` | Planner `--paths` filter. Empty → planner uses the suite file path itself. Paths in examples are prefixes, not glob patterns. |
-| `packages` | `[]` | Planner `--packages` filter. Empty → no package filter. |
-| `staged_configs` | `[]` | Relative paths (under package root) to config files the integration stages before run. Preflighted for filesystem presence + parseability. |
-| `staged_payloads` | `[]` | Relative paths to payload/fixture files. Preflighted for filesystem accessibility. |
+| `lane` | `None` | Requested routed tier, or explicit-matrix label (default `fast-local` for that matrix). It does not modify explicit commands. |
+| `paths` | `[]` | Input to implicit routing; empty uses the suite file path. Does not select unit vs integration tests. Explicit matrices expose these as inspection hints only. |
+| `packages` | `[]` | Input to implicit routing; inspect resolved packages. In explicit matrices it does not add Cargo `-p` arguments. |
+| `commands` | `[]` | Ordered explicit commands. A nonempty command or resource matrix bypasses the repository router, using the shared command executor. |
+| `resource_commands` | `[]` | Commands executed before the body; nonzero exit prevents body execution. Use for actual inventory/count/resource preflight. |
+| `scope_plan` | `None` | Structural scope contract; not an automatic compiled-test inventory check. |
+| `staged_configs` | `[]` | Package-relative files preflighted for presence/parseability. This field does not itself copy files. |
+| `staged_payloads` | `[]` | Package-relative files preflighted for accessibility, not semantic validity. |
 | `integration` | `routed` | Which integration dispatches this suite. See next section. |
 | `mcp_call` | `None` | Required when `integration: mcp_call`. |
 | `http_probe` | `None` | Required when `integration: http_probe`. |
 | `sql_probe` | `None` | Required when `integration: sql_probe`. |
 
-**There is no `test_filter` field.** If you need nextest filter expressions beyond `paths` + `packages`, encode them in the nextest profile (`.config/nextest.toml`'s `default-filter` for the lane) — not in the suite YAML. `deny_unknown_fields` will reject unknown keys at parse time.
+There is no top-level `test_filter` field. Put exact nextest `-E` selection and
+Cargo `-p` / `--lib` / `--test` target selection in `commands`. Do not change a
+shared profile's `default-filter` to narrow one suite.
+
+For example, this selects one existing Swarmnet service test. The declared
+count is an expectation until an inventory preflight measures it:
+
+```yaml
+lane: fast-local
+packages: [swarm-services]
+scope_plan:
+  profile: fast-local
+  packages: [swarm-services]
+  binaries: [swarm-services]
+  test_count: 1
+negative_assertions:
+  - text: Planning must not execute the selected command or mutate earned state.
+    bound_tests: [run_plan_is_read_only_and_shares_real_execution_commands]
+commands:
+  - cargo nextest run --profile fast-local -p swarm-services --lib -E 'test(=verify::service::execution_plan::tests::run_plan_is_read_only_and_shares_real_execution_commands)'
+```
+
+`scope_plan` requires sorted, unique, nonempty packages/binaries, a positive
+`test_count`, exact equality of `packages` and `scope_plan.packages`, matching
+lane/profile when both exist, and binaries owned by declared packages (`pkg` or
+`pkg::binary`). With a scope plan, each negative assertion needs nonempty `text`
+and `bound_tests`. The service validates these relationships; it does not
+resolve those test names, compare the declared count with inventory, or evaluate
+the prose. Add a project-owned `resource_commands` preflight that reads the same
+scope/selector, checks actual compiled inventory and fails for zero, extra or
+missing matches. Record the measured count in its evidence. Planning this
+example alone establishes neither one compiled test nor the negative claim.
+
+Other accepted annotation fields are `scope`, `summary`, `e2e_gates`,
+`verification_criteria`, `checklist_items`, `evidence_required`,
+`negative_assertions`, `static_no_mock_checks`, `static_checks` and
+`agent_families`. Acceptance requires a test or adapter that actually consumes
+the claim; parsing an annotation is not execution.
 
 ### Integration kinds — when to use each
 
@@ -142,7 +171,7 @@ sql_probe: null                                     # VerificationSqlProbeSuiteS
 
 | Integration | When to use |
 |---|---|
-| `routed` (default) | Standard Rust test execution via `scripts/dev/run-rust-tests.sh --tier <lane> --packages ... --paths ...`. This is what you want 95% of the time. |
+| `routed` (default) | Explicit command matrix when present; otherwise repository routing via `scripts/dev/run-rust-tests.sh --tier <lane> --packages ... --paths ...`. |
 | `mcp_call` | Suite is an MCP tool invocation against a running bundle/profile. Used when the "test" is really "call this MCP tool and assert the response shape". |
 | `http_probe` | Suite is an HTTP request against a running endpoint. Used for liveness / health checks. |
 | `sql_probe` | Suite is a SQL query against a local sqlite database (typically the swarmd event store). Used for persistence assertions. |
@@ -175,7 +204,7 @@ http_probe:
 ```yaml
 integration: sql_probe
 sql_probe:
-  database_path: .tmp/swarmd-data/events.redb       # required; alias databasePath
+  database_path: evidence/fixture.sqlite           # required SQLite DB; alias databasePath
   query: "SELECT COUNT(*) FROM events WHERE scope LIKE 'bridge.project%'"
   params: []                                         # default []
 ```
@@ -208,10 +237,14 @@ usage: scripts/dev/run-rust-tests.sh [--json] [--run-auxiliary] [--tier TIER] [-
 
 ### Planner vs executor
 
-- `--json` = planner mode. Emits the computed test manifest without running. Verify uses this during `verify.package.validate` to pre-check that the lane + filter combination selects something.
+- `--json` = router planner mode. Emits routing decisions and commands without running tests. Package validation alone does not execute this planner or prove test matches; use `verify run plan` to load the actual command definition and resolve execution planning.
 - Without `--json` = executor mode. Actually runs the tests and streams results.
 
-Verify command suites flow: validate → planner introspection (`--json`) → real run → capture output as CAS evidence.
+Use `verify package validate` → `verify run plan --package-ref <ref> --suite <id>`
+→ inspect scope, commands and asset checks → actual selected run. Read-only
+planning creates no instance/run and changes no earned state. It does not run
+the compiled inventory, resource commands, test body, or live probe adapters.
+`matched_suite_count` counts suites; `declared_test_count` is not a measurement.
 
 ## Evidence from nextest runs
 
@@ -219,24 +252,25 @@ Verify command suites flow: validate → planner introspection (`--json`) → re
 
 | Key | Contents |
 |---|---|
-| `planner.json` | Planner output (which tests would run, which packages were touched) |
-| `preflight.json` | Preflight checks (lane resolution, resource groups, filter validation) |
-| `nextest_output` | Raw nextest stdout + stderr (per-test results, timing) |
-| `coverage` | Optional coverage output if enabled at the profile level |
-| `junit.xml` | Optional JUnit XML if enabled |
+| `planner.json` | Resolved command matrix, lane, packages and routing reasons |
+| `preflight.json` | Config/payload accessibility and parse checks |
+| `resource.N.json` | Actual resource/preflight command, exit status, output and lifecycle timing |
+| `command.N.json` | Actual body command, exit status, output and lifecycle timing |
 
-Authors cannot rename these keys — they're runtime-emitted. If you need custom evidence (e.g., a performance baseline file), have your test write it to a known path and ensure the lane's profile captures it.
+These keys are runtime-emitted. Nextest JUnit files or a custom coverage output
+are not automatically named UVP evidence merely because a profile writes them.
+Retain and bind needed artifacts through the package evidence contract. Inspect
+structured run verdicts: the CLI request can exit 0 while the suite is red.
 
-## What NOT to embed in a command suite
+## Execution boundaries
 
-1. **Raw `cargo test` invocations.** Bypasses the planner, breaks CI routing. Always use the lane.
-2. **Raw `cargo nextest run ...` commands.** Same problem — the planner is the integration point.
-3. **Shell scripts with side effects.** Command suites run inside the planner's execution context; they are not arbitrary shell escape hatches.
-4. **Build steps.** Verify command suites assume the workspace is already buildable. If your test needs a prebuild step, model it as a test-level `#[ctor]` or fixture, not as a suite-level shell command.
-5. **Environment variable setup.** Declare env vars via the nextest profile (`.config/nextest.toml`), not in the suite file.
-6. **Docker orchestration.** Model docker dependencies as resource groups + test fixtures (e.g., `testcontainers` crate). Do not shell out to `docker` from a command suite.
-7. **Network-dependent tests without guards.** Tests that hit real networks must be guarded by a feature flag or env var and live in `nightly-extended`.
-8. **Platform-specific tests without `cfg` guards.** Use `#[cfg(target_os = "macos")]` etc. at the test level, not in the suite file.
+Commands execute with the runner's environment, workspace and child lifecycle
+limits. Keep reusable setup in owned test fixtures or project scripts; explicit
+build checks and shell-wrapped setup are supported when they are the real proof.
+Do not put secrets into committed suite files. Guard external infrastructure and
+platform-specific requirements, reserve actual conflicting resources, and follow
+the project's authorization and artifact policies. Neither `lane` nor a parsed
+scope declaration makes arbitrary side effects safe or resource-bounded.
 
 ## Integration test vs unit test packaging
 
@@ -262,15 +296,20 @@ Where:
 # suites/backend-unit.yaml
 lane: fast-local
 packages: [swarm-services]
-paths: [crates/swarm-services/src]
+commands:
+  - cargo nextest run --profile fast-local -p swarm-services --lib -E 'test(=verify::service::execution_plan::tests::run_plan_is_read_only_and_shares_real_execution_commands)'
 
 # suites/backend-integration.yaml
 lane: feature-local
-packages: [swarm-services]
-paths: [crates/swarm-services/tests]
+packages: [swarm-cli]
+commands:
+  - cargo nextest run --profile feature-local -p swarm-cli --test verify_cli_tests -E 'test(=it_verify_run_plan_cli_uses_narrow_service_plan_without_starting_a_run)'
 ```
 
-The split between unit and integration comes from the **paths** filter (which subdirectory the planner selects) plus the lane choice (unit → `fast-local`, integration → `feature-local` with its one retry). There is no suite-level test-name filter.
+The split comes from explicit Cargo target selection (`--lib` versus `--test`)
+and exact test expressions. `paths` alone cannot establish that split. Add the
+same inventory/count preflight described above; a narrow test-name selector can
+still cause substantial compilation, so measure compile and execution separately.
 
 ## Multi-crate suites
 
@@ -291,27 +330,27 @@ paths:
   - crates/swarm-gateway/src/verify_handlers
 ```
 
-The nextest profile's `default-filter` (in `.config/nextest.toml`) still governs which tests in the selected packages actually run. If you need finer-grained test selection within a crate, **edit the nextest profile**, not the suite YAML.
+These are implicit-routing examples, suitable when the intended gate really is
+that broad. Inspect `verify run plan` because path policy can escalate the lane
+or package set. For finer selection use an explicit matrix with the required
+Cargo targets and exact test expressions, retaining the shared profile policy.
 
 ## Flakiness handling
 
 Lanes set retry counts. One retry on `feature-local` / `phase-gate` / `ci-fast` / `ci-merge` / `nightly-extended` means: if a test fails once, it gets one retry; if it fails again, the suite fails.
 
-**Do not fight flakes at the suite level.** Either:
-1. Fix the test to be deterministic (preferred).
-2. Move it to `nightly-extended` if it's inherently slow/flaky (for now).
-3. Quarantine it via nextest's `filter_expr` exclusion until fixed.
-
-Adding retries beyond the lane default requires a `.config/nextest.toml` change, not a suite change.
+Fix the underlying nondeterminism. If a case needs environmental isolation,
+declare that requirement and schedule it accordingly. Quarantine requires an
+explicit unresolved-proof record; it cannot quietly turn the affected gate green.
+Read retry settings from the selected profile and retain failed-attempt evidence.
 
 ## Heavy-lane rules
 
-Heavy tests (>60s, external services, large fixtures) must:
-
-1. Land in `nightly-extended` (or `phase-gate` if phase-gating demands it).
-2. Declare any required resource group via test attributes.
-3. Be gated behind an env var or feature flag if they need external infrastructure.
-4. Not run in `fast-local` or `feature-local` (those are inner-loop lanes).
+Choose the heavy lane from project policy and actual requirements, rather than
+an arbitrary duration threshold. Use nextest assignment overrides for groups,
+explicit admission for scarce machines, and environment gates for infrastructure.
+Inspect resource status before heavy work and reuse a compatible persistent build
+root. Keep a small independent proof in the repair loop where one exists.
 
 If a feature has a natural heavy-test backbone, split it:
 
@@ -335,28 +374,21 @@ suites:
 
 Plan attachment can then gate phases on only the lanes appropriate for that phase (blocking `fast-local` for PR, `ci-merge` for merge-gate, advisory `nightly-extended` for release readiness).
 
-## Environment setup — don't put it in the suite
+## Environment setup
 
-Env vars, secrets, docker setup, service bootstrapping — none of these go in the suite YAML. They live in:
+Pass host-local configuration through the runner environment and use reusable
+fixtures/scripts for lifecycle work. A shell wrapper may set nonsecret variables
+for an explicit command. Resource groups serialize only their assigned nextest
+members. Do not invent a top-level `env` or timeout field in suite YAML: the
+current command schema has neither. The UVP child deadline and retention limits
+are runner settings; nextest also applies its own profile settings.
 
-- **Nextest profile** (`.config/nextest.toml`) — set env vars per profile.
-- **Test fixtures** (crate code) — set up + tear down per-test or per-module.
-- **Resource groups** — serialize conflicting tests.
-- **CI orchestration** — bring up docker/network before nextest runs.
+## Relationship to repository routing
 
-A command suite file should be **2–10 lines** in almost all cases. If yours is longer, push the complexity down.
-
-## Relationship to Phase 0 backend-test-rework
-
-The lane system is the product of Phase 0's backend-test-rework. Verify command suites are **consumers** of that system, not an alternative to it:
-
-- Do not embed `cargo nextest` folklore in TESTS.md suites.
-- Do not define lanes inside TESTS.md.
-- Do not bypass the planner.
-
-If the lane system is missing something you need, the fix lives in `.config/nextest.toml` + `scripts/dev/run-rust-tests.sh` — not in the verify suite spec.
-
-Relevant docs: `docs/plan-hub/audit/` (Phase 0 alignment), `thoughts/alignment/phase-0-tdd.md`.
+Keep shared scheduling/filter policy in `.config/nextest.toml` and routing policy
+in `scripts/dev/run-rust-tests.sh`. Keep one suite's exact command selection in
+that suite. External repositories without the Swarmnet router should use explicit
+commands. Do not grow production handlers that recognize a UVP package or fixture.
 
 ## Staleness specifics for command suites
 
@@ -365,11 +397,16 @@ Key staleness triggers for backend suites:
 | Kind | Triggers when |
 |---|---|
 | `SuiteFile` (suite-scoped) | `suites/backend-fast.yaml` edited (hash changes) |
-| `PackageContent` (all-suite) | `TESTS.md` edited |
+| `PackageContent` | Semantic contract input changes; old snapshots may use full-document hash fallback |
 | `SourceOfTruthDoc` (all-suite) | Spec doc hash changes |
 | `NormalizedCapabilities` (suite-scoped) | Capability list changed |
 
-**Key absence**: unit tests themselves changing does NOT stale the instance. Stale is about the package contract, not about source code. A package that binds to `crates/swarm-services/src/verify/**` via `path_globs` will stale on source changes (drift-only); a package without `path_globs` won't.
+Freshness hashes the declared `path_globs` set and router bytes as a routing
+surface; it does not hash every source file matching those globs. A test or
+product-source edit therefore needs an affected proof run even when the stored
+projection remains fresh. Use existing per-suite snapshots and lineage carryover;
+do not mint a replacement instance merely to make a stale result disappear.
+Checklist item carryover has its own identity/input/evidence checks (CORE.md §9b.1).
 
 ## Minimum viable backend package (literal)
 
@@ -403,8 +440,8 @@ suites:
 
 # My Backend Proof
 
-Covers the <feature-x> subsystem. Runs a fast-local lane filter over
-`swarm-services::feature_x::tests::*`.
+Covers the actual invariant named by its explicit test command. Replace this
+illustration with the product's real backing tests and inventory preflight.
 ```
 
 And `suites/backend-fast.yaml`:
@@ -412,26 +449,30 @@ And `suites/backend-fast.yaml`:
 ```yaml
 lane: fast-local
 packages: [swarm-services]
-paths: [crates/swarm-services/src/feature_x]
+commands:
+  - cargo nextest run --profile fast-local -p swarm-services --lib -E 'test(=verify::service::execution_plan::tests::run_plan_is_read_only_and_shares_real_execution_commands)'
 ```
 
 Validate:
 
 ```bash
 agent-swarm verify package validate test-packages/my-backend-proof --format json
+agent-swarm verify run plan --package-ref test-packages/my-backend-proof --suite backend.fast --format json
 ```
 
-Iterate until `ok: true`, then instantiate + run.
+Resolve parse/planning errors, inspect the actual selected command and declared
+versus measured scope, then run. If the package already holds earned state,
+amend through its existing lineage and inspect carryover before adoption.
 
 ## Gotchas specific to backend command authoring
 
-1. **`lane` is the only required field in most suite YAMLs.** Over-specifying (filters, packages) narrows scope; start broad, narrow as needed.
-2. **Filters are nextest DSL, not shell globs.** `package(x)`, `test(pattern)`, `kind(bench)`. See `cargo nextest help filter` for the full grammar.
+1. **A lane-only file can route broadly.** Start from the smallest useful proof and inspect its real plan.
+2. **Nextest filters are its DSL, not shell globs.** Use exact test equality or anchored expressions and verify the resulting inventory.
 3. **`paths` filters are for planner hint, not final selection.** The planner uses them to decide which packages are touched; the lane's `default-filter` controls actual test selection.
-4. **`nightly-extended` runs nightly only.** A suite on this lane will never surface in PR gates — it's advisory until nightly.
+4. **A profile name is not a schedule or gate policy.** A `nightly-extended` suite runs only when something actually invokes it; attachments define whether it blocks.
 5. **Don't assume workspace-wide tests run.** Lanes like `fast-local` have `default-filter = "all() - binary(...)"` — read `.config/nextest.toml` before reasoning about selection.
 6. **Command suites are instance-scoped, not global.** Two instances of the same package on different scopes get independent runs.
-7. **Test timeouts are set at the lane level, not the suite level.** If your test needs longer, move to a slower lane or fix the test.
-8. **Coverage evidence is opt-in.** Don't expect coverage unless the lane's profile enables it.
-9. **Don't chain suites with `checklist_refs` for ordering automated runs.** The field is for cross-suite dependencies. Command suites run independently; `checklist_refs` is mainly meaningful when a checklist depends on a prior run's state.
-10. **`#[ignore]` tests are skipped by default.** Don't rely on them running in any lane unless the profile's filter explicitly includes `ignore(...)`.
+7. **There is no suite timeout field.** Account for both runner deadlines and nextest settings.
+8. **Emitting coverage is not retaining it as UVP evidence.** Bind the artifact that the acceptance contract requires.
+9. **`checklist_refs` is not an execution scheduler.** Existing-reference validation does not prove prerequisite ordering; orchestrate actual required outputs explicitly.
+10. **Ignored tests need explicit runner selection.** Verify inventory and the runner's ignored-test options; a matching name alone does not establish execution.

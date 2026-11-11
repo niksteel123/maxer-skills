@@ -1,6 +1,6 @@
 ---
 name: contract-to-uvp
-description: "Stage 3 of the contract-first pipeline. Transcribe one unit's UVP package spec from the execution contract into a real, validated verification package: TESTS.md + provenance-stamped derived docs + suite files, then verify package validate → instantiate → confirm the ALL-RED never-run baseline (contract-first discipline: packages exist and validate BEFORE implementation). Composes verify-authoring for schema authority. Use when: 'transcribe the UVP', 'create the unit package', 'contract to uvp', turning a contract's package spec into test-packages/<slug>/. Writes ONLY test-packages/."
+description: "Transcribe an execution contract's current proof obligations into a validated UVP package or package delta, with real suites, item identities, provenance and observed baseline/carryover. Use for contract to UVP, package transcription or an affected package update. Normal output is test-packages; reconcile changed intent with its owners."
 ---
 
 # Contract To UVP — Transcription Into Machine-Checked Contracts
@@ -16,16 +16,17 @@ description: "Stage 3 of the contract-first pipeline. Transcribe one unit's UVP 
 
 | # | Stage (skill) | Produces | Done when |
 | --- | --- | --- | --- |
-| 1 | research-hardening | ideal source doc via stamped revisions | 7-item readiness bar = READY |
+| 1 | research-hardening | grounded current intent and explicit assumptions | ready for the named outcome or bounded experiment |
 | 2 | research-to-contract | execution contract (units, scenarios, UVP specs, crosswalk) | pass-2 fresh-eyes validation clean |
-| 3 | contract-to-uvp | validated TESTS.md package per unit | instantiated; ALL-RED never-run baseline |
-| 4 | contract-to-beads | bead graph with proof classes per unit | 100% two-sided coverage; polish steady-state |
+| 3 | contract-to-uvp | validated package or affected package delta | observed baseline for new obligations; matching carryover retained |
+| 4 | contract-to-beads | bead graph with proof classes per outcome | coverage and actual capability dependencies verified |
 | 5 | contract-bead-audit | fresh-eyes audited bead graph | verdict READY |
 | 6 | contract-to-execution | kickoff/push/sweep prompts; flat swarm runs | unit UVP greenlight via gate fix-loop |
 
 Laws binding every stage:
-1. The research doc is canonical. Downstream artifacts CITE it, never restate
-   it. Conflicts resolve upward: code → package → contract → research.
+1. Research records current canonical intent. Cite requirements without
+   duplicating them. User steering or contrary evidence can revise that intent;
+   reconcile affected code, packages and contracts instead of resolving by rank.
 2. A unit is complete ONLY on truthful UVP greenlight — never on narrative,
    bead acceptance criteria, or local tests alone.
 3. Blocked is a valid truthful result; mocks never substitute for missing
@@ -35,26 +36,28 @@ Laws binding every stage:
    code change trips an automatic audit.
 5. Manual scenarios run on REAL subjects with real data; synthetic data only
    in labeled automated eval decks.
-6. Each stage writes exactly ONE artifact class.
+6. Each normal stage has one primary artifact class. Substantial steering pauses
+   affected dispatch and reconciles all affected artifact classes together.
 
 Stage prompts live in `docs/plan-hub/prompts/<feature>-contract-pipeline/`
 (numbered 00–10; every iterative prompt ends with its copyable fresh-eyes
 prompt as the absolute final section).
 
 **You are stage 3 — mission: turn the contract's package spec into a real
-package the verify service accepts, and prove the honest starting state
-(all-red, never-run) before any implementation exists.**
+package the verify service accepts, and record the honest starting state of its
+new obligations without discarding valid existing proof.**
 
 ## Position And Write Target
 
 ```
 research-to-contract → [contract-to-uvp] → contract-to-beads → contract-bead-audit
-                        (run once per unit)
+                        (run for a new package or affected package delta)
 ```
 
-Write target: `test-packages/<slug>/` ONLY. Never the research doc, never the
-contract doc EXCEPT a Class 1 amendment-log line when transcription forces a
-contract correction (e.g., a suite shape the parser rejects).
+Normal write target: `test-packages/<slug>/`. If transcription exposes a schema
+error or changed obligation, pause affected dispatch and reconcile it with the
+contract/research owner before continuing. Record the amendment and affected
+artifacts; do not silently invent requirements inside a package.
 
 ## When NOT To Use
 
@@ -66,11 +69,13 @@ contract correction (e.g., a suite shape the parser rejects).
 
 ## Preflight
 
-`verify` commands need a reachable daemon: build debug binaries
-(`cargo build -p swarm-cli -p swarmd`, repo convention is debug for
-iteration) and confirm `target/debug/agent-swarm verify --help` responds.
-If the daemon is unavailable and cannot be started, record BLOCKED with the
-error — do not hand-check YAML and call it validated.
+Resolve the installed or already-built CLI and the intended project's daemon;
+record their version/source provenance and confirm the required verbs exist.
+Reuse a suitable build and durable checkout. Build only when the needed consumer
+is missing or changed, after checking available resources. Preserve shared
+daemons and their ledgers; a restart requires an owned, safe checkpoint. Package
+syntax checks are useful while runtime prerequisites are unavailable, but report
+that limit instead of calling unexecuted runtime validation complete.
 
 ## Phase 0 — Required Reading
 
@@ -135,20 +140,28 @@ compact; the executable truth is the frontmatter + suites.
 
 ## Phase 3 — Suite Files
 
-**Automated command suites** (lane + planner pattern; never raw `cargo
-nextest` invocations):
+**Automated command suites**: select the execution mode the installed planner
+actually supports. With `commands`, the explicit command list is authoritative;
+use exact test selectors and matched counts. Without it, routed mode uses the
+declared lane/package policy. `paths` identifies watched/planned scope; it does
+not by itself select individual unit or integration tests.
 
 ```yaml
 # <suite purpose>; contract scenario steps <N..M>.
-lane: fast-local | feature-local | phase-gate     # per contract burndown tier
+lane: fast-local                               # per contract proof tier
 paths: [<implementation paths this suite watches>]
 packages: [<crates>]
 commands:
-  - <product command or cargo test with the EXACT test names the contract
-     fixed — these names are the contract; implementation must create them>
+  - 'bash -lc "<tested product command or exact named-test selector>"'
 resource_commands:
   - <help/version/provenance commands to retain>
 ```
+
+Inspect `verify run plan --package-ref test-packages/<slug> --suite <suite-id>
+--format json` before expensive execution; check selected suites, actual commands
+and any policy escalation. Use targeted repair runs, then the required close/gate
+scope after the candidate stabilizes. Do not change a shared lane's default filter
+just to narrow one suite.
 
 Contract-first convention: commands referencing not-yet-existing product
 surfaces are CORRECT — they run red until implementation. Note it in the
@@ -159,7 +172,7 @@ file's comment. Never soften a command to make it pass early.
 ```yaml
 ---
 items:
-  - title: <stable-item-id-from-contract>          # kebab-case, scenario wording
+  - title: <criterion title from the contract>   # preserve scenario wording
     description: >
       <the exact claim, citing contract scenario step + research clause>
     severity: critical | high | medium
@@ -172,14 +185,17 @@ items:
 ---
 ```
 
-Item ids and wording come FROM the contract scenario — transcribe, don't
-re-author. Include the standing integrity items the contract defines
+Criterion keys and wording come FROM the contract scenario — transcribe, don't
+re-author. The parser does not accept an authored `id` or `item_id`: it generates
+opaque runtime IDs. Read `verify checklist list` and record the criterion-to-item
+mapping before verdict calls; do not treat a title or ordinal as the runtime ID.
+Include the standing integrity items the contract defines
 (do-not-count-as-pass review, evidence-integrity, verdict-cites-refs).
 
 ## Phase 4 — Validate Loop
 
 ```bash
-target/debug/agent-swarm verify package validate test-packages/<slug> --format json
+agent-swarm verify package validate test-packages/<slug> --format json
 ```
 
 Iterate on `errors[]` until clean. Common rejects: unquoted semver, `kind`
@@ -190,29 +206,39 @@ log a Class 1 line in the contract's Amendment Log.
 ## Phase 5 — Instantiate + Baseline Proof
 
 ```bash
-target/debug/agent-swarm verify instantiate test-packages/<slug> --format json
-target/debug/agent-swarm verify greenlight --instance-id <id> --format json
+agent-swarm verify instantiate test-packages/<slug> --format json
+agent-swarm verify greenlight --instance-id <id> --format json
 ```
 
-Required baseline for a pre-implementation package: `green: false`; every
-suite in `never_run_suite_ids`; `evidence.required_artifacts` red; zero
-stale reasons. **Anything green before implementation exists is a defect**
-(a suite that can pass on an empty tree proves nothing). Record instance id
-+ baseline output.
+For genuinely unimplemented obligations, record their never-run/red baseline
+and missing required evidence. Inspect the relevant unit view and item status,
+not the whole package's color alone. Existing implemented behavior may already
+have valid proof; verify its inputs and carryover rather than forcing it red.
+For an amendment, preserve unaffected judgments whose identity, inputs and
+evidence still match. Record the instance, new/changed obligations, retained and
+reset proof, and the reason for each reset. An empty implementation passing a
+claim it cannot satisfy remains a vacuous-proof defect.
 
 ### ⛔ THE ALL-RED BASELINE CANNOT DISTINGUISH `never_run` FROM **UNRUNNABLE**
 
-**Both look identical, and one is a time bomb.** Suite YAML parses at **`verify run` time**, not
-at author/validate/instantiate time — and `package validate` reads only TESTS.md. So a suite file
-with a **syntax error** sails through transcription, validate, instantiate, AND the ALL-RED
-baseline, then 409s at parse the first time someone tries to earn it — typically units later, with
-the gate on the line.
+An instantiated never-run suite does not prove its executable specification is
+runnable. Use the installed typed parser through `verify run plan` for selected
+command suites and confirm their matched count and commands. Syntax-check other
+declared suite files with their applicable parser; YAML syntax alone does not
+validate the runtime schema or prove a command ran.
 
-**PARSE-CHECK EVERY SUITE FILE AT TRANSCRIPTION. It is one line and it closes the hole:**
+For YAML files, propagate parser errors instead of printing an error and leaving
+the shell green. Confirm the checked files cover the declared YAML suite paths:
 ```bash
-for f in test-packages/<slug>/suites/*.yaml; do
-  python3 -c "import yaml,sys;list(yaml.safe_load_all(open('$f')))" || echo "⛔ UNPARSEABLE: $f"
-done   # safe_load_all — multi-document manual/checklist suites are legitimate
+python3 - <<'PY'
+from pathlib import Path
+import yaml
+paths = list(Path('test-packages/<slug>/suites').glob('*.yaml'))
+assert paths, 'No YAML suite files matched; check the declared suite paths'
+for path in paths:
+    list(yaml.safe_load_all(path.read_text()))
+print(f'Parsed {len(paths)} YAML files; runtime schema/execution proof is separate')
+PY
 ```
 > **Real (U2, 2026-07-16):** a `negative_assertions` entry began with a backtick — a YAML reserved
 > indicator that cannot open a plain scalar — making the **whole file unloadable**. It blocked two
@@ -260,7 +286,7 @@ selector, not the claim.
   `{ENRICHMENT:package-instance}` (slug + instance id + baseline summary)
   and `{ENRICHMENT:suite-list}` markers.
 - Write/refresh `04-uvp-transcribe.md` in the pipeline prompts folder: a
-  self-contained prompt to repeat this stage for the NEXT unit (paths,
+  self-contained prompt for the next affected outcome or package delta (paths,
   commands, this checklist), ending with a copyable fresh-eyes re-read
   prompt as the final section.
 - Final response: package path, suite count by kind, validate/instantiate
@@ -271,10 +297,10 @@ selector, not the claim.
 
 - [ ] Every contract suite-table row → exactly one suite entry + file
 - [ ] Every Required Evidence artifact → `evidence_contract.required_artifacts`
-- [ ] Every checklist item id matches the contract's stable ids verbatim
+- [ ] Contract criterion wording is faithful; observed runtime item IDs are mapped
 - [ ] `work_unit_queries` labels match the unit's planned bead labels
 - [ ] Research + contract docs present in `path_globs`
 - [ ] No suite weakened/strengthened relative to the contract (diff them)
 - [ ] No fixture-specific logic anywhere near production code; fixtures are
       data only
-- [ ] Validate clean · instantiate clean · all-red never-run baseline proven
+- [ ] Validate/instantiate results recorded; new-obligation baseline and carryover reconciled

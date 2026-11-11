@@ -1,22 +1,24 @@
 ---
 name: disk-janitor
-description: "Autonomous disk-pressure relief for long agent runs. Checks headroom and reclaims space by a safety-ranked ladder (regenerable caches → dead-owner build artifacts → stale worktrees), never touching declared-protected or live-held state. Use when: disk pressure, low disk, disk full, ENOSPC, 'no space left on device', 'clean up disk', 'reclaim space', 'free up space', before/between heavy builds, at stage/unit boundaries, or on any periodic check in a long implementation loop. ALSO read it BEFORE creating large or load-bearing state (build worktree, daemon data dir, seeded fixture, uncommitted evidence) — you MUST declare it in the protect registry at creation time, which is what lets cleanup run without asking anyone."
+description: "Inspect disk pressure and rank cleanup candidates for long agent runs. Check headroom, protection, references and live ownership; deletion always needs the user's explicit authorization. Use for low disk, ENOSPC, cleanup planning, and before/between heavy builds. Also read before creating load-bearing state so its ownership, dependencies and retention are recorded."
 ---
 
 # Disk Janitor — reclaim space without destroying proof
 
 > Disk exhaustion is the most common silent blocker in long agent runs. When it hits, ENOSPC kills
 > everything at once — builds, daemons, even the harness's own output files — and the symptoms look
-> like anything except disk. The cure must be **autonomous** (no human approving each sweep; that is
-> the bottleneck) and **safe** (never deletes state that cannot be rebuilt). Those are compatible
-> only because of the Prime Rule.
+> like anything except disk. Inspect and prepare concrete options autonomously;
+> perform file deletion only within the user's explicit authorization. Being
+> rebuildable, old, unprotected or owned by a finished unit is not authorization.
 
-## Prime Rule: DECLARE at creation, never ASK at cleanup
+## Prime Rule: declare ownership; deletion requires explicit permission
 
-Asking "is this safe to delete?" at cleanup time is slow, blocks on humans, and is unreliable —
-background agents go dark and never answer. So the burden inverts: **whoever CREATES load-bearing
-state declares it once, at creation.** Cleanup then reads declarations + process liveness and acts
-alone.
+Whoever creates load-bearing state records its owner, references and retention.
+Read those declarations plus actual liveness before proposing exact cleanup paths.
+No registry release, lease expiry or absent process grants deletion authority.
+Existing user authorization for exact paths/actions carries forward; do not ask
+again for the same authorized act. If permission is missing, finish the candidate
+inventory and impact assessment before asking. Do not delete while waiting.
 
 **Registries** (both read on every sweep; append-only, one entry per line, `#` comments):
 - Repo-scoped: `<repo-root>/.disk-protect`
@@ -41,23 +43,17 @@ disguise — and it silently defeats the whole registry.
 
 **You MUST add an entry before walking away from**: daemon/service data dirs, instantiated
 fixtures or seeded DBs, uncommitted evidence, long-lived build worktrees, anything whose loss forces
-re-earning proofs or re-running expensive work. An undeclared artifact is a reclaimable artifact —
-that is the deal that buys autonomy.
+re-earning proofs or re-running expensive work. An undeclared artifact needs an
+ownership/reference check; it is never permission to delete.
 
-## Model routing — sweeps are cheap work; do not burn a top tier on them
+## Model routing — consume the fleet registry
 
-A sweep is ladder-following + liveness-checking + arithmetic. The *safety* lives in this skill's
-rules and the registry, not in the sweeper's brilliance. So:
-
-| Runner | Use | Never |
-|---|---|---|
-| Codex | `-c model="gpt-5.6-terra"` (the lighter tier) | `gpt-5.6-sol` — reserve it for implementation/gates |
-| Claude | Opus, or Sonnet for a routine sweep | the top judgment tier (Fable) — reserve it for contracts/audits/gate reviews |
-
-Top tiers are the scarce resource in a long run (and the first thing to hit a usage limit). A
-janitor that burns them is stealing from the work it exists to protect. The one exception: if a
-sweep escalates (floor breached after the full ladder), the *decision* about what else may go is
-owner/orchestrator territory — not the sweeper's, at any tier.
+Use `fleet-controller` and the model registry selected by the actual `uvp-fleet`
+configuration. Prefer an efficient eligible model for routine inspection, but
+apply required judgment/tool capability, live capacity and qualified authorized
+accounts before scores. Pass the selected model to the runner. No fixed provider
+or tier replaces those checks; deterministic disk probes need no paid model.
+Deletion authority remains the user's at every model tier.
 
 ## WHEN to sweep — phase-aware, not uniform polling
 
@@ -69,11 +65,11 @@ cargo targets, daemon data, test artifacts). Trigger accordingly:
 
 | Trigger | Why it is the right moment | Action |
 |---|---|---|
-| **Before implementation starts** (the pre-flight — first build-heavy dispatch of a unit) | You are about to CREATE the GBs. This is the only moment where being short is preventable rather than fatal | **BUDGET CHECK**: free ≥ (expected worktrees × ~30 GB) + the 20 GB floor? If not → sweep NOW, before the swarm launches |
-| **Just after a unit closes / a daemon moves to a new worktree** | The finished unit's build worktree just became **ownerless garbage** — usually the single biggest reclaim on the machine (~26 GB). Nobody else will ever notice it | **Opportunistic sweep** — this is the highest-yield moment in the whole cycle |
-| **During implementation** (before each heavy build; after a restart; on any suspicious tooling failure) | This is when the disk actually moves, and ENOSPC here kills every lane at once | Check every time; sweep if under threshold |
-| **Any `df` reading under threshold, at any time** | Ambient pressure — usually a PARALLEL pipeline on the same machine, not you | Sweep **your own** Scope A + B (their pipeline has its own janitor — see Scope). If only Scope C remains and you are still short: report + escalate, do not raid them |
-| **Pipeline close** | Your worktrees/daemons are now permanent garbage, and only YOU know they are | Reclaim your own; **release your registry entries**. Skipping this is how orphans are born |
+| **Before implementation starts** (the pre-flight — first build-heavy dispatch of a unit) | Budget the actual incremental build/scratch demand on existing roots | Check configured headroom; propose eligible cleanup before launching if short. Do not assume one worktree per agent. |
+| **Just after a unit closes / a daemon moves to a new worktree** | A prior root may have become unused, but retained proof can still reference it | Inspect ownership and inbound references; propose exact candidates without deleting |
+| **During implementation** (before each heavy build; after a restart; on any suspicious tooling failure) | This is when the disk actually moves, and ENOSPC here kills every lane at once | Check headroom; pause a new build or propose exact authorized cleanup if short |
+| **Any `df` reading under threshold, at any time** | Ambient pressure may come from a parallel pipeline | Inspect candidates in **your own** Scope A + B; delete only with explicit authorization. If only Scope C remains and you are still short: report + escalate, do not raid it |
+| **Pipeline close** | Confirm which work and retention obligations actually ended | Record released ownership and report exact cleanup candidates; deletion and shared-daemon lifecycle still need their own authorization |
 | Planning stages (contract, beads, audit, boundary advance) | They write KB. Nothing to reclaim, nothing being created | **Check only** (it is one command and catches ambient pressure). **Do NOT dispatch a janitor** unless the reading is actually under threshold |
 
 The two triggers people forget are the ones that pay: **pre-implementation budgeting** (short disk
@@ -98,11 +94,15 @@ then spawn a one-shot sweep agent if there is actually something to reclaim.
 # Disk watch — emits ONLY below threshold (silence = healthy)
 while true; do
   a=$(df -g . | tail -1 | awk '{print $4}')
-  [ "${a:-999}" -lt 50 ] && echo "DISK: ${a}GB free — under 50GB, janitor sweep recommended"
-  [ "${a:-999}" -lt 20 ] && echo "DISK: ${a}GB free — FLOOR BREACHED, sweep NOW"
+  [ "${a:-999}" -lt 50 ] && echo "DISK: ${a}GB free — inspect pressure and propose exact cleanup candidates"
+  [ "${a:-999}" -lt 20 ] && echo "DISK: ${a}GB free — pause new heavy builds; cleanup needs explicit authorization"
   sleep 900
 done
 ```
+
+The example thresholds are fallbacks; use the active project's measured budget
+and configured floor. Reuse an existing resource watcher when available; do not
+add a second monitoring stack as a prerequisite to ordinary work.
 
 - **Poll ~15 min.** Disk fills over tens of minutes (a cargo build is minutes; a worktree is one
   event), so tighter polling buys nothing. Tighten only if a run is observed burning >1 GB/min.
@@ -136,7 +136,7 @@ lanes/agents report (instant, but they go dark) → fast monitor (~15 min, can c
 slow watchdog (~30 min, heartbeat + redundant real check) → the orchestrator's natural wakes
 (free — check monitor liveness whenever a notification arrives for any reason) → the human.
 You cannot make it infinitely reliable; you make each layer fail into a slower one that still works.
-- **ONE sweep agent at a time**, cheap tier (`gpt-5.6-terra` / Sonnet), spawned on a firing and
+- **ONE inspection/authorized-cleanup agent at a time**, selected through the fleet registry, spawned on a firing and
   retired when done. Two concurrent sweeps race each other.
 - **If you ARE running as a resident agent** (no Monitor armed, or a stretch the orchestrator wants
   actively watched): loop inside an OPEN turn with bounded foreground sleeps and never end the turn
@@ -148,49 +148,53 @@ bead lands. Distributed, zero infra, catches growth at the source. The resident 
 for what the lanes miss (their peers' builds, other pipelines, their own cargo dirs growing between
 checks).
 
-**Steady-state hygiene beats emergency reclaim**: during a swarm, sweeping Tier 0 opportunistically
-at every wake — even when GREEN — keeps `target/**/incremental` and caches from ballooning into the
-crisis that stops everyone. Cheap, constant, boring. That is the goal.
+Inspect growth when it changes a build decision. Do not repeatedly purge caches
+at every wake: persistent compatible build roots save iteration time. A green
+capacity reading needs no cleanup run; deletion still requires explicit permission.
 
 ## Thresholds — check `df -h .` (one cheap command; run it often)
 
 | Free | State | Action |
 |---|---|---|
 | > 80 GB | GREEN | none |
-| 50–80 GB | AMBER | Tier 0 sweep (silent, zero risk) |
-| 20–50 GB | RED | Tier 0 + Tier 1; report what was reclaimed |
-| **< 20 GB** | **FLOOR BREACHED** | Tier 0+1+2 immediately; if still under after the full ladder → escalate to the owner (a genuine external block) |
+| 50–80 GB | AMBER | Inspect growth against the planned workload |
+| 20–50 GB | RED | Rank Tier 0/1 candidates and their rebuild/retention cost |
+| **< 20 GB** | **FLOOR BREACHED** | Pause work that would breach its budget; present exact candidates and obtain missing deletion permission |
 
-**20 GB is the hard floor.** Never plan work that would cross it. Check **before every heavy build,
+These are fallback thresholds; use the project's explicit current resource budget
+or user override. Never plan work that would cross its floor. Check **before every heavy build,
 at every stage/unit boundary, and after anything that writes GBs**. A single Rust build worktree can
 be 25 GB+ — headroom vanishes faster than intuition expects.
 
 ## The Reclaim Ladder — always in order, never skip ahead
 
-### Tier 0 — regenerable caches (no coordination, no risk)
-Everything here rebuilds itself on next use. Sweep freely.
+### Tier 0 — potentially regenerable caches (inspect before proposing)
+Check actual rebuildability, ownership and references. Every deletion still needs
+explicit user authorization; this list is not an allowlist to execute.
 - Package caches: `~/.npm/_cacache`, `~/.bun/install/cache`, pip/uv caches, `~/.cargo/registry/cache`
 - OS/tool caches: `~/Library/Caches/*` (macOS), `~/.cache/*` (Linux) — skip anything a registry protects
 - Rust incremental dirs: `target/**/incremental` (regenerates; often multi-GB)
-- Stale tool temp: `/tmp/codex-*.md`, `*.log` in scratch dirs older than ~1 day
-- Harness leftovers from **dead** sessions: `/private/tmp/claude-*/<session-id>/**` where that
-  session id has no live process (see Liveness)
+- Session transcripts, pending patches, handoffs and proof logs are retained state,
+  even under `/tmp`; age or a dead session is not evidence of disposability.
 
 ### Tier 1 — dead-owner artifacts (liveness-checked; where the real GBs are)
-Reclaimable **only** after proving the owner is gone — and **only in Scope A or B** (your own
+Eligible to propose **only** after proving the owner is gone — and **only in Scope A or B** (your own
 pipeline's, or no-man's-land). Another pipeline's dead artifacts are Scope C: leave them.
 - `target/` dirs inside **your** build worktrees no running process is executing from
 - Stale build worktrees (e.g. `.tmp/*-build-<commit>`) of **your** pipeline, unreferenced
 - Dead sessions' scratchpads (these routinely hide 10 GB+ cargo targets) — dead = provably no
   process, no recent mtime
-- Evidence/run-roots **already committed to git** (reconstructible → not precious)
-- Prefer `cargo clean --manifest-path <worktree>/Cargo.toml` over blind `rm -rf` for cargo trees
+- Retained evidence remains subject to its retention and input-reference obligations,
+  even when committed. Verify exact recoverability before proposing any removal.
+- `cargo clean` deletes files too: name its exact affected build root and obtain
+  explicit authorization; prefer preserving reusable build outputs.
 
-### Tier 2 — live but rebuildable (costly, not dangerous)
-Only at RED/FLOOR, and say so in the report.
-- The main repo's `target/` (forces a full rebuild — expensive, never unsafe)
-- Build worktrees of a **running** daemon: stop the daemon per its own protocol FIRST, reclaim,
-  then let its owner rebuild+restart. If you cannot verify that protocol, treat as Tier 3.
+### Tier 2 — potentially rebuildable live resources (coordination required)
+Only propose at RED/FLOOR, with rebuild and interruption costs stated.
+- The main repo's `target/` can be shared by live builds; verify actual ownership.
+- Build roots of a running daemon are not cleanup targets until its lifecycle and
+  retained-state custody are explicitly coordinated. Never stop a healthy daemon
+  merely to make its files appear unused.
 - Container images/volumes, if any
 
 ### Tier 3 — NEVER auto-reclaim
@@ -205,25 +209,27 @@ Only at RED/FLOOR, and say so in the report.
 
 | Scope | What | Rule |
 |---|---|---|
-| **A — yours** | Your pipeline's artifacts: its build worktrees, its stale daemons, its committed evidence, its caches | **Sweep per the ladder.** This is your job and nobody else's. |
-| **B — no-man's-land** | Things owned by no pipeline: package/OS caches, `target/**/incremental`, `/tmp/codex-*.md`, provably dead sessions' scratchpads | Tier 0/1 rules apply; safe. |
+| **A — yours** | Your pipeline's build roots, retained evidence and caches | Inspect per the ladder; ownership does not grant deletion permission. |
+| **B — shared or apparently unowned** | Package/OS caches, incremental build outputs and session scratch | Determine ownership and retention; propose only confirmed candidates. |
 | **C — another pipeline's** | Their worktrees, daemons, data dirs, scratchpads, evidence — live OR idle | **Hands off by default.** Every pipeline runs its own janitor; theirs knows its state, its protected paths and its timing better than you ever will. Reclaiming their artifacts is presumptuous and the fastest way to break work you cannot see. |
 
-**The ONLY Scope-C exception**: you are **below the 20 GB floor**, your Scope A + B ladder is
-**exhausted**, and the artifact is **provably dead** (no process, no registry claim, no recent
-mtime). Even then, prefer to **report the candidates and escalate** over reclaiming them — under
-pressure, a wrong cross-pipeline reclaim turns your disk problem into someone else's data loss.
+Pressure creates no Scope-C deletion exception. Report candidates and coordinate
+with their owner; obtain the user's explicit deletion authorization before acting.
 
-**Corollary — clean up after yourself at PIPELINE CLOSE.** Reclaim your own worktrees/daemons and
-**release your registry entries** when your pipeline finishes. Otherwise your garbage becomes
-precisely the Scope-C orphan that every future janitor is too polite to touch, and the machine
-silts up with debris nobody feels entitled to remove.
+**At pipeline close**, record which ownership/retention conditions ended and
+provide exact cleanup candidates. Keep still-referenced proof and healthy shared
+processes intact; a unit close alone grants no deletion or daemon-stop authority.
 
 ## ⛔ Machine locality — WHOSE computer is this? (gates everything above)
 
+All reads or operations on another machine run in a dedicated qualified machine
+lane. Return concise findings and exact candidate paths; do not load private
+machine runbooks into the orchestrator. Locality restrictions add to the user's
+explicit deletion rule; they never replace it.
+
 The entire scope/ladder model above silently assumes **you are on the operator's OWN primary
 machine**, where OS caches, `/tmp`, `~/Library/Caches`, and other "no-man's-land" (Scope B, Tier 0)
-are genuinely safe to reclaim. **On any machine you do not own, that assumption is false and
+are candidates for inspection, never automatic deletion. **On any machine you do not own, that assumption is false and
 dangerous — "no-man's-land" is THAT person's land, and a computer-wide reclaim can delete a
 stranger's real work or personal files.**
 
@@ -250,11 +256,10 @@ operator's own primary dev box — including borrowed or personal machines) are 
 the rig has an operational runbook listing its exact project-owned paths, read it before any remote
 cleanup.
 
-## Swarm awareness — look, don't ask
+## Swarm awareness — inspect before proposing cleanup
 
-The Prime Rule bans **asking permission** (the bottleneck; dark agents never answer). It does not
-ban **looking**. Before reclaiming anything while a swarm is live, read the swarm's own declared
-state — authoritative, free, and non-blocking:
+Read the swarm's declared state before proposing a path. Inspection is autonomous;
+deletion requires the user's explicit authorization after the impact is concrete:
 
 1. **The registry** (`.disk-protect`) — declarations + release-conditions
 2. **Work claims** — `br list --status in_progress` (or the run's ledger): who is mid-bead
@@ -262,9 +267,8 @@ state — authoritative, free, and non-blocking:
 4. **Processes** — `ps` / `lsof`: what executes from where, what holds handles
 5. **The run log** — AUTO-PILOT / pipeline guide: live roster, daemon identity, current unit
 
-You MAY broadcast a courtesy heads-up before a large reclaim — but **never wait on replies**: a lane
-mid-build will not answer and a dark one never will. Awareness informs the skip; it never gates the
-sweep.
+Coordinate live ownership before an authorized cleanup. A courtesy message or a
+peer's silence is not approval; ambiguous ownership means leave the path intact.
 
 **During an active swarm, bias hard to skip.** A lane's cargo dir mid-build is indistinguishable
 from garbage. If a live lane could plausibly be using it, it is Tier 3 *for this sweep* — you get
@@ -318,19 +322,18 @@ Before reclaiming anything with a possible owner, prove the owner is dead:
 4. **Ambiguity loses**: if you cannot prove the owner is dead, it is Tier 3 for this sweep. Skipping
    a reclaim costs disk; a wrong reclaim costs someone's day.
 
-## Autonomy — and the ONE escalation
-Run Tiers 0–2 **without asking anyone**. Do not request approval per path; do not block on peer
-agents' replies (they may be mid-run or dark). The registry + liveness ARE the authorization.
+## Autonomy and authorization
+Complete inspection, reference checks and a ranked exact-path impact report
+without waiting for approval. Execute only deletion actions already explicitly
+authorized by the user. Otherwise ask once for the concrete proposed action and
+explain this file's rule; no age, tier, registry release or pressure waives it.
+While permission is pending, preserve files and pause work that would breach its
+resource budget. Never breach Tier 3 to avoid reporting a blocker.
 
-Escalate to the owner in exactly one case: **the full ladder ran and free space is still under the
-20 GB floor.** That is a genuine external block — report the ranked candidates you did NOT take
-(with sizes + why each was protected), and let the owner decide. Never silently continue below the
-floor, and never breach Tier 3 to avoid asking.
-
-## Coordination — courtesy, not permission
-After a sweep, notify live peers (agent-mail or the run's log) with what vanished, so a lane that
-loses its cargo cache understands the recompile. Notification is **after** and **non-blocking** —
-never a gate on the sweep.
+## Coordination
+After an authorized cleanup, report exact affected paths, preserved evidence and
+headroom. Notify the relevant work owners through existing coordination; a
+notification never substitutes for the required deletion authorization.
 
 ## Reporting (always, even when nothing was taken)
 - Free before → after, and total reclaimed
@@ -341,11 +344,11 @@ never a gate on the sweep.
   in the same sweep
 
 ## Anti-patterns
-- Blanket `rm -rf .tmp` / `rm -rf target` without the ladder and liveness — the classic way to
+- Blanket `rm -rf .tmp` / `rm -rf target` without exact user authorization and ownership/reference checks — the classic way to
   destroy a day of proofs in one second
 - Reclaiming a daemon's data dir "because the daemon is down" (it is down *because* someone will
   restart it; its state is the point)
-- Asking the owner per sweep (the bottleneck this skill exists to remove)
+- Treating a cleanup tier, registry release, old timestamp or absent process as deletion permission
 - Sweeping silently (nobody trusts a janitor that does not report)
 - Treating an undeclared-but-obviously-precious path as fair game — if it smells load-bearing and
   liveness is ambiguous, skip it and flag the missing declaration in your report

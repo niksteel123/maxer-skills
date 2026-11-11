@@ -46,7 +46,7 @@ Ask a clarifying question only when the missing answer changes the proof boundar
 - The research document remains the source of truth. Handoffs and UVP package requirements should derive from it, not from hidden conversation memory.
 - The UVP proves product behavior. It must not become a private checklist, demo script, fixture-only proof, or production-code shortcut.
 - The workflow must fit the project in front of you. Discover local conventions for docs, prompts, packages, tests, browser tooling, issue tracking, and commit policy before choosing paths or commands.
-- Prefer one outer UVP close gate for a cohesive feature, with suite families inside it. Split into multiple packages only when the packages can be independently owned, run, and greenlit.
+- Resolve the existing surface package before choosing package shape. Prefer a lineage delta and scoped view for a feature touching an owned surface. Create a new package only for a genuinely new or independently owned surface; a feature name alone is not a package boundary.
 - Every important acceptance claim needs a traceable proof owner: suite id, checklist item id, artifact, final report field, or stop-the-line condition.
 - Blocked is a valid truthful result. If a real platform, credential, provider, browser, data, or product prerequisite is unavailable, require retained red/blocked evidence instead of substituting a fake path.
 
@@ -122,7 +122,10 @@ State whether the work needs:
 - Multiple UVP packages, only when independent close gates are genuinely useful.
 - A focus package plus a regression/baseline package reference.
 
-Default to one outer package for a cohesive feature. Split only when independent ownership or staged greenlights are real.
+First resolve existing surface ownership and package lineage. Within that boundary,
+use a coherent view for the feature's obligations and split only where independent
+ownership or acceptance is useful. Preserve existing earned proof through the
+actual lineage/carryover procedure.
 
 Use one outer package when the work shares one product story, one evidence root, one final report, and one operator greenlight.
 
@@ -205,6 +208,12 @@ For design-heavy frontend work, include the target design source: GX, VXG, scree
 
 State what existing behavior this work could regress and how the UVP will guard it.
 
+Specify an executable narrow repair command or selected suite, inspect its actual
+scope with `verify run plan`, and record expected selection counts where supported.
+Broader pre-close/gate checks follow stable candidate inputs. Reuse retained
+capture/render artifacts for repeated interpretation when relevant input and
+evidence identities still match.
+
 Include:
 
 - existing packages, tests, browser flows, reports, or retained evidence that serve as baselines;
@@ -215,7 +224,9 @@ Include:
 
 ### Manual Checklist Requirements
 
-Define manual suites and item ids before implementation starts. Items should be specific and evidence-oriented.
+Define manual suites and item criteria before implementation starts. Obtain opaque
+item IDs from the compiled runtime checklist; do not hand-author them or infer
+them from list positions. Items should be specific and evidence-oriented.
 
 Good manual items:
 
@@ -232,6 +243,21 @@ Bad manual items:
 - "Looks good";
 - "Agent verified manually";
 - any item that can pass without an artifact ref.
+
+An agent can judge a retained video against an explicit avatar/action rubric.
+Record actual observations, reviewer, reasoning and usable evidence references.
+Reserve human-required criteria for obligations that need that person's judgment
+or physical interaction. Compilation and deterministic behavior remain automated.
+
+### Reconsidering The Plan During Execution
+
+User steering, contradictory evidence or repeated work without information can
+change the canonical design. Pause affected dispatch and checkpoint live work;
+reconcile intent/contracts, suites/items, beads/edges, prompts and earned evidence
+as retained, revised, superseded or new. Preserve matching proof and unaffected
+work. A temporary scheduling conflict is not a permanent capability dependency.
+Resume affected work on the reconciled inputs. Do not weaken acceptance merely
+to obtain green or force all later design decisions before a bounded experiment.
 
 ### Final Report Shape
 
@@ -437,7 +463,10 @@ For documentation-only changes, run lightweight checks such as:
 git diff --check
 ```
 
-If a UVP package already exists or is created in the same task, validate and instantiate it with the current product commands.
+Validate a new or changed package with current commands. For an existing earned
+instance, inspect its identity and use the supported lineage/delta flow when the
+package changes; do not blindly instantiate it as a refresh. Read the actual
+carryover disposition and re-earn only obligations whose proof is no longer valid.
 
 For code changes, follow the repository's normal quality policy. In SwarmNet this usually includes scoped `ubs` on changed files and the relevant Cargo/Bun/browser gates named by the repo and the handoff.
 
@@ -453,4 +482,6 @@ Report:
 - any regression/baseline expectations added;
 - any remaining caveats or blocked items.
 
-Do not claim a UVP package passes unless `verify greenlight` or the requested package validation actually proves it.
+Package validation proves structural validity; it does not earn product acceptance.
+Claim a package green only from the appropriate current `verify greenlight`
+result and required evidence. Report a blocked/red result truthfully.

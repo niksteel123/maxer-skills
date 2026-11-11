@@ -1,24 +1,29 @@
 # Verify Authoring — Core Reference
 
-> ⚠ **Durable-fabric fields shipped 2026-07-19 — this file predates them.** For `lineage:` /
-> `owner:` / `views:` / package-level `family:` frontmatter, see SKILL.md § Durable-fabric
-> frontmatter. In particular, this file's "Recovery" advice to re-validate + re-instantiate on
-> content-hash staleness is SUPERSEDED: re-instantiation wipes banked run state; the sanctioned
-> change path is the lineage delta flow, and staleness clears on a fresh green run (B2) or via
-> `verify rebaseline` (audited read). Local no-`--target` publish (lineage-recording) is now the
-> primary publish; OCI is the distribution path.
+Use the committed consumers as the authority. This reference distinguishes
+accepted declarations from execution and freshness mechanisms. For package
+amendment, named views and lineage adoption, also read SKILL.md and verify-ops;
+re-instantiating is not a general stale-clear operation.
 
 Complete schema, validation rules, binding semantics, capability model, evidence model, staleness, and plan-attachment schema. This is the deep reference — read SKILL.md first for orientation.
 
 ## Source of Truth (code)
 
-- Types: `crates/swarm-services/src/verify/types.rs` (lines 27–92 for the package spec group)
-- Parser: `crates/swarm-services/src/verify/package_parse.rs` (entry: `parse_tests_md` line 132)
-- Compiler: `crates/swarm-services/src/verify/compiler.rs` (entry: `compile_loaded_package` line 38)
+- Types: `crates/swarm-services/src/verify/types.rs`
+- Parser: `crates/swarm-services/src/verify/package_parse.rs` (`parse_tests_md`)
+- Compiler: `crates/swarm-services/src/verify/compiler.rs` (`compile_loaded_package`)
 - Capabilities: `crates/swarm-services/src/verify/capabilities.rs`
 - Bindings / freshness: `crates/swarm-services/src/verify/bindings.rs`
 
-When in doubt, the Rust types are authoritative. This doc is accurate as of the unified-verification-packages-pipeline landing but code drifts — verify field names against `types.rs` before deep work.
+Check current types plus their call sites before extending a claim. Package
+validation proves package parsing/compilation; `verify run plan` loads selected
+command/session definitions but does not execute commands, inventory or sessions.
+Manual checklist parsing and judgment/evidence acceptance have separate runtime
+consumers in `service.rs` and `service/checklist.rs`.
+
+Navigation: §1–4 package/bindings/suites; §5–6 modes/capabilities; §7 evidence;
+§8–9 freshness/identity; §9b suite schemas; §10 validation; §11–12 policies and
+attachments; §13–16 publishing, layout and gotchas.
 
 ## 1. Full VerificationPackageSpec schema
 
@@ -37,8 +42,13 @@ The compiler requires `deny_unknown_fields` — any unrecognized key at any leve
 | `tags` | `Vec<String>` | no, default `[]` | Free-form taxonomy for catalog discovery (e.g., `[vxg, preview, browser]`). |
 | `required_profile` | `Option<String>` | no | Execution profile requirement (see profile docs; e.g., `"headful-chrome-1920x1080"`). Optional. |
 | `source_of_truth` | `VerificationSourceOfTruth` | **yes** | See §2. |
-| `bindings` | `VerificationBindings` | **yes** (at least one category populated) | See §3. |
+| `bindings` | `VerificationBindings` | **yes** (nonempty `scopes`) | See §3; parser requires scopes even when another category is populated. |
 | `suites` | `Vec<VerificationSuiteSpec>` | **yes (≥1)** | See §4. Suite IDs must be unique. |
+| `evidence_contract` | `VerificationEvidenceContract` | no | `run_root_glob` and `required_artifacts`; use concrete retained artifact names. |
+| `family` | `Option<Vec<String>>` | no | Package-level metadata tags; not a per-suite field. |
+| `owner` | `Option<String>` | no | Accountable owner used by supported routing consumers. |
+| `lineage` | `Option<VerificationLineage>` | no | Mapping with optional `previous_digest` / `reset_reason`; explicit null rejects. |
+| `views` | `BTreeMap<String, VerificationViewSpec>` | no | Each view has `suites` and optional `max_age_since_earned_ms`; `full` is reserved. |
 
 ### Rust type (reference)
 
@@ -58,8 +68,15 @@ pub struct VerificationPackageSpec {
     #[serde(default)]
     pub required_profile: Option<String>,
     pub source_of_truth: VerificationSourceOfTruth,
+    #[serde(default)]
+    pub evidence_contract: VerificationEvidenceContract,
     pub bindings: VerificationBindings,
     pub suites: Vec<VerificationSuiteSpec>,
+    pub family: Option<Vec<String>>,
+    pub owner: Option<String>,
+    pub lineage: Option<VerificationLineage>,
+    #[serde(default)]
+    pub views: BTreeMap<String, VerificationViewSpec>,
 }
 ```
 
@@ -75,15 +92,17 @@ pub struct VerificationSourceOfTruth {
 
 | Field | Required | Validation |
 |---|---|---|
-| `spec` | **yes** | Non-empty; must resolve to an existing file at package-root-relative path at compile time. |
-| `architecture` | no | If present, must exist. |
-| `tdd` | no | If present, must exist. |
+| `spec` | **yes** | Nonempty package-relative reference; author a real file (see missing-file limits below). |
+| `architecture` | no | Optional package-relative reference; author the file when declared. |
+| `tdd` | no | Optional package-relative reference; author the file when declared. |
 
-**Path rules (all paths in TESTS.md)**:
+**Referenced-file path rules** (`source_of_truth.*`, `suites[].file`):
 - Relative to package root.
 - No leading `/` (absolute rejected).
 - No `../` (parent escapes rejected).
-- Must resolve to a real file at validate/compile time (missing file = validation error).
+- Author real files. The loader fails closed on missing references for lineage
+  packages; legacy packages can retain missing-file diagnostics. Do not infer
+  runnable suite files from a successful package validation alone.
 
 **Staleness binding**: Any hash change to these files triggers `SourceOfTruthDoc` staleness across **all suites**. If your spec drifts and you don't re-validate, cached instances go stale and reports stop being trustable.
 
@@ -94,7 +113,7 @@ pub struct VerificationBindings {
     #[serde(default)]
     pub scopes: Vec<String>,
     #[serde(default)]
-    pub skeleton_layers: Vec<String>,
+    pub territory_layers: Vec<String>,
     #[serde(default)]
     pub work_unit_queries: Vec<VerificationWorkUnitQuery>,
     #[serde(default)]
@@ -108,7 +127,10 @@ pub struct VerificationWorkUnitQuery {
 
 ### Per-field semantics
 
-**`scopes` (required ≥1)** — Subject + contract binding. What this package covers. Accepted forms:
+**`scopes` (required, nonempty)** — What this package covers. The parser checks
+this separately after the general `has_any_bindings` test: other populated
+categories do not replace scopes. Use an actual project/workspace/target scope.
+Common forms:
 - `project/<project-id>` — whole project
 - `vxg/<vxg-id>` — specific VXG graph
 - `workspace/<workspace-id>` — specific workspace
@@ -124,9 +146,11 @@ scopes: [design/home-hero, vxg/home-preview]
 
 Multiple scopes = the package applies when any scope matches.
 
-**`skeleton_layers` (optional, drift-only)** — Watched skeleton layer IDs. Staleness fires when the layer's version string changes (or becomes unavailable).
+**`territory_layers` (optional)** — Watched layer IDs. Freshness compares versions
+read through the available skeleton projection (the runtime stale kind remains
+`SkeletonLayerVersion`). Do not author the obsolete `skeleton_layers` key.
 ```yaml
-skeleton_layers: [l2.5.vxg-map, l2.5.design-canvas]
+territory_layers: [l2.5.vxg-map, l2.5.design-canvas]
 ```
 
 **`work_unit_queries` (optional, contract/context)** — Work-unit label filters for plan-attachment applicability.
@@ -136,7 +160,10 @@ work_unit_queries:
   - { label: ui-regression }
 ```
 
-**`path_globs` (optional, drift-only)** — File-path glob watches. Staleness fires when matching files change. Uses standard glob syntax.
+**`path_globs` (optional)** — Declared path scope. Freshness hashes the declared
+glob set and repository router as `RoutingSurface`; it does not hash the content
+of each matching source file. A product edit under a glob is not an automatic
+stale signal. Schedule the affected proof from actual changed inputs.
 ```yaml
 path_globs:
   - "agent-swarm-ui/packages/ui/src/apps/vxg-map/**"
@@ -151,9 +178,9 @@ The spec talks about three *classes* of binding (subject / contract / drift-only
 |---|---|---|
 | **Subject** | `scopes` (target-facing) | `TargetFingerprint` — suite-specific |
 | **Contract** | `source_of_truth.*`, `scopes` (contract-facing), `work_unit_queries`, plan attachment fields | `SourceOfTruthDoc`, `PlanBinding`, `WorkBinding` — all-suite |
-| **Drift-only** | `skeleton_layers`, `path_globs` | `SkeletonLayerVersion`, content-hash watches — advisory |
+| **Drift inputs** | `territory_layers`; declared `path_globs` set/router | `SkeletonLayerVersion`, `RoutingSurface`; gate policy determines blocking behavior, not the field name |
 
-At least **one category must have entries** (typically `scopes`). Empty `bindings` rejects.
+Empty bindings and empty `scopes` both reject, even if another category has entries.
 
 ## 4. VerificationSuiteSpec
 
@@ -169,6 +196,8 @@ pub struct VerificationSuiteSpec {
     pub required_capabilities: Vec<String>,
     #[serde(default)]
     pub optional_capabilities: Vec<String>,
+    #[serde(default)]
+    pub lifecycle: Option<VerificationSuiteLifecycle>,
 }
 ```
 
@@ -180,9 +209,10 @@ pub struct VerificationSuiteSpec {
 | `proof_kind` | **yes** | Enum: `checklist` or `automated` (serde lowercase). |
 | `execution_mode` | **yes** | Enum: `manual`, `command`, or `swarm_session` (serde snake_case). |
 | `file` | **yes** | Non-empty relative path to suite spec file (YAML or MD). Must exist. |
-| `checklist_refs` | no | List of sibling suite IDs this suite depends on. All must exist in same package. |
+| `checklist_refs` | no | Sibling suite references; all must exist. Reference validation does not schedule prerequisite execution. |
 | `required_capabilities` | no | Capabilities required at runtime for the suite to execute. |
 | `optional_capabilities` | no | Capabilities that enhance the suite but are not required. |
+| `lifecycle` | no | `active`, `advisory`, or `retired: {reason, since}`; do not retire a failing obligation merely to green a gate. |
 
 ### Valid `(proof_kind, execution_mode)` pairs
 
@@ -191,7 +221,7 @@ Only three combinations pass validation. Anything else rejects with `unsupported
 | proof_kind | execution_mode | Use for | Suite file |
 |---|---|---|---|
 | `checklist` | `manual` | Human/AI-reviewed rubric items | YAML or MD with checklist items |
-| `automated` | `command` | nextest-routed backend validation | YAML with `lane:` + optional filters |
+| `automated` | `command` | Deterministic checks through explicit commands, repository routing or supported probe adapters | YAML/JSON/TOML command definition (§9b.2) |
 | `automated` | `swarm_session` | Browser / session-runtime proof | YAML with session profile + interaction script |
 
 ### ID conventions (not enforced, but strongly recommended)
@@ -323,7 +353,9 @@ pub enum SourceRef {
 
 ### Wire format (what you'll see in JSON responses)
 
-- CAS-backed: `"cas://verify/<instance-id>/<suite-id>/<attempt>/<kind>"` — the stable, hashed ref pattern emitted by the runtime.
+- Named runtime locator: `"cas://verify/<instance-id>/<suite-id>/<attempt>/<kind>"`.
+  Immutable payload refs use `cas://verify/sha256/<sha256>`; verify their retained
+  bytes and manifest binding rather than inferring integrity from the URI shape.
 - Session refs: serialized forms of `SourceRef::SessionSeq` / `SessionByte`.
 
 Example from a live `verify run` on a command suite:
@@ -332,25 +364,35 @@ Example from a live `verify run` on a command suite:
 "named_evidence_refs": {
   "planner.json":   "cas://verify/verify-instance-1220.../backend.fast/2/planner-json",
   "preflight.json": "cas://verify/verify-instance-1220.../backend.fast/2/preflight-json",
-  "nextest_output": "cas://verify/verify-instance-1220.../backend.fast/2/nextest-output",
-  "coverage":       "cas://verify/verify-instance-1220.../backend.fast/2/coverage"
+  "command.0.json": "cas://verify/verify-instance-1220.../backend.fast/2/command-0-json"
 }
 ```
 
 ### Declaration rules (what authors do / don't do)
 
-- **You do NOT declare evidence refs in TESTS.md.** Evidence accumulates at runtime and is keyed by the runtime (the planner for command suites; the session runtime for swarm_session; the verdict-setter for checklists).
-- **You DO declare required capabilities** that imply what evidence will be emitted. `capture.screenshot` implies a screenshot ref will appear; `trace.dom` implies a DOM trace ref.
-- For **checklist verdicts**, the agent/operator supplies `evidence_refs` at verdict time via `verify checklist verdict set --evidence-ref <ref>` (passing an existing CAS digest or `cas://...` URL).
+- Declare artifact obligations with `evidence_contract.required_artifacts` and,
+  where needed, `run_root_glob`. Runtime `named_evidence_refs` are output bindings,
+  not an authored suite map. Literal placeholders in artifact paths do not expand.
+- Capabilities describe requirements; an adapter must actually capture the bytes.
+  A capability name alone guarantees neither a screenshot nor acceptance.
+- Command runs retain `planner.json`, `preflight.json`, `command.N.json` and
+  any `resource.N.json` receipts. JUnit/coverage files need their own retention
+  and evidence binding; they are not automatically named artifacts.
+- For manual judgment, pass readable retained paths or resolvable evidence refs
+  through `--evidence-ref`. With nonempty required artifacts, a passing judgment
+  requires reviewer, reasoning and resolvable bytes. Item hints map declared
+  artifact names to that item's obligations; arbitrary substring citations do
+  not substitute for a real path/CAS binding. Empty-contract legacy verdicts do
+  not gain byte validation merely from a filename in prose.
 
-## 8. Staleness — 8 kinds
+## 8. Staleness and per-suite snapshots
 
 When any bound input changes, the instance becomes stale. Re-running a stale instance is allowed but downstream gates should treat it as untrusted until the instance re-compiles/re-runs and stale-reason count drops to zero.
 
 ```rust
 // crates/swarm-services/src/verify/bindings.rs ~line 61
 pub enum VerificationStaleSourceKind {
-    PackageContent,           // hash of TESTS.md changed
+    PackageContent,           // semantic-core comparison; whole-document fallback on old inputs
     SourceOfTruthDoc,         // hash of spec/architecture/tdd doc changed
     SuiteFile,                // hash of suite file changed (suite-specific)
     TargetFingerprint,        // target adapter fingerprint changed (suite-specific)
@@ -358,6 +400,8 @@ pub enum VerificationStaleSourceKind {
     SkeletonLayerVersion,     // watched skeleton layer version changed
     PlanBinding,              // plan_id or phase_id binding context differs
     WorkBinding,              // work_selector binding context differs
+    RoutingSurface,           // declared path-glob set or router bytes changed
+    ViewFreshnessFloor,       // only the view-scoped earned-age evaluator
 }
 ```
 
@@ -365,7 +409,7 @@ pub enum VerificationStaleSourceKind {
 
 | Kind | Scope | Triggered by | Common cause |
 |---|---|---|---|
-| `PackageContent` | all suites | TESTS.md hash | You edited TESTS.md |
+| `PackageContent` | package input, evaluated against suite snapshots | Semantic-core hash; old/unavailable semantic snapshots fall back to full TESTS.md bytes | Acceptance-relevant contract edit |
 | `SourceOfTruthDoc` | all suites | spec/architecture/tdd file hash | Spec drift |
 | `SuiteFile` | single suite | suite file hash | You edited a `suites/*.yaml` |
 | `TargetFingerprint` | single suite | target adapter fingerprint | The underlying target changed (VXG mutated, design snapshot changed) |
@@ -373,10 +417,16 @@ pub enum VerificationStaleSourceKind {
 | `SkeletonLayerVersion` | all suites | watched layer version | A watched skeleton layer got updated |
 | `PlanBinding` | all suites | plan_id/phase_id context | Plan attachment context changed |
 | `WorkBinding` | all suites | work_selector context | Work binding context changed |
+| `RoutingSurface` | shared input, evaluated against suite snapshots | Declared path-glob set or router bytes | Routing changed; not every matched source file |
+| `ViewFreshnessFloor` | selected view members | Last earned result older than configured floor | Time limit expired |
 
 ### Scope semantics
 
-`stale_applies_to_all_suites(kind)` returns true for: `PackageContent`, `SourceOfTruthDoc`, `SkeletonLayerVersion`, `PlanBinding`, `WorkBinding`.
+Once-green suites compare their own green-time input snapshots. Shared-input
+classification is not permission to discard every earned observation: unchanged
+checklist items have an additional item/input/evidence-aware migration path.
+Old snapshots lacking a new freshness channel use its documented fallback; do
+not infer retrospective coverage from a newly added field.
 
 Suite-scoped kinds — `SuiteFile`, `TargetFingerprint`, `NormalizedCapabilities` — carry a `key: suite_id` identifying which suite went stale.
 
@@ -398,10 +448,14 @@ Suite-scoped kinds — `SuiteFile`, `TargetFingerprint`, `NormalizedCapabilities
 
 ### Recovery
 
-- **Content-hash kinds (`PackageContent`, `SourceOfTruthDoc`, `SuiteFile`)**: re-validate + re-instantiate. The new instance has a new `instance_id` derived from the new content hash.
-- **Target-fingerprint**: either wait for target to re-settle, re-point the scope, or accept the new fingerprint.
-- **Capability**: changed capability declaration produces a new artifact; re-instantiate.
-- **Skeleton-layer / plan-binding / work-binding**: advisory vs blocking depends on the suite/package's freshness policy.
+- Inspect the actual stale reason and affected obligation. Run/review changed
+  acceptance on the intended target; a fresh green run captures current inputs.
+- For package evolution, use a validated lineage delta and inspect carried,
+  reset and new obligations. Metadata-only edits need not change artifact identity.
+- `verify rebaseline` is an audited reporting-only re-check; it does not refresh
+  stored acceptance. Do not use re-instantiation or target relabeling as a reset
+  shortcut. Same-identity instantiation can preserve unchanged state, but changed
+  baselines can reset automated state; always inspect the resulting carryover.
 
 Full freshness policy semantics: §11.
 
@@ -426,12 +480,18 @@ Every record in the UVP lifecycle has a stable ID. Most are deterministic from c
 ### What this means for authoring
 
 - **Rename a package**: new `package_id` → new artifact_id → new instance_id → everything downstream regenerates. Existing instances orphan.
-- **Edit TESTS.md** (even whitespace): new artifact_id → new instance_id. Previous instances go stale via `PackageContent`.
-- **Stable identity across re-compiles with identical content**: you get the same `artifact_id` → same `instance_id`. Re-instantiating is idempotent.
+- **Edit TESTS.md**: semantic acceptance changes can change artifact identity.
+  Whitespace/body edits and metadata overlays are not universally new artifacts:
+  the compiler hashes a semantic core. Introducing lineage adds suite-file
+  fingerprints to that core, so the first lineage transition can change identity.
+- **Identical compiled inputs** produce the same artifact/instance IDs. Identity
+  equality alone is not a promise about all runtime mutations; see recovery above.
 
 ## 9b. Suite file schemas — authoritative reference
 
-Each suite in `suites[]` references a file under `suites/<name>.{md,yaml,yml,json,toml}`. The runtime loads that file and parses it using a kind-specific parser. Every schema below is copied directly from the live Rust types — treat it as the ground truth.
+Each suite references a package-relative file parsed by its execution mode.
+Use the source consumers above for current schema truth; the examples below
+show supported shapes and distinguish parser checks from runtime acceptance.
 
 ### 9b.1 Checklist suites (`proof_kind: checklist`, `execution_mode: manual`)
 
@@ -440,20 +500,23 @@ Each suite in `suites[]` references a file under `suites/<name>.{md,yaml,yml,jso
 1. **Structured mode** — YAML frontmatter with an `items:` array. Per-item `severity`, `required_capabilities`, `tags`, and `automation_hint` are all author-controllable.
 2. **Legacy mode** — Markdown bullet lines (`- `, `* `, or `+ `). Simpler; per-item metadata falls back to defaults.
 
-**Parser entry**: `parse_runtime_checklist_items` (`crates/swarm-services/src/verify/service.rs:2560-2577`).
+**Parser entry**: `parse_runtime_checklist_items` in `service.rs`.
 
 ```rust
-if let Some(items) = parse_structured_runtime_checklist_items(source, suite_path, suite)? {
+if let Some(items) = parse_structured_runtime_checklist_items(source, suite_path, suite, id_strategy)? {
     return Ok(items);
 }
-Ok(parse_markdown_runtime_checklist_items(source, suite))
+parse_markdown_runtime_checklist_items(source, suite, id_strategy)
 ```
 
-`extract_checklist_frontmatter` (`service.rs:2661`) detects mode: the file must start with a line of exactly `---`, followed by YAML, followed by a closing `---`. Malformed frontmatter (present but no closing delimiter, invalid YAML, or missing `title` on an item) fails closed with `InvalidInput`. If the file doesn't start with `---`, it's treated as legacy Markdown.
+`extract_checklist_frontmatter` detects mode: the first trimmed line must be
+`---`, followed by YAML and a closing `---`. Malformed frontmatter, invalid YAML
+or a missing item title fails closed at checklist runtime parsing. Without the
+opening fence, the file uses the legacy Markdown parser.
 
 #### Structured mode
 
-Parsed into `StructuredRuntimeChecklistFrontmatter { items: Vec<StructuredRuntimeChecklistItem> }`. Both structs are `#[serde(deny_unknown_fields)]` — extra keys reject parse (`service.rs:2579-2599`):
+Parsed into `StructuredRuntimeChecklistFrontmatter { items: Vec<StructuredRuntimeChecklistItem> }`. Both structs reject unknown fields:
 
 ```rust
 struct StructuredRuntimeChecklistItem {
@@ -474,10 +537,15 @@ Per-item semantics:
 | `description` | `""` | Trimmed. |
 | `severity` | `VerificationSeverity::Medium` | One of `low`, `medium`, `high`, `critical` (serde lowercase). |
 | `required_capabilities` | Suite-level `required_capabilities` (inherited) | When provided, normalized via `normalize_capability_values` (13-alias table — see §6). |
-| `tags` | `[]` | Trimmed; empty / whitespace-only entries dropped (`service.rs:2633-2638`). |
-| `automation_hint` | `None` | Trimmed; whitespace-only collapses to `None` (`service.rs:2652-2654`). |
+| `tags` | `[]` | Trimmed; empty entries dropped. |
+| `automation_hint` | `None` | Trimmed; whitespace-only becomes `None`. |
 
-Authors **cannot** set `item_id` — it's always auto-generated as `generate_checklist_item_id(suite_id, ordinal)` from `compiler.rs`. Ordinal is the 1-based position in the `items:` array.
+Authors cannot set `item_id` (nor an `id` alias); unknown structured fields reject.
+Both parser modes generate opaque `chk-*` IDs. Without `lineage.previous_digest`,
+the ID hashes suite ID and ordinal. With a predecessor digest, it hashes suite
+ID, trimmed title/description and a duplicate-content tiebreak. Read actual IDs
+from `verify checklist list`; neither `<suite>-<ordinal>` nor the title is a
+runtime ID. Keep a contract criterion key in the title/mapping for traceability.
 
 Structured example:
 
@@ -506,7 +574,9 @@ Everything below the closing `---` is commentary only once `items:` is present.
 
 #### Legacy mode (Markdown bullets)
 
-Parsed by `parse_markdown_runtime_checklist_items` (`service.rs:2694-2746`). Only lines starting with `- `, `* `, or `+ ` become items; every other line is skipped.
+Parsed by `parse_markdown_runtime_checklist_items`. Trimmed lines starting with
+`- `, `* `, or `+ ` become items. This legacy extraction is not a full Markdown
+document parser; use fenced structured frontmatter for reliable metadata.
 
 Canonical pattern: `- **item-slug**: description text...`
 
@@ -524,9 +594,17 @@ Use legacy mode when you only need title + description and don't care about per-
 
 #### Common authoring patterns
 
-- **Start legacy, upgrade to structured** when differentiation becomes valuable. The upgrade path: wrap the existing bullets in `items:` as `title: ...` entries, promote any `**slug**` sluggery into structured `title` text, promote descriptions, then add metadata.
+- Prefer structured items for new acceptance criteria. To convert a legacy file,
+  preserve each title/description and use a fenced `items:` array; inspect actual
+  IDs and migration rather than assuming metadata or position changes are harmless.
 - **Mixing is not supported in one file**: the parser uses frontmatter presence as a binary switch. If YAML frontmatter is present, only `items:` is read and the Markdown body is commentary. Bullets below YAML frontmatter are ignored.
-- **`item_id` stays deterministic in both modes** (`<suite_id>-<ordinal>`), so verdict-set CLI calls don't care which mode the file uses.
+- **Parsing mode and ID strategy are independent.** Frontmatter chooses structured
+  metadata; lineage chooses content-based identity. Both expose generated `chk-*` IDs.
+- Unchanged items can retain judgments across a neighboring edit when relevant
+  inputs, target/capabilities and evidence obligations match. Changed definitions
+  reset only affected acceptance; missing prior input snapshots cannot confer
+  fresh acceptance. Metadata/obligation changes can invalidate a judgment even
+  when its text-derived ID stays the same. Inspect resets and evidence disposition.
 
 **Validation errors the parser can emit**:
 
@@ -555,24 +633,28 @@ checklist item at instantiate time.
 - **contains-edges-correct**: The 14 `contains` edges in docs/spec.md §2.1 all exist; no stray contains edges tied to feature-core-layout subtree.
 ```
 
-This produces three items with ids `graph.structure-1`, `graph.structure-2`, `graph.structure-3` (where `graph.structure` is the suite id from TESTS.md).
+This produces three items. Obtain their generated `chk-*` IDs from checklist list.
 
 ### 9b.2 Command suites (`proof_kind: automated`, `execution_mode: command`)
 
 **File format**: `.yaml` / `.yml` / `.json` / `.toml` (extension-driven; anything else rejects with `UnsupportedFormat`).
 
-**Parser**: `load_command_suite_spec` at `crates/swarm-services/src/verify/execution/command.rs:133-176`.
+**Parser**: `load_command_suite_spec` in `execution/command.rs`.
 
-**Type**: `VerificationCommandSuiteSpec` (command.rs:60-81), `#[serde(deny_unknown_fields)]` — any extra field rejects parse.
+**Type**: `VerificationCommandSuiteSpec`, `#[serde(deny_unknown_fields)]`.
+The execution-bearing subset is shown here; annotation fields are listed below.
 
 ```rust
 pub struct VerificationCommandSuiteSpec {
     #[serde(default)] pub lane: Option<String>,
     #[serde(default)] pub paths: Vec<String>,
     #[serde(default)] pub packages: Vec<String>,
+    #[serde(default)] pub commands: Vec<String>,
+    #[serde(default)] pub resource_commands: Vec<String>,
     #[serde(default)] pub staged_configs: Vec<String>,
     #[serde(default)] pub staged_payloads: Vec<String>,
     #[serde(default)] pub integration: VerificationCommandIntegration,
+    #[serde(default)] pub scope_plan: Option<VerificationSuiteScopePlan>,
     #[serde(default)] pub mcp_call: Option<VerificationMcpCallSuiteSpec>,
     #[serde(default)] pub http_probe: Option<VerificationHttpProbeSuiteSpec>,
     #[serde(default)] pub sql_probe: Option<VerificationSqlProbeSuiteSpec>,
@@ -583,21 +665,44 @@ pub struct VerificationCommandSuiteSpec {
 
 | Field | Type | Default | Purpose |
 |---|---|---|---|
-| `lane` | `Option<String>` | `None` | Nextest profile name (`fast-local`, `feature-local`, `phase-gate`, `ci-fast`, `ci-merge`, `nightly-extended`). Required in practice for routed suites. |
-| `paths` | `Vec<String>` | `[]` | Planner `--paths` filter. Empty → planner uses the suite file path itself. |
-| `packages` | `Vec<String>` | `[]` | Planner `--packages` filter. Empty → no package filter. |
-| `staged_configs` | `Vec<String>` | `[]` | Relative paths to config files under the package root that the integration will stage before run. Preflighted for existence + parseability. |
-| `staged_payloads` | `Vec<String>` | `[]` | Relative paths to payload/fixture files (JSON/binary/etc.) under the package root. Preflighted for accessibility. |
+| `lane` | `Option<String>` | `None` | Requested tier for implicit routing; explicit-matrix label otherwise. Does not inject `--profile` into explicit commands. |
+| `paths` | `Vec<String>` | `[]` | Implicit-routing hints; empty uses suite-file path. Not a unit/integration or test-name selector. |
+| `packages` | `Vec<String>` | `[]` | Implicit router input; in explicit mode these are declared metadata and do not inject Cargo `-p`. |
+| `commands` | `Vec<String>` | `[]` | Exact command matrix; when commands or resources are present the shared executor uses this matrix instead of calling the repository router. |
+| `resource_commands` | `Vec<String>` | `[]` | Executed before body commands; failure prevents body execution. |
+| `scope_plan` | `Option<VerificationSuiteScopePlan>` | `None` | Declared profile/packages/binaries/test_count, with structural cross-field checks; actual inventory must be measured by a consumed preflight. |
+| `staged_configs` | `Vec<String>` | `[]` | Package-relative config paths preflighted for existence/parseability; not a copy/staging instruction by themselves. |
+| `staged_payloads` | `Vec<String>` | `[]` | Package-relative payload paths preflighted for accessibility. |
 | `integration` | `VerificationCommandIntegration` | `Routed` | Which integration to dispatch. See below. |
 | `mcp_call` | `Option<VerificationMcpCallSuiteSpec>` | `None` | Required when `integration: mcp_call`. |
 | `http_probe` | `Option<VerificationHttpProbeSuiteSpec>` | `None` | Required when `integration: http_probe`. |
 | `sql_probe` | `Option<VerificationSqlProbeSuiteSpec>` | `None` | Required when `integration: sql_probe`. |
 
 **`VerificationCommandIntegration` enum** (command.rs:15-23, `#[serde(rename_all = "snake_case")]`):
-- `routed` (default) — dispatches to `scripts/dev/run-rust-tests.sh --tier <lane> --packages ... --paths ...`
+- `routed` (default) — uses an explicit matrix when supplied; otherwise calls `scripts/dev/run-rust-tests.sh --json --tier <lane> --packages ... --paths ...` to plan the commands that execution will run.
 - `mcp_call` — invokes an MCP tool via a bundle/profile; requires `mcp_call:` sub-block
 - `http_probe` — issues an HTTP request against a URL; requires `http_probe:` sub-block
 - `sql_probe` — runs a SQL query against a local sqlite file; requires `sql_probe:` sub-block
+
+The non-routed integrations reject `commands`, `resource_commands` and
+`scope_plan`; use their matching adapter block. Read-only planning reports their
+inputs without invoking the live adapter.
+
+`scope_plan` has `profile: String`, `packages: Vec<String>`,
+`binaries: Vec<String>` and `test_count: usize`. Packages/binaries must be sorted,
+unique and nonempty; count must be positive. `packages` must equal the scope
+plan's packages, lane/profile must match when both are given, and each binary's
+package prefix must belong to that set. This is structural validation, not
+measurement of compiled binaries or tests.
+
+Accepted annotation fields also include `scope`, `summary`, `e2e_gates`,
+`verification_criteria`, `checklist_items`, `evidence_required`,
+`negative_assertions`, `static_no_mock_checks`, `static_checks` and
+`agent_families`. Negative assertions may be legacy strings or
+`{text, bound_tests}` mappings; a scope plan requires the bound form with nonempty
+test names. These fields do not evaluate their prose or resolve tests by
+themselves. BACKEND.md shows the exact-command pattern and the required
+inventory/count consumer. There is no top-level `test_filter` field.
 
 **`VerificationMcpCallSuiteSpec`** (command.rs:27-36):
 ```yaml
@@ -621,17 +726,26 @@ http_probe:
 **`VerificationSqlProbeSuiteSpec`** (command.rs:52-58):
 ```yaml
 sql_probe:
-  database_path: .tmp/swarmd-data/events.redb   # required; alias: databasePath
+  database_path: evidence/fixture.sqlite      # required SQLite DB; alias: databasePath
   query: "SELECT COUNT(*) FROM events WHERE scope LIKE 'bridge.project%'"
   params: []                    # default []
 ```
 
-**Minimum viable command suite** (`test-packages/bootstrap/simple-verify/suites/backend-fast.yaml`):
+**Portable explicit-command example** (requires the project's real Python tests):
 ```yaml
 lane: fast-local
+commands:
+  - bash -lc "python3 -m unittest discover -s tests -p test_slug.py"
 ```
 
-That's it. Empty `paths` means planner uses the suite file path; `integration` defaults to `routed`.
+An implicit lane-only suite is accepted but may select a broad policy lane.
+For narrow Rust proof, put Cargo package/target arguments and exact nextest `-E`
+expressions in `commands`, rather than changing the lane's shared default filter.
+Inspect `verify run plan --package-ref <ref> --suite <id>`: it reports selected
+suites, actual commands/resources, requested/resolved lane and asset checks.
+`matched_suite_count` counts suites; `declared_test_count` is an expectation.
+Planning does not execute inventory, commands or acceptance, and it does not
+replace checking actual test matches before a run.
 
 ### 9b.3 Swarm_session suites (`proof_kind: automated`, `execution_mode: swarm_session`)
 
@@ -639,10 +753,14 @@ That's it. Empty `paths` means planner uses the suite file path; `integration` d
 
 **Parser**: `load_swarm_session_suite_spec` at `crates/swarm-services/src/verify/execution/swarm_session.rs:423`.
 
-**Type**: `VerificationSwarmSessionSuiteSpec` (swarm_session.rs:29-70), `#[serde(deny_unknown_fields)]`.
+**Type**: `VerificationSwarmSessionSuiteSpec` in `execution/swarm_session.rs`.
+This runtime-field subset omits accepted annotation fields (`scope`, `summary`,
+criteria/checklist/evidence/negative/static annotations and agent families), which
+do not become automatic assertions merely because they parse.
 
 ```rust
 pub struct VerificationSwarmSessionSuiteSpec {
+    #[serde(default)]                               pub lane: Option<String>,
     #[serde(default, alias = "profileId")]          pub profile: Option<String>,
     #[serde(default, alias = "bundleId")]           pub bundle: Option<String>,
     #[serde(default, alias = "adapterKind")]        pub adapter_kind: Option<String>,
@@ -671,9 +789,12 @@ pub struct VerificationSwarmSessionSuiteSpec {
 - **There is no `interaction_script` or `expected_evidence` field.** Unknown fields reject parse. Browser automation happens via the `playwright:` sub-block (see below).
 - **snake_case is canonical.** camelCase aliases exist (`profileId` → `profile`, `targetKind` → `target_kind`, etc.) — both parse identically, but pick one convention per file.
 
-**Defaults** (swarm_session.rs:26-27):
-- `profile` defaults to `"vxg-preview-default"` at runtime if `None`.
-- `bundle` defaults to `"vxg_preview@1"` at runtime if `None`.
+For the VXG preview path, fallback profile/bundle are `vxg-preview-default` and
+`vxg_preview@1`. The separate `web-app-browser` path has
+`web-app-browser-default` and consumes the product web-app target. Do not assume
+those VXG defaults implement an arbitrary non-VXG adapter. Read-only planning
+shows declared session inputs; placement, live tools and adapter preflight resolve
+at execution.
 
 **Field semantics** (high-level):
 
@@ -737,7 +858,9 @@ A `deny_unknown_fields` violation (e.g., `profile_id:` instead of `profile:`, or
 
 These patterns appear in pre-migration test packages (authored before shared verify landed) and **will reject** under the current parsers:
 
-- Checklist YAML frontmatter with per-item `id` / `severity` / `tags` / `required_capabilities` / `automation_hint` — parser ignores frontmatter entirely (reads bullet lines only).
+- Checklist structured items with authored `id` or `item_id` — unknown fields.
+  `severity`, `tags`, `required_capabilities` and `automation_hint` are supported
+  inside a fenced `items:` array; unfenced YAML is read as legacy Markdown.
 - Command suite `test_filter: "package(x) + test(pattern)"` — no such field; `deny_unknown_fields` rejects.
 - Swarm_session nested `target: { kind, vxg_id, preview_target, node_selector }` — not a struct; fields are flat.
 - Swarm_session nested `viewport: { width, height }` — not a struct; use flat `viewport_width` / `viewport_height`.
@@ -747,7 +870,11 @@ These patterns appear in pre-migration test packages (authored before shared ver
 
 ## 10. Validation — what `verify.package.validate` checks
 
-Errors surface as `{ ok: false, errors: ["..."] }`. Common categories:
+The CLI wraps validation in an envelope: inspect both outer `ok` and
+`data.ok` / `data.errors`. An invalid package can return process exit 0 with
+`data.ok: false`. Package validation does not execute commands or parse every
+legacy suite body; use run planning for selected command/session definitions
+and the actual checklist runtime for manual item acceptance.
 
 | Error pattern | Cause | Fix |
 |---|---|---|
@@ -759,7 +886,8 @@ Errors surface as `{ ok: false, errors: ["..."] }`. Common categories:
 | `paths must be relative to package root` | `source_of_truth.*`, `suites[].file`, or other package-internal path uses an absolute path or `../` escape | Use a path relative to the package directory |
 | `source-of-truth file '<path>' does not exist` | `source_of_truth.*` points at missing file | Create the file or fix the path |
 | `bindings empty: at least one binding category required` | All binding categories empty | Add `scopes: [...]` |
-| `bindings.scopes must have at least one entry` | Empty `scopes` list | Add at least one scope string |
+| `missing required field 'bindings.scopes'` | Empty scopes, even with other bindings | Supply at least one concrete scope |
+| `unknown field 'skeleton_layers'` | Obsolete binding key | Use `territory_layers` for the current layer-version input |
 | `duplicate suite id '<id>'` | Two suites share an ID | Rename one |
 | `unsupported proof_kind/execution_mode pair: (<p>, <e>)` | Invalid combination | Use one of the 3 valid pairs (§4) |
 | `suite file '<path>' does not exist` | `suites[].file` points at missing file | Create or fix |
@@ -870,21 +998,21 @@ Conventions:
 
 1. **`kind` must equal the literal `"verification"`**. Not `verify`, not `pkg`, not empty, not `"Verification"` (case-sensitive).
 2. **`package_version` must be valid semver.**
-3. **Paths are workspace-relative.** No absolute, no `../`.
+3. **Package refs are workspace-relative; declared spec/suite files are package-relative.** No absolute or parent escape in those refs.
 4. **Only three valid suite-kind pairs.** (Checklist, Manual), (Automated, Command), (Automated, SwarmSession).
 5. **`bindings.scopes` must have at least one entry.**
 6. **Suite IDs unique within package.**
 7. **`checklist_refs` must reference existing suite IDs** in the same package.
-8. **Source-of-truth files must exist** at compile time.
+8. **Author real source-of-truth and suite files.** Lineage loading fails closed on missing refs; legacy diagnostics can be weaker.
 9. **Unknown capabilities pass through non-strict.** Typo = silent drift.
 10. **`TESTS.md` body is ignored.** All spec in frontmatter.
 11. **`deny_unknown_fields`** rejects unrecognized keys at every level.
 12. **Instance IDs are content-hashed.** Re-instantiating identical input returns identical ID.
-13. **Editing TESTS.md stales all suites** (`PackageContent`).
-14. **Editing a single suite file stales only that suite** (`SuiteFile`).
+13. **Semantic contract changes affect freshness.** Not every TESTS.md whitespace/body/metadata edit changes semantic identity.
+14. **Suite files are freshness inputs.** Checklist items additionally migrate by definition/input/evidence compatibility, preserving valid neighbors.
 15. **Capability fingerprint is per-suite.** Changing one suite's caps doesn't stale other suites.
 16. **OCI publish is fail-closed** on digest/signature/trust mismatches.
-17. **`simple-verify` template's `backend.fast` suite is a deliberately-failing stub.** Don't copy it verbatim (see verify-ops F5).
+17. **A template is not product proof.** Inspect its command plan and replace its seed with the actual required checks.
 18. **Checklist verdicts are author-scoped to passes** when `pass_id` is provided; bare verdicts skip pass rollup.
-19. **Evidence refs are auto-emitted**; authors don't declare them in TESTS.md.
+19. **Runtime evidence refs are outputs.** Authors declare obligations with `evidence_contract`, then provide or capture real retained bytes.
 20. **Stale instances are still queryable** — `verify.greenlight` returns their last known state + stale reasons; it's the plan-gate policy that decides whether stale blocks.

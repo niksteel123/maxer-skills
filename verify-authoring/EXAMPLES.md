@@ -1,12 +1,22 @@
 # Verify Authoring — Annotated Examples
 
-> ⚠ Fabric fields shipped 2026-07-19 — see SKILL.md § Durable-fabric frontmatter; this file
-> predates them. Where this file says "edit TESTS.md → re-validate + re-instantiate", that is
-> now the STATE-WIPE path on packages holding banked greens — use the lineage delta flow.
+Six package patterns and their suite files. Replace project-specific targets,
+fixtures and tests, then validate and inspect the selected execution plan.
+Package-schema acceptance is not proof that a browser adapter, exact test
+inventory, or retained evidence exists. Amend existing surface packages through
+their lineage and inspect retained/reset/new obligations before adoption.
 
-Six end-to-end TESTS.md examples with their suite files, annotated with why each choice was made. Every schema in this file has been validated against the Rust types — copy any of them verbatim and `verify package validate` will accept it. Copy, rename, adjust.
+Checklist files support structured fenced `items:` metadata and legacy Markdown
+bullets. Both return generated opaque `chk-*` IDs. A predecessor digest selects
+content-based identity; otherwise IDs derive from suite and ordinal. Neither mode
+accepts author-supplied `item_id`, and a title is not the runtime ID. Read
+checklist list before verdict writes. Structured metadata supports severity,
+tags, per-item capabilities and artifact hints (CORE.md §9b.1).
 
-> Heads-up on checklist items: the runtime parser supports **two modes**. If a checklist file starts with a YAML frontmatter block containing an `items:` array, the parser reads **structured mode** with per-item `title` / `description` / `severity` / `tags` / `required_capabilities` / `automation_hint`. Otherwise it falls back to **legacy mode** (Markdown bullets `- `, `* `, `+ `), auto-generates `item_id` as `<suite_id>-<ordinal>`, hardcodes severity to `Medium`, and inherits `required_capabilities` from the suite level. Both modes are valid today — see CORE.md §9b.1.
+For required manual acceptance, declare `evidence_contract.required_artifacts`
+and map item obligations with structured hints as shown in VXG-CANVAS.md. A
+minimal package with no evidence contract illustrates parsing, not enforced
+evidence-byte coverage or completed review.
 
 ## 1. Minimal checklist-only package (human review)
 
@@ -39,7 +49,7 @@ source_of_truth:
 
 bindings:
   scopes: [project/swarmnet]
-  skeleton_layers: [l2.5.nav]  # drift-only — stale if nav layer changes
+  territory_layers: [l2.5.nav]  # layer-version input when projection is available
 
 suites:
   - id: design.checklist
@@ -73,8 +83,8 @@ Items are machine-extracted from Markdown bullets below.
 ### Why these choices
 - `proof_kind: checklist` + `execution_mode: manual` because rubric items need human judgement.
 - No `swarm_session` suite — the reviewer drives the browser manually.
-- `skeleton_layers: [l2.5.nav]` as a drift signal: if the nav layer ships a new version, the checklist's verdicts go stale.
-- Four bullets → four items with auto-generated ids `design.checklist-1` through `design.checklist-4`.
+- `territory_layers: [l2.5.nav]` supplies a layer-version freshness input; inspect the available projection and actual stale reason.
+- Four bullets produce four items with generated `chk-*` IDs; obtain them from checklist list.
 - **Legacy Markdown-bullet mode** is fine here: every item has the same severity target (advisory design review) and inherits suite-level capabilities, so the structured-mode overhead isn't worth it. If you need per-item severity or tags (e.g., separating `critical` a11y items from `medium` polish items), switch to the structured YAML frontmatter shape shown in Example 5.
 
 ---
@@ -140,11 +150,16 @@ paths:
 
 ### Why these choices
 - `feature-local` lane: persistence tests hit disk, need one retry tolerance, slower than pure unit tests. (`fast-local` has retries=0.)
-- `paths:` narrows the planner to the event-store + storage subdirs. The lane's `default-filter` in `.config/nextest.toml` still selects which tests run within those paths.
-- `packages:` constrains to just the two crates that own the code; no cross-crate bleed.
-- `path_globs` in bindings matches the same tree — drift signal for any code change under those paths.
+- `paths` and `packages` feed the repository router. This is a broader routed check,
+  not a selector for tests in those subdirectories; policy can expand the lane or
+  package set. Inspect actual commands with `verify run plan`.
+- `path_globs` declares scope. Its set and router bytes are freshness inputs;
+  matched source-file contents are not automatically watched.
 - Both `backend.assertions` and `persistence.assertions` capabilities declared: the suite makes assertions against backend state AND persistence-layer state.
-- **No `test_filter` field** — if you need finer-grained test selection, modify `.config/nextest.toml`'s `default-filter` for the lane.
+- For narrow repair, put exact Cargo package/target arguments and nextest `-E`
+  expressions in `commands`, with a real inventory/count preflight. Do not change
+  a shared profile's default filter for one package. BACKEND.md contains a literal
+  explicit-command example and the limits of declared `scope_plan.test_count`.
 
 ---
 
@@ -230,7 +245,8 @@ playwright:
 - **No `vxg_id` field in the suite YAML** — the adapter derives it from the scope. Trying to set one rejects parse.
 - Flat `viewport_width` / `viewport_height` — not a nested object.
 - `playwright` sub-block controls browser automation; there is no author-facing interaction-script field.
-- `path_globs` covers both the frontend VXG app code and the swarmd preview route — either one changing drift-signals.
+- `path_globs` records the intended source scope; changes to matching UI/server
+  files still need affected proof even if the stored projection remains fresh.
 
 ---
 
@@ -274,7 +290,7 @@ source_of_truth:
 
 bindings:
   scopes: [project/swarmnet, vxg/swarm2-main]
-  skeleton_layers: [l2.5.feature-x]
+  territory_layers: [l2.5.feature-x]
   path_globs:
     - "crates/swarm-services/src/feature_x/**"
     - "agent-swarm-ui/packages/ui/src/apps/feature-x/**"
@@ -395,7 +411,7 @@ source_of_truth:
 
 bindings:
   scopes: [vxg/swarm2-main]
-  skeleton_layers: [l2.5.vxg-map]
+  territory_layers: [l2.5.vxg-map]
   path_globs:
     - "agent-swarm-ui/packages/ui/src/apps/vxg-map/**"
     - "agent-swarm-ui/packages/ui/src/canvas/**"
@@ -492,7 +508,9 @@ playwright:
 
 ### Why these choices
 - **Structured-mode checklist.** YAML frontmatter with an `items:` array lets each slot carry its own `severity`, `tags`, and (where useful) `required_capabilities` / `automation_hint`. The dimension slots stay at suite-level capabilities (`capture.layout` is enough); `canvas-octagon-centered` overrides to also require `capture.screenshot` because the glass gradient is the feature signature, and gets an `automation_hint` that nudges the reviewer to inspect computed styles on `[data-octagon-map]`.
-- **One item per shell slot.** Tight blame when any single slot breaks. `item_id` is still auto-generated as `<suite_id>-<ordinal>` (`shell.checklist-1` … `shell.checklist-8`); `title` is the author-facing slug used in the checklist UI but is not the id.
+- **One item per shell slot.** Distinct observations make affected review precise.
+  `title` is a criterion label, not the generated runtime `chk-*` ID. Unaffected
+  items can retain acceptance when their captured inputs and obligations match.
 - **Severity mix.** Dimension drift on the shell header / top nav / dock is `high` because those regions drive the whole layout math; rail widths and status-overlay positioning are `medium`. Legacy Markdown-bullet mode — see Examples 1 and 4 — would hardcode every item to `Medium`.
 - **VXG-specific scope** (`vxg/swarm2-main`) anchors the target fingerprint; if the underlying graph mutates, the instance stales automatically.
 - `playwright.route: vxg-map-shell` — a named route in the `vxg_preview@1` bundle's route table.
@@ -617,8 +635,12 @@ agent-swarm verify instantiate local://staged/merge-gate-smoke --format json
 
 ### Why these choices
 - **`ci-merge` lane** — hosted T2, one retry, 120s timeout; appropriate for merge-gate blocking.
-- Three suites: two routed-nextest crates + one `http_probe` integration for liveness. The health probe demonstrates a non-`routed` integration; trying the same thing inside a routed suite would be a category error.
-- Paths in backend-merge + gateway-merge narrow the planner's scope so unrelated crates don't drag the merge gate.
+- Three suites: two broader routed checks and one dedicated HTTP adapter. A
+  supported explicit command could also run a real health assertion; choose the
+  adapter that gives the required proof and inspect its result semantics.
+- Paths in backend-merge and gateway-merge are routing hints. They do not exclude
+  unrelated tests by name, and policy can expand the resolved scope. Inspect the
+  planned commands and actual matched inventory before claiming gate coverage.
 - **Digest-pinned package_ref** in plan YAML — content changes require publishing a new digest; staleness is automatic.
 
 ---
@@ -628,7 +650,7 @@ agent-swarm verify instantiate local://staged/merge-gate-smoke --format json
 | Scenario | Suite pattern |
 |---|---|
 | Pure human review | 1 × checklist (Markdown bullets) |
-| Pure backend unit tests | 1 × command (`fast-local`, `paths:` scoped) |
+| Pure backend unit tests | command with exact `-p`, `--lib` and test selectors; requested `fast-local` |
 | Backend integration | 1 × command (`feature-local`) |
 | Backend merge-gate | 1 × command (`ci-merge`) |
 | Backend nightly heavy | 1 × command (`nightly-extended`) |
@@ -645,12 +667,15 @@ agent-swarm verify instantiate local://staged/merge-gate-smoke --format json
 
 | Change | What stales | Fix |
 |---|---|---|
-| Edit `TESTS.md` | All suites (PackageContent) | Re-validate + re-instantiate (new instance_id) |
+| Edit `TESTS.md` | Semantic contract changes can stale affected acceptance; metadata/body edits are not universally new identities | Validate, plan and adopt a lineage delta; inspect carryover instead of minting a reset |
 | Edit `docs/spec.md` | All suites (SourceOfTruthDoc) | Re-run after confirming contract intent |
-| Edit `suites/backend-fast.yaml` | Only `backend.fast` suite (SuiteFile) | Re-run that suite |
-| Add `capture.a11y` to a suite | Only that suite (NormalizedCapabilities) | Re-instantiate |
+| Edit `suites/backend-fast.yaml` | Its `SuiteFile` reason; lineage semantic-core changes can also affect shared inputs | Inspect actual stale/carryover results and rerun affected proof |
+| Add `capture.a11y` to a suite | Changed capability/definition inputs | Reconcile the package delta and rerun/review affected proof |
 | VXG graph mutates | Session suites whose target_fingerprint changed (TargetFingerprint) | Re-run affected session suites |
-| Skeleton layer version bumps | All suites binding that layer (SkeletonLayerVersion) | Usually advisory |
+| Watched territory layer version changes | `SkeletonLayerVersion` input | Follow the actual gate freshness policy; optional binding does not mean advisory |
+| Edit a matched product-source file | No automatic content watch from `path_globs` | Run the affected proof using change scope |
+| Edit the declared glob set or router | `RoutingSurface` when the captured channel exists | Inspect routing and rerun affected acceptance |
+| Edit one checklist item | Changed item/input/evidence obligations reset; compatible neighbors may retain judgments | Inspect item migration and review the changed criteria |
 | Plan attachment context changes | All suites (PlanBinding / WorkBinding) | Plan-level; not a package-author concern |
 
 ## Plan-attachment policy cheat-sheet

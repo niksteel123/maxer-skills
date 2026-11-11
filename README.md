@@ -2,28 +2,59 @@
 
 Agent skills for rigorous, spec-driven implementation pipelines — workflows that carry a feature from raw idea to production-audited code without spec drift.
 
-Two complete pipelines ship here:
+Three workflow entry points ship here:
 
-- **Contract-First** *(current)* — validation-first. Verification packages exist and validate **before** implementation. A unit ships only on a truthful greenlight.
-- **3-SOT** *(original)* — three sources of truth (Spec / TDD / Strategy) feeding self-contained execution units.
+- **Git Contractmaxxer (everyday delivery)** — plan, implement, review or take over
+  feature work through existing GitHub issues and PRs, without restarting a stage chain.
+- **Contract-First** — adopt explicit contracts, verification packages and unit gates
+  where the project needs them.
+- **3-SOT (original)** — Spec / TDD / Strategy feeding execution units.
+
+47 bundled skills, refreshed against the owner's installed sources on **2026-11-11**.
+Everyday third-party helpers, including **no process porn/ceremony**, are catalogued
+with upstream links in [dependencies](docs/DEPENDENCIES.md), subject to their licenses.
 
 Works with [Claude Code](https://code.claude.com) and [Codex](https://developers.openai.com/codex).
 
 ## Installation
 
-### Claude Code
-```bash
-git clone https://github.com/niksteel123/maxer-skills.git /tmp/maxer-skills-install
-cp -r /tmp/maxer-skills-install/*/ ~/.claude/skills/
-rm -rf /tmp/maxer-skills-install
+```sh
+git clone https://github.com/niksteel123/maxer-skills.git
+cd maxer-skills
+python3 scripts/install.py --preset everyday --target shared --dry-run
+python3 scripts/install.py --preset everyday --target shared
+# Claude Code: use --target claude instead of --target shared.
 ```
 
-### Codex
-```bash
-git clone https://github.com/niksteel123/maxer-skills.git /tmp/maxer-skills-install
-cp -r /tmp/maxer-skills-install/*/ ~/.agents/skills/
-rm -rf /tmp/maxer-skills-install
+Requires Python 3.10+. The installer includes bundled dependencies, skips matching
+copies, and refuses to overwrite differing installations without explicit
+`--replace` (which keeps backups). Use `--all` for all bundled skills or
+`--preset contract`, `--preset legacy`, `--preset swarm` for a narrower workflow.
+External/proprietary skills and their CLIs are installed separately.
+
+See [setup/update instructions](docs/SETUP.md), [dependency map](docs/DEPENDENCIES.md),
+[project AGENTS.md starter](examples/AGENTS.md), and [source audit](docs/source-snapshot.json).
+Do not copy private machine or global agent configuration into another project.
+
+## Everyday GitHub delivery
+
+| Skill | Purpose |
+| --- | --- |
+| [git-contractmaxxer](git-contractmaxxer/) | GitHub-native feature planning, delivery, steering and takeover from current state |
+| [product-board](product-board/) | Maintain useful product milestones in the existing shared work plane |
+| [fleet-controller](fleet-controller/) | Choose authorized models/providers/effort and size delegation to useful work |
+| [fleet-accounts](fleet-accounts/) | CAAM account enrollment, qualification and session/account operations |
+| [verify-ops](verify-ops/) | Operate adopted verification packages and evidence |
+| [disk-janitor](disk-janitor/) | Inspect storage pressure and ownership before cleanup |
+
+```text
+/git-contractmaxxer Continue this feature from its current issue, PRs and proof.
+/product-board Reconcile the next milestones against what actually works.
 ```
+
+Repository policy and scoped user authorization govern every workflow. A helper's
+stage chain, AUTO mode or install preset does not grant deployment, spend or
+publication permission.
 
 ---
 
@@ -126,6 +157,12 @@ If it's in the spec, it ships. No downstream document gets to make scope cuts.
 
 ## Swarm Operations
 
+The optional `swarm` preset also includes [agent-swarm-cli](agent-swarm-cli/),
+[project-ops](project-ops/), [vcs-ops](vcs-ops/), [vxg-project-ops](vxg-project-ops/),
+[vxg-testing](vxg-testing/), [swarm-design-ops](swarm-design-ops/),
+[canvas-to-vxg](canvas-to-vxg/) and [swarm2-vxg-feature-shell](swarm2-vxg-feature-shell/).
+They require compatible external services/runtimes; the skills do not ship those.
+
 Skills for running long, multi-agent implementations without the run degrading underneath you.
 
 | Skill | Purpose |
@@ -172,4 +209,6 @@ Skills for running long, multi-agent implementations without the run degrading u
 
 ## License
 
-MIT — except `skill-creator/`, which is Apache-2.0 (see `skill-creator/LICENSE.txt`).
+Original contributions: [MIT](LICENSE). Third-party materials retain their own
+licenses; see [THIRD_PARTY.md](THIRD_PARTY.md). Proprietary optional skills are linked
+in the dependency guide and are not bundled.

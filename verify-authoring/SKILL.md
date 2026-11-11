@@ -1,19 +1,21 @@
 ---
 name: verify-authoring
-description: Author Unified Verification Packages (UVP) — `TESTS.md` files — from scratch. Use when writing a new test package, test manifest, or verification package for any swarmnet domain (VXG/canvas UI proof, backend Rust crates, mixed-mode features). Covers YAML frontmatter schema, proof_kind / execution_mode decisions, bindings (scopes, skeleton_layers, work_unit_queries, path_globs), source-of-truth anchoring, capability normalization, nextest lane routing, swarm_session browser proof, checklist items (structured YAML or legacy Markdown), validation, publish, and plan attachment. Triggers include writing/authoring a TESTS.md, verification package, test manifest, VXG or canvas test manifest, preview proof suite, backend command suite, nextest-lane verify suite, swarm_session suite, checklist suite, `suites[].proof_kind`, `suites[].execution_mode`, `bindings.scopes`, or `source_of_truth.spec`.
+description: Author or amend Unified Verification Packages (UVP) — TESTS.md and suite files — for backend, VXG/canvas, and mixed-mode proof. Covers current package and structured-checklist schemas, scopes and territory_layers, explicit narrow command matrices, routed nextest plans, declared versus measured test scope, retained evidence, lineage and item-specific carryover. Use for writing or repairing a verification package, test manifest, checklist, command/swarm_session suite, source-of-truth binding, or plan attachment.
 ---
 
 # Verify Authoring — TESTS.md Write Playbook
 
 > ULTRATHINK before you write. A verification package is a proof contract — every suite must be grounded in a source-of-truth doc, bound to a real subject, and declare capabilities it actually needs. Shortcuts here compound into red runs, stale instances, and foot-gunned plan attachments downstream.
 
-This skill teaches you how to **author** a `TESTS.md` from scratch: for VXG/canvas UI proof, for backend Rust features, or for mixed-mode packages that combine both. It is the write-path complement to the `verify-ops` skill (which covers running, scheduling, and inspecting already-authored packages).
+Use this skill to author or amend `TESTS.md` and its suite files. It complements
+verify-ops, which covers executing and inspecting the resulting proof. Keep
+existing surface packages and earned observations when their obligations remain valid.
 
 ## When to use this skill
 
 - Writing a new `TESTS.md` for a feature (VXG, backend, mixed, etc.)
 - Extending an existing package with a new suite (**the durable-fabric DEFAULT — do it as a
-  lineage delta amendment, never by re-instantiating in place**; see "Durable-fabric
+  lineage delta amendment with inspected carryover**; see "Durable-fabric
   frontmatter" below)
 - Bootstrapping a package from the `simple-verify` template
 - Fixing `verify package validate` failures on a TESTS.md you authored
@@ -89,8 +91,8 @@ source_of_truth:
   tdd: docs/tdd.md                     # optional
 
 bindings:
-  scopes: [project/swarmnet]      # required, at least one
-  # optional: skeleton_layers, work_unit_queries, path_globs
+  scopes: [project/swarmnet]      # required, nonempty concrete subject binding
+  # optional: territory_layers, work_unit_queries, path_globs
 
 suites:
   - id: backend.fast
@@ -105,6 +107,34 @@ suites:
 ```
 
 Every field of `VerificationPackageSpec`, every validation rule, every subtype is in **CORE.md**. Read it once; use it as reference during authoring.
+
+## Fast proof and real product feedback
+
+Each required suite/item must protect a current product promise or a material risk
+at its intended use boundary. Separate representative positive proof, necessary
+failure checks and optional future hardening. Prefer one sufficient check of a
+mechanism over a combinatorial recovery/edge matrix. Before adding another case,
+name what decision it changes. Do not add new suites merely to satisfy scenario
+section counts; reconcile overgrown existing obligations with the contract owner.
+
+Design the earliest runnable slice to demonstrate representative product
+behavior. Declare exact narrow command/suite scopes for local repair, a broader
+pre-close check, and the actual milestone gate. Keep capture/render/build
+production separate from interpretation so retained artifacts can be judged
+again without repeating expensive work when their relevant inputs still match.
+Inspect the real execution plan and matched-test counts; a narrow selector alone
+does not prove less compilation or faster execution.
+
+Distinguish measurement from acceptance. Emitting a timing, video or image is
+not meeting its quality criterion. Automate deterministic thresholds; use an
+agent checklist for visual/video judgment unless the criterion needs a human
+or physical interaction. Record reviewer identity, reasoning and a valid retained
+evidence reference through the supported pass/verdict mechanism.
+
+On steering, classify affected suites and items as retained, revised, superseded
+or new. Preserve judgments only when item identity, relevant inputs and evidence
+obligations still match; invalidate changed acceptance honestly. Reconcile the
+contract, beads and prompts before affected execution resumes.
 
 ## Durable-fabric frontmatter (shipped 2026-07-19 — live-proven on `test-packages/verify-self` v1.1.0)
 
@@ -149,7 +179,7 @@ authoring one fails validate. What ships: unit-namespaced suite IDS carry the bi
 `family:` exists only at PACKAGE level as the tag list above (confirmed against live
 `test-packages/verify-self` v1.1.0, whose suites carry no family field).
 
-Delta-amend authoring sequence: append suites + the unit view → bump MINOR version → set
+Delta-amend authoring sequence: revise/add affected suites and views → bump the version for the change → set
 `lineage.previous_digest` → validate → publish (read the returned `suite_diff` — it is the
 amendment's price sheet) → ONE instantiate → read the carryover audit `{carried, reset, new}`.
 Run-path details + the carryover/D22 reconciliation rules: `verify-ops` § Durable-Fabric
@@ -162,7 +192,16 @@ owner-adjudicated SUPERSEDE (D9), never through quiet retirement.
 
 > **Checklist authoring — two modes.** A checklist suite file chooses its mode automatically: if it starts with a YAML frontmatter block (`---` / `items:` / `---`), the parser reads **structured mode** with per-item `title` / `description` / `severity` / `tags` / `required_capabilities` / `automation_hint`. Otherwise the parser falls back to **legacy mode** (Markdown bullets `- **title**: description`) which inherits defaults for everything but title + description. See CORE.md §9b.1 for the exact schema, deny_unknown_fields rules, and validation errors. Use structured mode when you need per-item differentiation; use legacy when you don't.
 >
-> **Item identity (B8, lineage-gated):** in a package WITH `lineage.previous_digest`, item ids are content-addressed — editing an item's title/description mints a NEW id and visibly resets its verdict (`checklist_definition_changed`); carryover migrates verdicts only for byte-unchanged items, and ONLY within suites whose whole suite FILE passed the D3 byte-match — ANY suite-file edit (even one item) resets the WHOLE suite at carryover (measured, D22; see `verify-ops` § Durable-Fabric Operations). WITHOUT lineage, ids are legacy-ordinal: inserting an item renumbers every item below it and orphans their verdicts — never insert mid-list on a live legacy package. Also: an item's `automation_hint` artifact names are the verdict's citation contract — verdicts must cite ALL of them by substring or the item fails its projection.
+> **Item identity and carryover:** structured and legacy parser modes both return
+> generated opaque `chk-*` IDs, never authored `item_id` fields. With
+> `lineage.previous_digest`, IDs hash suite ID, trimmed title/description and a
+> duplicate-content tiebreak; otherwise they derive from suite ID and ordinal.
+> List the real IDs before verdict writes. Current item-aware migration can
+> preserve unaffected judgments across a neighboring checklist-file edit when
+> captured inputs, target/capabilities and evidence obligations match. Changed
+> items reset; missing old input snapshots cannot confer fresh acceptance.
+> Required passing judgments resolve actual retained bytes and artifact bindings;
+> an arbitrary substring citation is insufficient. See CORE.md §9b.1 and verify-ops.
 
 ## Suite-kind decision tree
 
@@ -214,13 +253,21 @@ Backend/control-plane packages usually combine:
 - `Checklist + Manual` suites for the full live operating scenario and no-shortcut review.
 - Optional `Automated + SwarmSession` suites only after a generic adapter exists.
 
-For infrastructure and control-plane packages, checklist items should explicitly require doctor/report proof for every product surface the scenario touches: preflight state, final state, negative cases, unsupported/gap output where a doctor command does not exist yet, and retained evidence refs for each verdict.
+For infrastructure and control-plane packages, use doctor/report output where it
+proves a named acceptance condition or diagnoses an observed blocker. Reuse matching
+preflight/final observations. Do not require a new diagnostic or negative-case
+matrix for every touched surface merely because it is infrastructure. Keep any
+diagnostic proof the actual product contract requires, with retained evidence refs.
 
 Never make a UVP pass by adding fixture-aware logic to production handlers, daemon methods, runtime adapters, services, or CLI commands. UVP verifies product behavior; it is not a place to smuggle test orchestration into production code.
 
 **Do not default backend or infrastructure packages to VXG.** UVP is domain-neutral; VXG is only one adapter. For backend/control-plane work, start with `Automated + Command` suites under `project/<id>`, `workspace/<id>`, or `zone/<id>` scopes and put the full live scenario in `Checklist + Manual` unless a generic session adapter exists. Use `Automated + SwarmSession` for backend work only when the proof truly must run inside a real product session, VM, sandbox, or agent runtime through a reusable non-VXG adapter/profile/bundle such as `adapter_kind: vm-agent-event-plane`. Do not use `vxg-preview-default`, `vxg_preview@1`, `preview_target`, `page:*`, or `vxg/<id>` unless the subject is actually a VXG/canvas UI target.
 
-Current implementation note: the shipped `swarm_session` runner is VXG-preview-first until additional product session adapters are implemented. A non-VXG `swarm_session` contract may be valid as an expected-red/backend adapter target, but it must fail closed with a missing-adapter/blocker reason. Never "make it green" by rewriting the package into a VXG preview proof or by hardcoding a specific backend package scenario in production code.
+Current implementation includes VXG preview and a `web-app-browser` adapter with
+`web-app-browser-default`. Declaring an arbitrary VM/agent adapter name does not
+implement it. Resolve the actual adapter/profile for the product target; missing
+capability remains a blocker. Do not make a backend package green by relabeling it
+as VXG or adding package-specific production behavior.
 
 For the full authoring patterns of each:
 - Checklist and automated SwarmSession patterns for VXG/canvas → **VXG-CANVAS.md**
@@ -228,20 +275,22 @@ For the full authoring patterns of each:
 
 ## Bindings at a glance
 
-Every package binds to at least one scope. Four binding categories; `scopes` is required, the rest are optional.
+Supply a nonempty `scopes` list. The parser checks it separately after the
+general binding-category check; other categories cannot replace it.
 
 | Field | Required | Class | Purpose |
 |---|---|---|---|
 | `bindings.scopes` | **yes (≥1)** | subject/contract | What this package covers (`project/<id>`, `vxg/<id>`, `workspace/<id>`, `zone/<id>`, `design/<id>`) |
-| `bindings.skeleton_layers` | no | drift-only | Watched skeleton layers; staleness fires when layer version changes |
+| `bindings.territory_layers` | no | drift input | Layer versions consumed through the available projection; stale kind remains `skeleton_layer_version` |
 | `bindings.work_unit_queries` | no | contract/context | Work-unit label filters for suite applicability |
-| `bindings.path_globs` | no | drift-only | File-path watches — declared drift INTENT only: the shipped freshness inputs hash NO watched-file content (D21, measured — a matching source edit did NOT stale the declaring suite), so today a matching file change does not stale the instance; wiring is B6 (Phase-2, unscheduled) |
+| `bindings.path_globs` | no | declared scope | The declared glob set and router bytes are hashed as a routing surface; matching source-file contents are not. Run affected proof on product edits even if stored state remains fresh. |
 
 Binding classes (conceptual, not literal enum):
 
 - **Subject** — what's being proven (the target). Lives in `scopes`. Drives target-fingerprint staleness.
 - **Contract** — the proof contract (source-of-truth docs, suite selectors, gate/freshness policy). Lives in `source_of_truth` + plan attachment. Drives content/suite/doc staleness.
-- **Drift-only** — optional watches that cause staleness but don't block. Lives in `skeleton_layers` (wired: `skeleton_layer_version` is a live stale kind) + `path_globs` (declared intent only today — see the D21 note in the table above).
+- **Drift inputs** — layer versions and routing surface. Whether stale proof blocks
+  is a gate policy decision; an optional field is not automatically advisory.
 
 Full rules: **CORE.md § Bindings**.
 
@@ -282,26 +331,28 @@ agent-swarm verify template create --template-id simple-verify --output test-pac
 agent-swarm verify package validate test-packages/my-feature --format json
 
 # 4. Fix errors iteratively — read errors[], amend TESTS.md, re-validate
+#    In CLI JSON inspect data.ok and data.errors as well as outer ok/exit status.
 #    Common errors: missing kind, invalid semver, non-existent file refs,
 #    unsupported proof_kind/execution_mode pair, empty bindings.scopes
 
 # 5. Instantiate — compiles, resolves adapters, preflights, returns instance_id
-#    ⛔ If this package_id ALREADY has an instance holding banked greens, STOP:
-#    re-instantiating wipes all suite state to all-red. The sanctioned change
-#    path is the lineage delta flow (Durable-fabric frontmatter above +
-#    verify-ops § Durable-Fabric Operations). Check `verify list` first.
+#    For an existing surface, inspect its pinned state and lineage first.
+#    Same identity does not imply a reset, but changed baselines can reset state;
+#    use the lineage delta flow for contract evolution and inspect carryover.
 agent-swarm verify instantiate test-packages/my-feature --format json
 # → { "instance_id": "verify-instance-1220..." }
 
 # 6. Inspect the instance — suites, capabilities, stale reasons
 agent-swarm verify get <instance-id> --format json
 
-# 7. Run automated suites (command + swarm_session)
-agent-swarm verify run --instance-id <id> --format json
+# 7. Plan and run the selected automated proof (commands + swarm_session)
+agent-swarm verify run plan --instance-id <id> --suite <suite> --format json
+agent-swarm verify run --instance-id <id> --suite <suite> --format json
 
 # 8. For checklist suites: open a pass, set verdicts, finish pass
 agent-swarm verify checklist pass start --suite-id <suite> --instance-id <id>
-agent-swarm verify checklist verdict set --suite-id <suite> --item-id <item> --verdict pass --pass-id <pass> --evidence-ref evidence/<run-id>/<artifact>
+agent-swarm verify checklist list --suite-id <suite> --instance-id <id> --format json
+agent-swarm verify checklist verdict set --instance-id <id> --suite-id <suite> --item-id <item-id-from-list> --verdict pass --pass-id <pass> --reasoning "Actual observation against the criterion" --evidence-ref evidence/<run-id>/<artifact>
 agent-swarm verify checklist pass finish --suite-id <suite> --pass-id <pass> --summary "..."
 
 # 9. Read greenlight to see pass/fail rollup
@@ -314,7 +365,9 @@ agent-swarm verify package publish test-packages/my-feature
 agent-swarm verify package publish test-packages/my-feature --target oci://registry.example.com/verify
 ```
 
-Iterate steps 2–6 until validate+instantiate both succeed with zero errors and no stale reasons.
+Resolve authoring errors through validation and read-only planning before
+instantiation. For an existing instance, rerun/review affected obligations and
+inspect lineage/carryover; do not repeat instantiation as a stale-clear loop.
 
 ## Top 10 authoring gotchas (summary — full list in CORE.md)
 
@@ -322,10 +375,10 @@ Iterate steps 2–6 until validate+instantiate both succeed with zero errors and
 2. **`package_version` must be valid semver.** `1.0.0` works; `v1`, `1`, `1.0`, `latest` all reject.
 3. **Know the two path scopes.** `package_ref` values are workspace-relative (`test-packages/<slug>`), but paths inside `TESTS.md` like `source_of_truth.*` and `suites[].file` are package-root-relative. Absolute paths (`/Users/...`), parent escapes (`../`), or leading `/` still reject.
 4. **Only three valid suite-kind pairs.** `(Checklist, Manual)`, `(Automated, Command)`, `(Automated, SwarmSession)`. No `browser` mode. No `(Checklist, Command)`.
-5. **`bindings.scopes` must be non-empty.** You must bind to at least one concrete scope; a zero-scope package is rejected.
+5. **`bindings.scopes` must be nonempty.** Other binding categories do not replace it; do not author the obsolete `skeleton_layers` field.
 6. **Suite IDs must be unique within the package.** Dotted namespacing convention — `backend.fast`, `preview.checklist`, `browser.smoke`.
 7. **`checklist_refs` must reference existing suite IDs** in the same package. Forward refs allowed; unknown suites reject.
-8. **Source-of-truth files must exist at compile time.** `source_of_truth.spec` pointing at a non-existent file rejects.
+8. **Author real referenced files.** Lineage packages reject missing files; legacy diagnostics can be weaker. Successful package validation alone does not prove a runnable suite.
 9. **Unknown capabilities pass through non-strict.** If you misspell `click` as `clik`, it normalizes to `clik` and silently becomes a non-functional requirement at runtime.
 10. **The body of `TESTS.md` is ignored by the compiler.** Everything machine-readable goes in the YAML frontmatter.
 
@@ -346,7 +399,7 @@ suites:
     execution_mode: manual
     file: suites/preview-checklist.md
     required_capabilities: [capture.screenshot, capture.layout]
-    checklist_refs: [backend.fast]   # depends on backend passing first
+    checklist_refs: [backend.fast]   # reference only; explicitly orchestrate needed producer proof
 
   - id: browser.smoke
     proof_kind: automated
@@ -359,7 +412,7 @@ See **EXAMPLES.md § Mixed-Mode Package** for a full annotated TESTS.md.
 
 ## Pointers — deep dives
 
-- **CORE.md** — full TESTS.md schema, every field, every validation rule, bindings in depth, capabilities, evidence model, the 8 staleness kinds, publish flow, plan-attachment schema.
+- **CORE.md** — package/suite schemas, bindings, capabilities, evidence, freshness channels, publish flow and plan attachments; distinguishes declarations from runtime consumers.
 - **VXG-CANVAS.md** — VXG/canvas authoring: visual checklists, swarm_session browser suites, preview routes, design-ref comparison, shell/slot-scoped items, screenshot evidence.
 - **BACKEND.md** — command-suite authoring: nextest lane routing, `scripts/dev/run-rust-tests.sh` contract, resource groups, heavy-lane rules, flakiness policy, evidence from nextest output.
 - **EXAMPLES.md** — six annotated end-to-end TESTS.md packages: minimal checklist, minimal command, minimal swarm_session, mixed-mode, VXG map rendering, backend event-store persistence.
@@ -387,13 +440,15 @@ See **EXAMPLES.md § Mixed-Mode Package** for a full annotated TESTS.md.
   VXG test live (AMEND-U3-1); a suite whose command matches 133 unrelated tests goes green
   with zero backing tests of its own. Ordinary-English-word filter terms are banned; the
   suite must fail on zero, extra, or missing matches.
-- **`negative_assertions` is parsed metadata the executor NEVER evaluates** — it documents
-  intent but proves nothing (a claim with no consumer). It must still be VALID YAML: a
+- **Negative prose is not an executable assertion.** `scope_plan` adds structural
+  checks and requires nonempty `bound_tests`; the runtime does not resolve their
+  inventory or evaluate the English text. A real preflight must measure exact
+  matches and the named tests must exercise the claimed negative. Use VALID YAML: a
   reserved-indicator scalar (e.g. a leading backtick) makes the whole suite file unloadable
   and `verify run` 409 at parse time — "vacuously green" has a twin, "vacuously DEAD", and
   the ALL-RED birth baseline cannot distinguish `never_run` from `unrunnable`. Parse-check
   every suite file at authoring time.
-- **Evidence must be CAS/repo-durable (D20).** `evidence.required_artifacts` and hint
+- **Evidence must be durably retained (D20).** `evidence_contract.required_artifacts` and hint
   artifacts must never cite a disposable build-worktree path (`.tmp/*-build-*`) as proof —
   green-time manifests (B11-core) make proof survive worktree deletion, and a raw pinned
   path defeats that. Also: literal path templates (`<unit>`-style placeholders) in
@@ -406,7 +461,11 @@ See **EXAMPLES.md § Mixed-Mode Package** for a full annotated TESTS.md.
 - Do not declare capabilities you don't actually use. Over-declaration makes instances brittle.
 - Do not put machine-readable config in the Markdown body. The body is for humans; the compiler ignores it.
 - Do not hand-craft `artifact_id`, `instance_id`, or any derived ID. They're content hashes.
-- Do not use the `simple-verify` template's suite verbatim in production packages — its `backend.fast` suite is a deliberately-failing plumbing stub (see verify-ops gotchas). Replace it.
-- Do not embed raw `cargo nextest` invocations in a command suite. Use the lane + planner pattern (BACKEND.md).
-- Do not bypass the validate → instantiate loop. Shipping an unvalidated TESTS.md means red runs at plan-run activation time.
+- Do not use a template suite as product proof unchanged. Inspect its current
+  plan and replace its seed with the actual required test/target selection.
+- Use explicit narrow `commands` for exact test/target selection, with a measured
+  inventory preflight where required. Use implicit routing for the intended
+  broader gate; inspect requested/resolved lanes before execution (BACKEND.md).
+- Validate and inspect the run plan before executing changed proof. Do not use
+  repeated instantiation to manufacture a clean-looking acceptance state.
 - Do not add package-specific scenario runners, fixture paths, fixed agent names, flow ids, or evidence filenames to production code to satisfy a UVP. Put orchestration in the verification run/evidence, and keep product code generic.

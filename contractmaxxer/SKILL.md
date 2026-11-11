@@ -1,6 +1,6 @@
 ---
 name: contractmaxxer
-description: "Orchestrate the complete CONTRACT-FIRST pipeline from any entry point. Deep-researches the doc + codebase + UVP landscape via subagents, then generates the full numbered handoff chain (hardening, contract pass 1+2, UVP transcription, beads, audit, execution prep) into docs/plan-hub/prompts/<feature>-contract-pipeline/ — each handoff packed with researched context, exact skill invocations, scope gates, and a written fresh-eyes sub-optimization pass. Composable: detects what exists and starts there. MODES: mini/normal/max unit granularity by feature complexity (user-overridable). AUTO MODE (explicit opt-in, Claude Code only): orchestrates end-to-end execution with fresh agents per stage until the feature ships. Use when: 'contractmaxxer', '/contractmaxxer', 'generate the contract pipeline for X', 'wrap the contract-first workflow', 'create handoffs for the contract pipeline', 'run the contract pipeline in auto mode'. Supersedes pipemaxxer for contract-first work (pipemaxxer remains for legacy 3-SOT)."
+description: "Orchestrate an adaptive contract-first workflow from its current state: investigate unresolved questions, choose coherent product outcomes, author executable proof and handoffs, and reconcile plans when evidence or user steering changes them. Use for contractmaxxer, contract pipeline preparation or authorized end-to-end execution."
 ---
 
 # Contractmaxxer — Contract-First Pipeline Orchestrator
@@ -24,13 +24,14 @@ description: "Orchestrate the complete CONTRACT-FIRST pipeline from any entry po
 | 1 | research-hardening | ideal source doc via stamped revisions | 7-item readiness bar = READY |
 | 2 | research-to-contract | execution contract (units, scenarios, UVP specs, crosswalk) | pass-2 fresh-eyes validation clean |
 | 3 | contract-to-uvp | **surface resolution executed**: AMEND the surface package (delta: append suites + unit view + minor bump + lineage publish, ONE instantiate) or MINT a new surface package — per the stage-0 decision record | instantiated; **DELTA-VIEW all-red** (H1: `greenlight(view=unit:<epic>-u<N>)` = never-run); carryover audit read, `reset=∅` expected ONLY for suites byte-unchanged since the ancestor's instantiate (D22) |
-| 4 | contract-to-beads | bead graph with proof classes per unit | 100% two-sided coverage; polish steady-state |
+| 4 | contract-to-beads | bead graph with proof classes per outcome | coverage and actual capability dependencies verified |
 | 5 | contract-bead-audit | fresh-eyes audited bead graph | verdict READY |
 | 6 | contract-to-execution | kickoff/push/sweep prompts; flat swarm runs | unit UVP greenlight via gate fix-loop |
 
 Laws binding every stage:
-1. The research doc is canonical. Downstream artifacts CITE it, never restate
-   it. Conflicts resolve upward: code → package → contract → research.
+1. Research records current canonical intent. Cite requirements without
+   duplicating them. User steering or contrary evidence can revise that intent;
+   reconcile affected code, packages and contracts instead of resolving by rank.
 2. A unit is complete ONLY on truthful UVP greenlight — never on narrative,
    bead acceptance criteria, or local tests alone.
 3. Blocked is a valid truthful result; mocks never substitute for missing
@@ -54,7 +55,8 @@ Laws binding every stage:
    ancestor instance's birth — read the audit, never assert the price.
 5. Manual scenarios run on REAL subjects with real data; synthetic data only
    in labeled automated eval decks.
-6. Each stage writes exactly ONE artifact class.
+6. Each normal stage has one primary artifact class. Substantial steering pauses
+   affected dispatch and reconciles all affected artifact classes together.
 7. **THE CONSUMER RULE — a declaration is not a mechanism. Every claim must have
    a proven consumer.** A field the schema accepts but no executor evaluates, a
    guarantee the docs promise but no code reads, a rule written in one checker's
@@ -148,27 +150,74 @@ What this changes about EVERY pipeline this skill generates:
 the feature, and generate the complete handoff chain so that every stage
 session starts with everything it needs to execute correctly.**
 
-## Cardinal Rule: ZERO SCOPE DRIFT
+## Account For Current Authorized Scope
 
-**If it's in the research doc, it gets proven and implemented. No
-exceptions.** Phases/units are execution ORDER, never importance tiers.
-Banned in every generated artifact and every downstream output: "post-MVP",
-"Phase 2+", "stretch goal", "nice to have", "deferred", "out of scope",
-"future iteration", "simplified for initial implementation", "can be added
-later". Every CREATE handoff embeds this rule; every handoff's sub-
-optimization includes a red-flag scan + coverage verification; the audit
-handoffs treat scope drift as BLOCKING. In this pipeline the rule has teeth
-beyond language-policing: the crosswalk makes coverage mechanically
-diffable, and greenlight makes completion ungameable — your handoffs must
-wire both into every stage's checks.
+Every current requirement must have a proof/work owner or an explicit remaining
+disposition. Later authoring does not silently erase it. Review actual coverage,
+authority and evidence; do not use a vocabulary ban as a proxy for scope drift.
+User steering and contradicted assumptions may change the canonical design or
+scope through recorded reconciliation. Do not weaken a criterion merely to
+obtain green. Product readiness and a completed internal gate remain separate.
+
+### Shared product board
+
+When repository instructions, the guide or the user names a product board,
+read its relevant milestones/prerequisites before partitioning or selecting work.
+Use [product-board](../product-board/SKILL.md) for preliminary plan iteration,
+new tracks, completion policy and external workflow mappings. A requested board
+can be drafted before contracts; draft milestones are not new implementation
+authorization. With no board in scope, continue the normal single-track workflow.
+
+The research and contract phases may revise milestones alongside affected
+canonical plans when evidence or steering warrants it. Preserve IDs, valid proof
+and active ownership; a board does not freeze architecture or impose one unit
+per milestone. Add its actual path/link and relevant IDs to the existing guide.
+Generated planning/execution prompts must carry that pointer and boundary reminders.
+
+Keep the full product goal distinct from the next demonstration. Use short outcome
+titles and acceptance bullets; split milestones for useful delivery/dependency
+boundaries, not one per check. Develop substantial design changes in the canonical
+plan and reconcile the board; identify pending amendments and respect a requested
+plan-first sequence. A board rewrite alone does not complete the redesign.
+
+The coordinator rereads at start/resume, next-outcome selection and before relying
+on a changed prerequisite; updates after meaningful results, blocks, milestone
+closure or reflection. Apply the product-board Achieved policy: actual promised
+behavior, applicable earned proof/review, matching evidence and no unresolved
+contradiction. A green unit or merged PR alone does not establish a milestone.
+Report the actual unlock and open product obligations at unit and final sweeps.
+Before changing a promise, inspect dependent IDs and reconcile affected artifacts.
+Existing worker scope, independent work and healthy workloads remain protected.
+
+### Steering during execution
+
+At the existing coordination cadence and before extending a repair/review loop,
+ask: what useful behavior or decision has advanced, what is still unproven, and
+what decision will the next verification change? Prefer the next product result
+when more checks only elaborate already-qualified behavior. This is a short
+choice in the current checkpoint, not a new watcher, worksheet or review round.
+Apply [research-to-contract](../research-to-contract/SKILL.md#scenario-authoring-rules-the-heart-of-this-skill)
+for proportional proof: representative success plus relevant material failures,
+scoped repair, required close checks and a stopping condition. Reconcile an
+overgrown contract explicitly; preserve genuine operational promises and valid
+evidence. Honor paused/concluded experiments; findings need not become endless
+repairs merely because an exploratory checklist still has open questions.
+
+Use [research-to-contract — Reflection and substantial steering](../research-to-contract/SKILL.md#reflection-and-substantial-steering)
+for the affected-artifact table and resume conditions. Pause affected dispatch,
+checkpoint work, reconcile intent/contracts, suites/items, beads/edges and
+prompts, and inspect actual evidence carryover. Unaffected work continues.
 
 ## First Action When Invoked
 
-1. Read `TEMPLATES.md` in this skill folder FULLY — it carries the complete
-   parameterized template for every handoff, the enrichment marker map, the
-   worked-example sub-optimizations that set the quality bar, and the
-   manifest/EXECUTION-GUIDE templates. Do not generate any handoff from the
-   anatomy summary alone.
+Before any delegation, including research and native subagents, read
+[fleet-controller](../fleet-controller/SKILL.md#model-account-and-machine-routing)
+and the current model registry. Choose the model/provider for the actual task
+before choosing its launch adapter. This applies in every mode, not only AUTO.
+
+1. Read the relevant complete handoff block in `TEMPLATES.md`, its enrichment
+   map and the needed manifest/guide fields. Read later blocks when their work
+   becomes ready; do not generate a handoff from the anatomy summary alone.
 2. Skim the SIX stage skills' opening sections (they live in the same
    skills directory as this skill: `research-hardening`,
    `research-to-contract`, `contract-to-uvp`, `contract-to-beads`,
@@ -225,7 +274,7 @@ grep -n "^Revision:" <research_doc> | tail -3          # revision history exists
 ls docs/plan-hub/prompts/ | grep <feature>             # pipeline folder exists?
 cat test-packages/SURFACES.md 2>/dev/null              # surface registry (bootstrap rows if absent)
 ls test-packages/ | grep -i "surface\|<feature>"       # surface pkgs + legacy per-feature pkgs
-target/debug/agent-swarm verify list --format json     # instances?
+agent-swarm verify list --format json     # instances, using the installed qualified CLI
 br list --json | head -20                              # beads? root epic?  (run from REPO ROOT — a worktree CWD reads a frozen snapshot)
 ```
 
@@ -242,48 +291,30 @@ wastes a full stage session.
 
 ## Pipeline Modes — mini / normal / max (granularity calibration)
 
-Every invocation selects a mode BEFORE generating anything. Mode calibrates
-**unit granularity and ceremony — never rigor**: the six laws, the
-fresh-session 03/06 discipline, truthful greenlights, and zero scope drift
-apply identically in all modes. Putting a bug fix through max is waste;
-putting cortex-class work through mini is malpractice — both are
-calibration failures, and the first is the more common one.
+Mode describes how much near-term detail is useful; it does not prescribe a
+unit count, document size, review quota, package count, or fleet size. Preserve
+an explicitly requested mode, but size work from the next useful outcome,
+remaining uncertainty, real capability dependencies and feedback cost.
 
-| | **mini** | **normal** | **max** |
-| --- | --- | --- | --- |
-| Fits | bug fixes, small frontend features, single-surface wiring, config/doc-shaped features | medium features decomposable into a few coherent slices | cortex / meshsync / workbench-class: novel infrastructure, kernel/event-sourced/distributed work, many subsystems, high interaction complexity |
-| Units | **1** (rarely 2) — contract authored IN FULL in one pass, no stubs | 2–4 — first 1–2 full, rest stubbed | 5+ — full stub+graduation discipline, a SPINE release unit, recorded checkpoint reviews at major boundaries (orchestrator-adjudicated, retro-review flagged). Package model is NOT a per-pipeline choice anymore: the surface resolution decides it (AMEND the surface package with per-unit views; ONE shared package per surface is the standing shape) |
-| Phase 1 research | 2 subagents (1 + 2; fold the UVP-landscape questions into subagent 2) | 4 subagents (standard) | 4 subagents; add an adversarial pre-read pass when the doc exceeds ~2,500 lines |
-| Proof surface | one small delta on the resolved surface package (typically 3–8 suites; a standalone package only per a MINT resolution) | per contract | per contract + SPINE composition |
-| Execution swarm | 1–2 agents | 2–4 agents | 3–6 agents + ONE closer agent for tails |
-| Fresh-eyes (03/06) | still FRESH sessions — single-pass, tight | standard | cross-model, multi-agent encouraged |
+Start with the smallest coherent slice that can demonstrate representative
+product behavior. Add a unit only for a separately useful outcome, material
+risk retirement, or genuinely independent work. Author near-term acceptance
+fully and keep later work light. Backend, kernel and distributed work have no
+automatic upward bias; UI and visual work have no automatic downward bias.
 
-**Selection** — YOUR judgment, made provisionally in Phase 0 from the doc's
-scale, confirmed or adjusted after Phase 1's findings. Score these signals:
-
-- Doc scale: <800 lines → mini · 800–2,500 → normal · >2,500 → max
-- Subsystems touched: 1 → mini · 2–4 → normal · 5+ → max
-- Backend depth: FE/wiring-only → mini · new service logic → normal ·
-  kernel / event-sourced / distributed → max
-- Novelty: follows existing patterns → mini/normal · new patterns → normal ·
-  new infrastructure → max
-- Estimated proof surface: <6 suites → mini · 6–15 → normal · >15 → max
-- Risk class: cosmetic → mini · feature → normal · data-integrity /
-  distributed-correctness → max
-
-Mode = the tier the majority of signals indicate; when torn, round UP for
-backend/kernel/distributed work and DOWN for UI wiring and fixes.
+Use independent review where the risk or unresolved judgment warrants it.
+Continue a review only for unresolved findings or new evidence, not a round
+target. Fleet size comes from live claims, reservations, capacity and eligible
+models; a mode name grants no slots.
 
 **Rules:** (1) **User override always wins** — if the invocation names a
 mode, use it and record `mode_source: user`. (2) Record `mode`,
 `mode_source`, and a 1–2 line `mode_rationale` in `manifest.yaml` AND in
 `00-pipeline-guide.md`'s header. (3) Thread the mode into the generated
-handoffs — 02's unit-carve directive and 07-prep's agent count are the two
-load-bearing threading points (see the templates). (4) Mid-pipeline
-**escalation** (mini→normal→max) is any stage's right when discovered scope
-outgrows the mode — one logged note in the guide; **de-escalation** requires
-a recorded top-tier adjudication with rationale, retro-review flagged
-(shrinking ceremony is how scope drift hides — it is never a silent call).
+handoffs as an explanation of near-term detail, not a unit or staffing quota.
+(4) Escalation and de-escalation use the same evidence-based decision: record
+what changed, preserve acceptance obligations and reconcile affected artifacts.
+Neither direction requires a special model or ritual review merely for changing mode.
 
 ## Phase 0 — Detect (5–10 min)
 
@@ -292,28 +323,27 @@ a recorded top-tier adjudication with rationale, retro-review flagged
    phase/unit structure).
 2. Run the detection commands; build the entry-point decision; confirm with
    the user only if genuinely ambiguous.
-3. Detect environment facts every handoff needs: bead CLI (`br`, never
-   `bd`), debug-build convention, daemon reachability
-   (`target/debug/agent-swarm verify --help`), AgentMail availability,
+3. Detect environment facts every handoff needs: authoritative bead CLI/context,
+   installed/built tool provenance, intended daemon reachability, AgentMail availability,
    evidence-root conventions (`evidence/<unit>/...`).
 4. Make the PROVISIONAL mode call (mini/normal/max — see Pipeline Modes)
-   from the doc's scale + the user's invocation; honor any explicit user
+   from the next useful outcome, unresolved risk and feedback cost; honor any explicit user
    mode. Confirm or adjust after Phase 1; state the final call + rationale
    in your report.
-5. Detect whether AUTO mode applies: the user explicitly requested it AND
-   the host provides background-agent tooling (Agent tool + task
-   notifications + SendMessage — i.e., Claude Code). If requested but the
-   host can't support it (e.g., Codex CLI), say so plainly and fall back to
-   the standard generate+report flow. Never infer auto from silence.
+5. Detect whether AUTO mode applies: the user explicitly requested it and a
+   verified current harness, NTM or local/SSH controller can launch, observe and
+   checkpoint the owned work. Check the actual capabilities and fleet config;
+   report a concrete missing capability rather than rejecting a harness brand.
+   Never infer auto from silence.
 
 ## Phase 1 — Deep Research (the part that makes this orchestration, 20–40 min)
 
-Launch 4 parallel research subagents (mini mode: 2 — subagents 1 and 2,
-with subagent 3's UVP-landscape questions folded into 2). Their findings
-become the embedded context and the sub-optimization questions in every
-handoff — generic findings here mean generic handoffs, which defeats the
-skill. When findings land, CONFIRM the provisional mode against the signal
-rubric; adjust and record if the doc's real scale surprised you.
+Research only unresolved questions that affect the next outcome or its proof.
+Use the question groups below as coverage prompts, not a staffing quota. Reuse
+current evidence; delegate only concrete independent questions within the live
+capacity budget. Set a bounded question/output/time budget and stop when those
+questions are resolved or their limits are explicit. Reassess the provisional
+mode from findings, not document size or a prescribed number of agents.
 
 **Subagent 1 — Research-doc cartography + readiness pre-scan**: full section
 outline with line refs; which sections are citable anchors (numbered
@@ -442,17 +472,17 @@ Step 2 feature-specific guidance (from research) → Step 3 verify output
 | 02-contract-create | research-to-contract | every in-scope clause in crosswalk; zero restatement | "Re-derive 5 random clauses from research §<real sections> without the crosswalk — do they appear? Pick scenario step N — grounding triple complete (command/citation/artifact)? Does the topology match the surfaces at <real paths>? Does the tool-to-medium matrix cover the <specific medium subagent 1 found, e.g. a UI deliverable>?" |
 | 03-contract-validate | none (fresh-eyes pass 2) | the seven checks, all blocking | "Re-read your own findings: did fixes introduce restatement? Is every Class 1 log line written? Did the inventory diff use the research doc directly?" |
 | 04-uvp-transcribe | contract-to-uvp | transcription fidelity checklist; **the stage-0 surface decision EXECUTED** (AMEND: delta appended to the surface pkg + unit view + minor bump + lineage publish + ONE instantiate; MINT only per the decision record); **DELTA-view all-red proven (H1)**; carryover audit read + reconciled (D22) | "Diff the contract suite table vs TESTS.md suites — row-for-row. Re-run validate. Does every new suite carry a `family:` tag + unit-namespaced id? Is `lineage.previous_digest` the current published digest? Is the unit view's greenlight never-run? Does the carryover audit's reset list reconcile against the ancestor's suite-file stale set — any UNEXPLAINED reset? Are BOTH docs in path_globs? Did any checklist item wording drift from the scenario?" |
-| 05-beads-create | contract-to-beads | two-sided coverage 100%; matrix invariants | "Run polish round 1 verbatim. Check the matrix: does <real suite id> have a turns-green owner? `br dep cycles` empty? Does `bv --robot-plan` match the contract topology? Is the gate bead `--type task`?" |
+| 05-beads-create | contract-to-beads | two-sided coverage 100%; matrix invariants | "Check the changed graph: does <real suite id> have a turns-green owner? `br dep cycles` empty? Does `bv --robot-plan` match the actual capability topology? Is the gate bead `--type task`? Repeat review only for unresolved evidence or a changed input." |
 | 06-beads-audit | contract-bead-audit | verdict READY/FIXED-READY; **W1 guards: a bead minting a parallel package over an owned surface = BLOCKING violation; closing lint diffs the planned touch-paths against SURFACES.md path-glob roots (under-declared surfaces = the predicted adjacency-rule evasion)** | "Re-read your fixes — did they preserve verbatim embeds? Re-run the mechanical preflight after fixes. Is the report's reasoning section honest about check 5? Does every touched surface from the resolution records have its AMEND/MINT reflected in the graph — no orphan surface, no unsanctioned new package?" |
-| 07-execution-prep | contract-to-execution | kickoff self-contained, zero unfilled placeholders, real ids | "Open the generated 07-execution-kickoff.md as if you were agent #3 of 3: can you boot, claim, and run the loop with NOTHING else? Are epic/instance ids real? Is the fix-loop + 5-stalled valve verbatim? Is the tool-to-medium matrix embedded?" |
+| 07-execution-prep | contract-to-execution | kickoff self-contained, zero unfilled placeholders, real ids | "Can a fresh agent boot, claim, and run with the named inputs? Are epic/instance ids real? Are targeted reruns, evidence-triggered reflection and affected-artifact reconciliation executable? Is the tool-to-medium matrix embedded?" |
 
 ### Handoff quality rules (all mandatory)
 
 - Exact skill name in First Action, or an explicit "no skill".
 - Numbered workflow — never "context + invoke skill".
 - Every source doc annotated READ/SKIM/REFERENCE with exact paths.
-- ≥3 actual codebase/doc references in every sub-optimization; ≥5
-  feature-specific verification questions in 03 and 06.
+- Ground each follow-up in the actual files and unresolved questions needed to
+  assess this change. No minimum question/reference count or empty review round.
 - Zero "TODO"/bare placeholders; `{ENRICHMENT: ...}` markers must describe
   what will fill them AND how the handoff works without it.
 - Each handoff restates only the laws it needs; the full block lives in the
@@ -467,10 +497,11 @@ Step 2 feature-specific guidance (from research) → Step 3 verify output
 
 ## Sub-Optimization Authoring Rules (the heart of this skill)
 
-The sub-optimization is a follow-up prompt sent IN THE SAME SESSION after
-the stage's main work completes. It is WRITTEN per-feature, never templated:
+The sub-optimization is a feature-specific follow-up available in the same
+session when unresolved evidence or changed inputs justify another pass. A
+checked no-change result may stop; the prompt is not a mandatory extra round:
 
-1. **Grounded**: reference ≥3 actual files/sections/ids from Phase 1
+1. **Grounded**: reference the relevant actual files/sections/ids from Phase 1
    research — "Open `crates/swarm-services/src/work/projection.rs` — does
    your replay section follow this rebuild pattern?" not "verify quality".
 2. **Falsifiable**: every question answerable only by re-reading the
@@ -542,7 +573,7 @@ result), manifest + guide paths, literal next action ("open a fresh
 session, paste <first-handoff>" — or, in auto mode, "entering auto-pilot;
 first stop at <stop>").
 
-## Auto Mode (Phase 5 — explicit opt-in, Claude Code only)
+## Auto Mode (Phase 5 — explicit opt-in, available controller)
 
 Auto mode executes the generated chain end-to-end by orchestrating fresh
 agents. Three preconditions, all hard:
@@ -550,28 +581,32 @@ agents. Three preconditions, all hard:
 1. **Explicit opt-in.** Run it ONLY when the user's invocation requests it
    ("auto mode", "autopilot", "run it end to end"). Never inferred, never
    default, never suggested-then-assumed.
-2. **Claude Code only.** Requires background-agent tooling (Agent tool, task
-   notifications, SendMessage). Elsewhere: state auto is unavailable,
-   deliver the standard generate+report.
-3. **Same artifacts first.** Phases 0–4 run identically — the full folder is
-   written before any execution, so the pipeline stays auditable and a human
-   can take over at ANY boundary. Auto adds `AUTO-PILOT.md` (config + run
-   log) and then executes. Auto mode is an execution layer, never a
-   different pipeline.
+2. **A verified execution adapter.** The current harness, NTM or a local/SSH
+   controller must be able to launch, observe and checkpoint owned work. Consume
+   `uvp-fleet` for live model/account selection, ownership, source and capacity
+   checks. If a required capability is absent, name that limit; do not infer it
+   from the harness brand. Machine work remains in its dedicated qualified lane.
+3. **Required artifacts first.** Prepare the current outcome's executable inputs
+   and handoffs, with explicit prerequisites for later work and a durable
+   `AUTO-PILOT.md` checkpoint. A human can take over at any boundary. Do not
+   invent settled later decisions merely to fill a folder before the first demo.
 
-**Control-plane rule: you never do stage work in your own context.** Every
-stage runs in a FRESH agent whose task is: read + execute the named handoff
-file, then run its Follow-Up Pass (the final section) on itself. This gives
-03/06 their mandatory fresh sessions for free and keeps your context clean
-for orchestration across the whole feature.
+**Control-plane rule: keep orchestration separate from stage work.** Dispatch a
+bounded handoff to an owned, qualified agent; preserve healthy conversations and
+children during continuation. Use an independent fresh context for a required
+contract/bead audit. Execute an additional follow-up only when its unresolved
+question or changed input warrants it. Stage numbers identify artifact roles;
+they do not create ordinal dependencies between units.
 
 **Stage loop:** spawn the stage agent → on completion, verify the stage's
 done-condition YOURSELF against the artifact (read the guide's stage row,
 spot-check the output — never advance on the agent's summary alone) →
 **verify the artifact is COMMITTED, not merely written** → verify forward
 enrichment landed → append the AUTO-PILOT log line → **DISK CHECK** → next
-stage. On failure: ONE retry enriched with your findings; a second failure
-triggers the recovery valve.
+stage. On failure, classify the actual cause and retain the checkpoint. Retry
+only when a specific recovery or new input can change the result, within the
+declared budget. Repetition without information triggers affected-scope
+reconciliation immediately; it is not permission to replay an unknown outcome.
 
 > **The commit check is not pedantry.** If you tell stages "the orchestrator
 > owns git" (a reasonable rule — it prevents lanes committing each other's
@@ -583,91 +618,77 @@ triggers the recovery valve.
 > costs nothing; an uncommitted artifact costs a debugging session and a wrong
 > theory. Check it every stage.
 
-**Disk check — CHECKING is free, SWEEPING is not.** `df -h .` at every stage
-boundary costs one command and catches ambient pressure from parallel
-pipelines; run it always. But **dispatching a `disk-janitor` is phase-aware**,
-because this pipeline only consumes disk during IMPLEMENTATION (build
-worktrees ≈ 25–30 GB each) — planning stages (contract, beads, audit,
-boundary) write kilobytes, so a sweep there burns an agent to reclaim nothing
-and races live work for no gain.
+**Resource checks follow the workload.** Before a heavy run, inspect live disk,
+memory and active build-root ownership, and compare the expected peak with the
+configured host reserves. Reuse compatible durable checkout/build/cache roots;
+a new worktree is not the default budget unit. Recheck on workload changes or
+observed pressure. A watcher is justified by sustained growth or overlapping
+builds, not by the mere existence of an implementation stage; select its runner
+from current registry/qualification and keep observation foreground-bounded.
+At close, retain the roots and evidence still needed by any consumer. Unit
+completion, an expired claim or a moved daemon does not prove a root disposable.
 
-Sweep on these triggers only:
-1. **Pre-implementation BUDGET check** (before 07-prep's swarm launches):
-   free ≥ (expected build worktrees × ~30 GB) + the 20 GB floor? If not,
-   sweep BEFORE the lanes start — short disk discovered after a 40-minute
-   build is a wasted build.
-2. **RESIDENT WATCHDOG for the whole implementation window** — launch ONE
-   cheap-tier janitor ALONGSIDE the swarm (not instead of the lanes' own
-   checks), retire it at gate close. It loops inside an open turn: `df` →
-   sweep if needed → bounded foreground sleep (**~15 min**) → repeat,
-   reporting only when it acts. **This is the trigger that saves the human**:
-   a pre-flight check is stale within minutes once N lanes are building, and
-   boundary-only sweeping is why an owner ends up cleaning by hand three
-   times mid-run. Never let the watchdog end its turn to "wait" — background
-   timers die with the turn. It must be **swarm-aware** (read `br` claims,
-   agent-mail file reservations, `ps`/`lsof`, the registry — look, never ask)
-   and **bias hard to skip** while lanes build: a cargo dir mid-build looks
-   exactly like garbage, and it gets another look in 15 minutes while the
-   lane does not get its build back. It stays in **its own lane** (Scope A/B):
-   other pipelines run their own janitors — never raid theirs.
-3. **Post-unit-close** (after a gate closes / the daemon moves to a new
-   worktree): the finished unit's worktree is now ownerless garbage —
-   typically the single biggest reclaim available (~26 GB), and nobody else
-   will ever notice it. Highest-yield moment in the cycle.
-4. **Lanes check before every heavy build** and after each bead lands — free,
-   distributed, catches growth at the source.
-5. **Any reading under 50 GB, any time** (usually a parallel pipeline's
-   doing, not yours) → sweep; under **20 GB** (the floor) → immediately.
-
-Sweeps run autonomously — never approval-gate one; route them to the CHEAP
-tier (Ops row). Corollary duty for every pipeline: **declare load-bearing
+Inspect pressure and report reclaim candidates; deletion follows the repository's
+explicit-permission rule. Route inspection through the available qualified
+operations lane. Corollary duty for every pipeline: **declare load-bearing
 paths at creation** in `<repo>/.disk-protect` (daemon data dirs, fixtures,
 build worktrees, uncommitted evidence) — that declaration is what makes
-autonomous cleanup safe, and an undeclared artifact is a reclaimable one.
+ownership review possible. An undeclared artifact is not permission to delete it.
 Stage 3/6 prompts must carry this duty (see TEMPLATES).
 
-**Orchestration substrate — conversation loop vs Workflow tool:** the STAGE
-CHAIN runs as conversation-loop orchestration (Agent tool + notifications +
-SendMessage), NOT as a Workflow script, deliberately: stage transitions are
-judgment-gated (you verify artifacts, adjudicate delegated decisions, and
-re-craft each next prompt from the previous stage's findings), stages need
-mid-flight steering (SendMessage corrections into running agents), and the
-resume state is file-based (guide cursor + AUTO-PILOT) so a human or fresh
-session can take over at any boundary — none of which a deterministic
-script provides. USE the Workflow tool for the genuinely fan-out-shaped
-segments INSIDE stages, where deterministic parallel control flow wins:
-multi-finder research sweeps, N-verifier adversarial panels on contract/
-audit findings, per-item migration or census sweeps, and (when topology
-declares real parallelism) multi-lane execution bursts. Rule of thumb:
-sequential + adaptive = conversation loop; parallel + enumerable =
-Workflow.
+**Orchestration substrate:** preserve judgment at stage transitions and a durable
+checkpoint for steering and resume. Consume `uvp-fleet` from the available
+controller: NTM, a local/SSH process adapter, or the current agent harness.
+Use that adapter's messages/events where supported and bounded foreground
+observation otherwise. Claude Agent/SendMessage/Workflow primitives are optional
+adapters, not portable requirements. Enumerated independent work may fan out;
+each launch still consumes current ownership, reservations and capacity.
+NTM/vibing and janitor helpers are optional operator references. Their absence
+does not prevent the installed fleet utility, current harness or local/SSH
+adapter from observing owned processes and checking `df`, memory and build-root
+use. Require the actual execution capability, not a particular helper package.
 
-**Model routing** (owner-ratified default; adjust to the tiers available —
-the judgment/mechanical ratio matters more than the labels):
+**Model routing — consume current policy at dispatch.**
 
-**THE SUBSTANCE RULE (owner, standing):** anything with real judgment in it — **implementation,
-audits, high-level planning/architecture**, contracts, fresh-eyes passes, gate reasoning, stub
-graduation — runs on a **top tier at xhigh/full effort: Codex `gpt-5.6-sol` +
-`model_reasoning_effort="xhigh"`, Opus 5, or Fable.** Nothing substantive runs below that, ever.
+Use `docs/plan-hub/shared/MODELS.md` with `uvp-fleet` (portable source:
+`scripts/dev/uvp-fleet.py`; inspect live `--help`). Scores are editable
+preferences, not benchmark facts. Apply availability, harness/model support,
+task capabilities, resource limits, source identity and live claim/reservation
+gates before scoring. Pass the chosen model and supported effort to the runner
+and record what actually ran; a model column alone is not dispatch.
 
-**ROUTING v2 (owner, 2026-07-24, post-Opus-5 release — supersedes the 2026-07-16 "Fable
-rationed / Codex sole workhorse" split).** With Opus 5 available the split is three-way, by
-JUDGMENT ALTITUDE and TASK DEFINEDNESS:
-- **Fable — the biggest architecture decisions and design choices only** (a contract's central
-  carve, an invariant collision, the pipeline's one-per-unit highest-stakes gate/fresh-eyes leg
-  where holistic judgment uniquely pays). Still metered, still never for chores or volume.
-- **Opus 5 — the wide judgment band:** reviews, audits, fresh-eyes passes, boundary/graduation,
-  orchestration-adjacent seats, debugging, AND the workhorse role for **BROAD / underspecified
-  tasks** (exploratory integration, multi-plane debugging, work where the spec emerges while
-  doing).
-- **Codex sol xhigh — the workhorse for HIGHLY-DEFINED tasks:** mechanical transcription,
-  spec-frozen implementation, migrations, bulk drafting against an explicit contract.
-The workhorse question is now "how defined is the task?" — highly defined → Codex; broad →
-Opus 5. When torn between Opus and Fable for a design call, Fable only if it is genuinely the
-biggest fork in the stage. (Codex config defaults pin sol + xhigh in `~/.codex/config.toml` —
-the failure mode is a prompt *downgrading* them: `codex-first` once silently passed
-`model_reasoning_effort="high"` for an entire run. Never pass a lower effort; omit the flag or
-pass xhigh.)
+All delegation uses this rule: native children, reviews, research, CLI agents,
+NTM panes and remote lanes. Compare the eligible registry pool across providers;
+the current app's child-model menu is only one adapter's capability list. If the
+chosen provider needs a qualified CLI/CAAM route, use it. Native inheritance is
+valid only when its actual model/effort is the selected eligible choice. Record a
+brief task-fit reason and meaningful exclusions in the existing dispatch note;
+do not impose provider quotas or reassign healthy work for cosmetic diversity.
+Inspect configured model lists and current account qualifications: `available: yes`
+alone does not enable a route. Repair a stale authorized route when practical,
+otherwise name the limitation and choose from the genuinely eligible set.
+
+Effort is executable registry policy: explicit task `effort`, then the selected
+`task_type` recommendation, then the model's `default_effort`, restricted by
+`allowed_efforts` and verified provider support. Choose the task type from the
+current table; this applies to Sol and the other Codex models as well as Astra.
+Read `effort` and `effort_source` from placement and receipts. The fleet adds the
+provider effort flag to new and resumed launches; remove conflicting fixed flags
+from harness argv. Other dispatch adapters must pass the same resolved policy
+explicitly and record it. Existing running turns keep their current settings.
+Max requires `effort_reason` for an exceptional architecture/design/reasoning
+decision and must be allowed for the selected model; it is not routine escalation.
+
+Use `fleet-accounts` for CAAM account policy. Isolated enrollment, production
+qualification and explicit project-data/model authorization are separate gates.
+Bounded eligible-account selection/rotation is enabled by default, with an
+explicit disable, attempt limit and cooldown policy. Distinguish usage exhaustion,
+authentication failure and missing model access. A failure after dispatch keeps
+its conversation and healthy children: checkpoint the outcome and resume only
+when prior results and replay safety are known. Never blindly replay a mutation.
+
+Keep second-machine operations in a dedicated qualified lane under repository
+policy. NTM, local processes and SSH are adapters; none defines workflow identity.
 
 **THE INDEPENDENCE RULE — an author may not drive the proof of their own fix.** The tier is only
 half of trust; the other half is *who drives the drive*. A session that just wrote a fix has a
@@ -693,29 +714,22 @@ of the claim." Corollaries:
 > surfaced only when a substrate wipe forced an independent re-earn months of work later. The
 > author-drives-own-proof shape is what let it through; assume it will do so again.
 
-| Stage class | Tier (ROUTING v2, 2026-07-24) |
+| Work | Registry preferences after hard eligibility checks |
 | --- | --- |
-| **02 contract — the central carve** + genuinely hard architecture forks | **Fable** (the biggest-design seat) |
-| 01 direction/hardening, 03 fresh-eyes, 06 audit, 07-prep, 09 boundary + stub graduation, gate drivers + full-unit diff review | **Opus 5** (the wide judgment band). Keep cross-model/cross-session independence where the author was also a Claude model — Codex sol xhigh is the cross-model alternative for a fresh-eyes leg; escalate a gate/fresh-eyes leg to **Fable** only when it is the unit's single highest-stakes checkpoint |
-| 04 UVP transcription, 05 beads — the mechanical plow (highly defined) | **Codex sol xhigh** via the codex-first pattern (embed an explicit no-git constraint IN the codex prompt text; a wrapper reviews mechanically). Opus 5 if the stage turns out broader than its spec |
-| **Ops chores** — `disk-janitor` sweeps, log triage, housekeeping | **cheap tier: Codex `gpt-5.6-terra`, or Sonnet.** NEVER sol/Opus-5/Fable — chores are ladder-following, not judgment |
-| Execution swarm | **Split by definedness per lane/bead: highly-defined implementation → Codex** (via codex-first; no-git in every codex prompt); **broad/exploratory implementation + integration debugging → Opus 5.** Wrapper/plumbing lanes (Sonnet) do spec relay, builds/burndowns, br mechanics, MECHANICAL AC checks only. **The unit gate driver (Opus 5, or Fable at the unit's highest stakes) performs a full-unit diff review of every landed commit at gate close (findings → JIT fix beads in the fix-loop)** |
+| Architecture, investigation, conflicting evidence | reasoning, thoughtfulness, orchestration and relevant domain capability |
+| Defined implementation and targeted repair | required capabilities, speed and cost efficiency |
+| Visual/3D product judgment | visual/3D and review capability; inspect real evidence |
+| Independent acceptance review | review capability and independence from the author |
 
-**ORCHESTRATOR-IS-FABLE MODE (owner, 2026-07-16): when the session model IS Fable, decisions are
-made INLINE — no delegation ceremony.** Adjudications, amendment classifications, scheduling calls,
-option-picking, gate reasoning about *whether* to proceed: the orchestrator decides directly and
-records the rationale (AUTO-PILOT + the artifact's own log). Do NOT spin up a Codex-xhigh session
-just to make a decision the orchestrator is now qualified to make — that was the degraded-mode
-ceremony for an untrusted-orchestrator era, and it costs a full context handoff each time. What
-STAYS delegated regardless: **bulk work** — highly-defined → Codex sol xhigh, broad → Opus 5
-(ROUTING v2); **plumbing** → Sonnet lanes; and — per
-the INDEPENDENCE RULE — **any clean-context fresh-eyes/verification seat for work the orchestrator
-directed**: the orchestrator can never be its own independent reviewer, whatever its tier. Fable
-subagent seats stay reserved for the biggest design forks. The owner's "don't overuse Fable"
-applies to the orchestrator's own turns too: decide inline, but keep turns tight and push volume
-to Codex/Opus per definedness.
+The qualified orchestrator makes ordinary scope and scheduling decisions directly.
+Delegate bounded independent work where it improves progress, and keep required
+independent review separate from authorship. Do not create a review lane merely
+because a model-specific routing table once prescribed one.
 
-**DEGRADED MODE — judgment tier unavailable (usage exhaustion, outage, owner distrust):** when Fable cannot be used, **Opus 5 absorbs the design/review seats** (ROUTING v2); when neither Claude top tier is usable, **Codex sol xhigh becomes the sole substantive worker** for EVERY judgment stage — not just implementation but bead authoring, audits, gate reasoning + full-unit diff review, and boundary/stub graduation (its "trustworthy when the task is defined" profile fits, because each stage skill decomposes the judgment into defined checks). Non-Codex agents drop to thin plumbing (drive `codex exec`, run commands, land) on a cheap tier (Sonnet), and the orchestrator confines itself to mechanical control-plane. Ops chores route cheaper still (terra/Opus/Sonnet — see the Ops row). Record the trigger + the override in AUTO-PILOT.md and proceed autonomously (this is a routing degradation, not a decision gate). Never route substantive judgment to a model the owner has said not to trust, and never let a chore-tier model near an audit or a gate.
+**Availability changes:** read current registry/account state again and record
+the eligible substitution and actual runner. If no eligible candidate remains,
+report the blocked frontier without weakening qualification or authorizing an
+unrecorded model/account substitution.
 
 **Stops under auto (owner directive 2026-07-14, reaffirmed 2026-07-16: AUTONOMOUS BY DEFAULT, RUN TO FULL COMPLETION):**
 - ⛔ **"Auto mode" means run until EVERY unit is shipped — not until the next milestone.** A unit
@@ -789,7 +803,7 @@ selected = []
 for bead in frontier ORDERED BY transitive-dependent-count DESC:   # critical path first
     if files(bead) ∩ ⋃ files(selected) == ∅:                       # no reservation clash
         selected += bead
-target = min(|selected|, user_cap, mode_cap)                        # +soft crate-contention sanity
+target = min(|selected|, user_cap, available_resource_slots)        # live capacity and contention
 ```
 
 - `files(bead)` — **live agent-mail reservations are the TRUTH**; the bead's
@@ -797,9 +811,10 @@ target = min(|selected|, user_cap, mode_cap)                        # +soft crat
   plan unfolds, so a clean declaration proves nothing). Use the declaration
   for the INITIAL guess only — before lanes run there is no live data — then
   observe. This is why sizing is **just-in-time and resident**, not planned.
-- **Staff CRITICAL-PATH FIRST.** Ready beads are not equal: the one with the
-  most transitive dependents unblocks the most work. With one slot and a
-  choice, the critical path always wins.
+- **Staff for the next useful outcome.** Prefer work that unlocks real
+  capabilities or delivers the promised early demo/uncertainty reduction.
+  Compare dependency impact, feedback delay, cost and available resources;
+  transitive-dependent count alone does not determine priority.
 - **BIAS LOW — the costs are asymmetric.** Under-staffing costs one widening
   report (a lane tells you in seconds). Over-staffing costs a wasted spawn,
   a lane that immediately parks on a reservation it cannot take, and
@@ -807,39 +822,41 @@ target = min(|selected|, user_cap, mode_cap)                        # +soft crat
   scopes are unclear, staff fewer and let the sensors widen you.
 
 **Runtime correction — make the graph LEARN.** A lane that cannot take a
-reservation has discovered a resource dependency the graph missed. It PARKS
+reservation has discovered placement contention. It PARKS
 (claim held) and reports `HIDDEN SERIAL: <bead> blocked on <files> held by
-<peer>`. The orchestrator then **files the missing `br dep` edge** so the
-graph is accurate for the next unit and the next run. An undeclared resource
-dependency that bites twice is a bug in the graph, not bad luck.
-- **LANES ARE THE SENSORS — no polling.** The frontier moves only when a bead
-  closes, and the closing lane knows first. The kickoff therefore requires:
+<peer>`. The orchestrator narrows scopes or reschedules the conflicting edits.
+Add a `br dep` edge only for an actual consumed capability, not temporary file
+contention. Record recurring contention in the placement plan.
+- **Lanes report events; the controller verifies liveness.** The kickoff requires:
   after every `br close`, re-read the frontier; if it is wider than the active
-  lane count, SendMessage the orchestrator (WIDENING + the ready ids); if it
+  lane count, notify the current controller (WIDENING + the ready ids); if it
   is empty, STOP per the empty-queue rule. Fleet control becomes event-driven
   and free.
 - **Narrowing is self-service — NEVER kill a lane.** Empty-queue=STOP drains
   the fleet at sequential bottlenecks by itself. A lane that finds a SOFT
   dependency the graph did not encode (its bead needs a peer's in-flight code)
-  parks its claim and stops cleanly; a parked claim is absent from `br ready`,
-  so the controller will not re-staff it. **The graph is the schedule; the
+  parks its claim and stops cleanly. `br ready` can still list that claim;
+  the frontier must filter actual status, assignee and reservations before
+  staffing it. **The graph records capability dependencies; the
   lanes are the ground truth**, and the math self-corrects when they disagree.
-- **Widening — RESUME before you SPAWN.** A parked lane is a warm pool: it
-  keeps its context, AgentMail identity, file reservations and seam knowledge.
-  SendMessage-resume it before paying for a cold agent.
-- **Caps for multi-pipeline / subscription budgets**: the owner may cap in the
-  invocation ("auto, max 3 agents") → record it in AUTO-PILOT config; a
-  machine-wide ceiling shared by several pipelines can live in
-  `~/.claude/fleet-cap` (a single number, same declare-in-a-known-file spirit
-  as `.disk-protect`). **Absent any cap, run at the computed optimum** — an
-  unstaffed frontier is the most expensive thing in the run.
-- The **gate driver and the resident janitor are NOT fleet members** — they sit
-  outside the cap (one each, always).
+- **Widening — consider valid continuation before spawning.** A parked lane may
+  retain useful context. Recheck its conversation/checkpoint, outcome, account
+  qualification and live ownership/reservations; resume through the current
+  adapter only when those inputs support continuation. Do not assume leases or
+  account access survived a pause.
+- **Caps for multi-pipeline / subscription budgets**: bind an explicit owner
+  limit to the actual controller/fleet configuration used for admission. Share
+  physical worker capacity across products and honor current resource reserves.
+  Gate drivers, reviewers and optional watchers consume capacity too; none is
+  automatically outside the cap. Absent a requested limit, use measured capacity
+  and useful eligible work rather than a decorative cap file or a forced spawn.
 
 Fleet rules — all hard-won, all mandatory:
-1. YOU own monitoring. Background wake-ups get lost; run a persistent
-   heartbeat (Monitor-style — never bash sleep loops, they get reaped) and
-   kick dark agents via SendMessage. **Expect to kick** — a lane going dark is
+1. YOU own monitoring. Observe owned processes, receipts, claims and reservations
+   through the current adapter; `uvp-fleet probe` and `reconcile` provide portable
+   observations. Use bounded foreground waits while work is in flight. Optional
+   host Monitors do not keep a turn alive. Kick idle agents through the adapter.
+   **Expect to kick** — a lane going dark is
    the NORM, not misconduct (see rule 2's correction). Budget for it.
 2. **⛔ CORRECTED 2026-07-16 — this rule used to read "kill + relaunch any agent
    degenerated into polling loops; put an explicit anti-polling rule in the
@@ -861,13 +878,11 @@ Fleet rules — all hard-won, all mandatory:
 4. Machine-wide CPU is meaningless as a progress signal; trace actual
    commits/bead-closes.
 5. Mandatory push after bead commits (repo policy — never "do not push").
-6. **Disk is a shared finite resource and the swarm is its biggest consumer**
-   (one Rust build worktree ≈ 25 GB; N lanes × M units exhausts a disk fast).
-   Lanes check `df` before heavy builds and declare any worktree/data-dir they
-   create in `<repo>/.disk-protect`; the orchestrator watches headroom across
-   the whole run and dispatches `disk-janitor` at the 50 GB mark — proactively,
-   because at ENOSPC every lane dies at once and the state you needed to
-   diagnose it is the state that just failed to write.
+6. **Disk is a shared finite resource.** Check headroom before heavy work against
+   the workload estimate and configured host reserves. Reuse suitable existing
+   roots, declare new load-bearing paths, and request a bounded resource review
+   when pressure warrants it. Registry release conditions do not authorize
+   deletion or invalidate another consumer's retained proof.
 
 Queue drained → gate fix-loop runs to TRUTHFUL greenlight (top-tier gate
 driver; the valve stops the run, never loosens the gate). **Unit gates are

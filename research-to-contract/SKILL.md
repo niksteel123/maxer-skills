@@ -1,6 +1,6 @@
 ---
 name: research-to-contract
-description: "Stage 2 of the contract-first pipeline. Author the companion EXECUTION CONTRACT for a hardened CANONICAL research doc: shippable units + execution topology, per-unit pre-research maps, step-by-step real-data validation scenarios, UVP package specs, verification prerequisites (tool-to-medium matrix), requirement-to-proof crosswalk, close gates, and the amendment protocol. Two-pass: pass 1 creates the contract; pass 2 is a generated fresh-eyes adversarial validation prompt. Use when: 'contract pass', 'execution contract', 'research to contract', converting research into a validation-first implementation plan. Writes ONLY the contract doc — never the research doc."
+description: "Author an execution contract from canonical research: useful outcomes, capability dependencies, real-data validation, UVP proof obligations and close gates. Use for research-to-contract conversion or affected-scope reconciliation after authorized steering. Review unresolved risks with fresh eyes; preserve unaffected work and earned evidence."
 ---
 
 # Research To Contract — The Contract Pass
@@ -15,16 +15,17 @@ description: "Stage 2 of the contract-first pipeline. Author the companion EXECU
 
 | # | Stage (skill) | Produces | Done when |
 | --- | --- | --- | --- |
-| 1 | research-hardening | ideal source doc via stamped revisions | 7-item readiness bar = READY |
+| 1 | research-hardening | grounded current intent and explicit assumptions | ready for the named outcome or bounded experiment |
 | 2 | research-to-contract | execution contract (units, scenarios, UVP specs, crosswalk) | pass-2 fresh-eyes validation clean |
-| 3 | contract-to-uvp | validated TESTS.md package per unit | instantiated; ALL-RED never-run baseline |
-| 4 | contract-to-beads | bead graph with proof classes per unit | 100% two-sided coverage; polish steady-state |
+| 3 | contract-to-uvp | validated package or affected package delta | observed new-obligation baseline and reconciled carryover |
+| 4 | contract-to-beads | bead graph with proof classes per outcome | coverage and actual capability dependencies verified |
 | 5 | contract-bead-audit | fresh-eyes audited bead graph | verdict READY |
 | 6 | contract-to-execution | kickoff/push/sweep prompts; flat swarm runs | unit UVP greenlight via gate fix-loop |
 
 Laws binding every stage:
-1. The research doc is canonical. Downstream artifacts CITE it, never restate
-   it. Conflicts resolve upward: code → package → contract → research.
+1. Research records current canonical intent. Cite requirements without
+   duplicating them. User steering or contrary evidence can revise that intent;
+   reconcile affected code, packages and contracts instead of resolving by rank.
 2. A unit is complete ONLY on truthful UVP greenlight — never on narrative,
    bead acceptance criteria, or local tests alone.
 3. Blocked is a valid truthful result; mocks never substitute for missing
@@ -34,7 +35,8 @@ Laws binding every stage:
    code change trips an automatic audit.
 5. Manual scenarios run on REAL subjects with real data; synthetic data only
    in labeled automated eval decks.
-6. Each stage writes exactly ONE artifact class.
+6. Each normal stage has one primary artifact class. Substantial steering pauses
+   affected dispatch and reconciles all affected artifact classes together.
 
 Stage prompts live in `docs/plan-hub/prompts/<feature>-contract-pipeline/`
 (numbered 00–10; every iterative prompt ends with its copyable fresh-eyes
@@ -53,30 +55,35 @@ research-hardening → [research-to-contract] → contract-to-uvp → contract-t
                        pass 2: validate (fresh)  → contract-to-execution
 ```
 
-Write target: the contract doc ONLY — `docs/research/<date>-<feature>-execution-contract.md`
-(companion file beside the research doc; for small features ≤~1500 lines of
-research, an appended "Execution Contract" layer in the same file is
-acceptable — state the choice). NEVER write the research doc. NEVER write
-test-packages (stage 3's job).
+Normal authoring target: `docs/research/<date>-<feature>-execution-contract.md`
+(companion file beside the research doc; when it improves navigation, an
+appended "Execution Contract" layer in the same file is
+acceptable — state the choice). Normal transcription does not silently change
+research or packages. Authorized scope reconciliation updates the affected
+intent and contract together and assigns package changes to their owner before
+dispatch resumes; record the affected-artifact table.
 
 Supersedes `spec-to-tdd`, `spec-to-strategy`, and the spec stage entirely.
 
 ## Entry Gate (mandatory, before anything else)
 
-Score the research doc against the readiness bar (inlined so this skill
-stands alone): (1) CANONICAL mode + stamped revision history declared;
-(2) architecture decided to the point of naming — placement, module shape,
-new-vs-reused surfaces, not option lists; (3) codebase grounding audited,
-corrections recorded in a stamped revision; (4) citable structure — named
-sections, numbered invariants, enumerable criteria/phases; (5) product
-surface sketched — candidate commands/RPC verbs/event kinds named; (6) every
-open question carries a recommendation or an explicit human-decision flag;
-(7) scope edges explicit — non-goals, exclusions, boundaries.
+Consume the `research-hardening` readiness result for the next bounded outcome:
+(1) current CANONICAL intent and revision are identified; (2) architecture needed
+for that outcome is decided, or the outcome is an explicit experiment with
+inputs, resource/time budget and a falsifiable result; (3) relevant codebase
+claims are grounded, with actual corrections recorded; (4) requirements are
+citable; (5) the first product demonstration or experiment surface is named;
+(6) unresolved questions have a recommendation or an explicit decision owner,
+and only questions blocking this outcome prevent dispatch; (7) scope edges and
+non-goals are explicit. A checked no-op keeps the existing research revision.
 
-If ANY item FAILs: **STOP**. Report the scorecard and route to
-research-hardening. You are NEVER allowed to fill research gaps inside the
-contract — a contract that invents architecture is a shadow spec, and shadow
-specs recreate the drift problem this pipeline exists to kill.
+If a required item fails, report the concrete gap and route that affected work
+to `research-hardening`. Continue independent work whose inputs are ready. Do
+not invent an architecture decision in the contract: encode a bounded experiment
+when the canonical research authorizes one, then reconcile its result back into
+the research and affected contract artifacts before dependent implementation.
+An experiment's accepted result is evidence for the next decision; it does not
+certify the proposed product behavior as implemented or accepted.
 
 If the research doc is under active revision elsewhere, either wait or work
 from an explicitly frozen snapshot copy (state which, pin the revision).
@@ -108,7 +115,10 @@ unit — re-invocation is the normal mode, not a failure.
    heading, invariant number, phase name, verb, event kind, or acceptance
    item — never paraphrased into new normative prose. If a sentence here
    defines behavior the research doc doesn't, that sentence is a defect.
-2. **Conflicts resolve upward**: code → package → contract → research.
+2. **Reconcile intent and evidence.** A canonical document records the current
+   decision; it does not make contradicted assumptions true. Update the affected
+   intent and proof obligations together when authorized steering or evidence
+   changes them, preserving the history and unaffected earned proof.
 3. **Real subjects only** (scenarios): manual checklist scenarios run on real
    projects with real data at representative scale. Synthetic data is
    permitted only inside labeled automated eval decks.
@@ -159,15 +169,18 @@ unit — re-invocation is the normal mode, not a failure.
 
 ### Phase 2: Unit Design
 
-Units are shippable slices with ONE outer UVP package and ONE close gate
-each. Derive them from the feature's natural shipping structure (research
-phases when they exist; one unit minimum for small features). For each unit:
+Start with the smallest coherent outcome and earliest representative product
+demonstration. Add a unit only for a separately useful outcome, material risk
+retirement, or genuinely independent work; document length, stack and unit count
+are not sizing rules. Keep later work light until it approaches execution.
+Use the existing package surface and a scoped close gate. For each unit:
 id, research-phase citation, one-line scope, package id, status. Define:
 
 - Macro sequence with explicit parallel marks (`U2 ∥ U3`), grounded in the
   research doc's own prerequisite statements.
-- Prerequisite rule: a unit may not claim green while a prerequisite unit's
-  package is red/stale/never-run.
+- Prerequisite rule: gate on the named capabilities and evidence actually
+  consumed. A prior unit number is not a dependency; a required capability whose
+  proof is red/stale/never-run remains blocked.
 - For multi-unit features: an outer SPINE/shipping package composing the unit
   packages as prerequisites (the production-chat product-package pattern).
 
@@ -237,34 +250,92 @@ Every unit gets ALL of these sections. Status of unauthored units = STUB.
     suites; no orphan crosswalk rows; prerequisites green or unit BLOCKED;
     quality gates; amendment records complete + tripwire clean.
 
+### Product-board alignment (when present)
+
+Read the board named by the user, repository instructions or guide before locking
+the next outcome's partition. Follow [product-board](../product-board/SKILL.md):
+milestones stay editable during contract planning, can span units/tracks, and name
+actual useful unlocks. Link relevant IDs and required proof to the contract outcomes;
+do not manufacture one unit or package per milestone. Resolve acceptance or dependency
+conflicts with current intent and amend affected board/plan entries together.
+A smaller achieved milestone can release a consumer without closing its producer's
+whole unit. Draft board proposals do not authorize new scope or foreign work.
+Read acceptance bullets as one outcome's checks, not a unit quota. Keep an early
+demonstration distinct from a promised operating product; reconcile substantive
+design changes in the canonical plan before treating board proposals as settled.
+
 ### Phase 4: Document-Level Machinery
 
 - **Header**: companion-to path, research revision pinned, status.
 - **Relationship section**: the citation-not-restatement law verbatim.
 - **Alignment Rules** (numbered, adapt as needed):
-  1 research is canonical, conflicts resolve upward; 2 units close only on
+  1 research records current intent, reconciled when evidence or steering changes it; 2 units close only on
   greenlight; 3 scenarios use product commands, current `--help` is
   authoritative for flags; 4 every checklist verdict cites retained evidence
   refs; 5 no fixture-specific logic in production code; 6 negative
   assertions are blocking; 7 blocked is a valid truthful result; 8
   amendments follow the protocol, unrecorded weakening is stop-the-line;
-  9 rebase on research revision (re-grep citations, log Class 1 repairs,
-  bump package versions, re-instantiate).
+  9 reconcile affected inputs on a research revision, inspect lineage/carryover
+  and invalidate only obligations whose identity, inputs or evidence changed.
 - **Amendment Protocol**: Class 1 (tighten/repair — frictionless, one log
   line, patch bump). Class 2 (weaken/redefine-pass — full YAML record:
   id, target, change, why_contract_was_wrong, **research_basis (REQUIRED —
-  no supporting clause means the research is what needs changing: mark
-  BLOCKED and surface, never amend around it)**, evidence, affected_suites,
+  no supporting clause means the canonical intent must first be reconciled with
+  the authorized user directive or contrary evidence)**, evidence, affected_suites,
   version bump). **Red-to-green tripwire**: any suite/item red under
   version N and green under N+1 without an intervening code change is an
   automatic audit trigger. Agent autonomy is total; friction is the control.
 - **Amendment Log** (starts empty, last section).
 
+### Reflection and substantial steering
+
+Reflect after the first representative product demonstration, a contradicted
+assumption, repeated failure without new information, a missed feedback/time
+budget, or user steering. State what changed and whether the next work still
+serves the product. A short unchanged decision is enough; do not create a new
+review cycle merely to record reflection.
+
+At existing coordination/next-work boundaries, also check whether verification is
+displacing the next useful product result. Name the unproven behavior, the decision
+another check would change, and the smallest sufficient proof. More green checks
+without new capability or decision-relevant learning is a reason to reorder work,
+not to create another audit. An experiment can yield an honest negative finding;
+do not turn its entire exploratory checklist into a mandatory delivery promise.
+
+For a substantial change, pause only affected dispatch, checkpoint live work
+and retained evidence, revise canonical intent and acceptance, and complete:
+
+| Affected artifact / ID | Reason | Disposition | Required change / owner | Proof retained or invalidated, and why |
+| --- | --- | --- | --- | --- |
+| Product-board milestone and dependent IDs (if present) | changed promise, unlock or dependency | retained / revised / superseded / new | board entry + affected track owner | actual evidence/acceptance impact; priority-only edits do not invalidate proof |
+| Research and contract/unit | changed intent or assumption | retained / revised / superseded / new | exact section + owner | relevant input identity |
+| UVP suite/checklist item | changed obligation | retained / revised / superseded / new | exact suite/item + owner | matching evidence or invalidation |
+| Bead and capability edge | changed work or prerequisite | retained / revised / superseded / new | exact ID + owner | preserve history |
+| Guide, kickoff and pending dispatch | changed next action | retained / revised / superseded / new | literal next action + owner | preserved conversation/checkpoint |
+
+Recompute capability dependencies and resume only the reconciled frontier;
+unaffected work continues. User-authorized steering needs no repeated ritual
+approval. Keep contract-completion and actual product-readiness statements
+separate. Producing a measurement is not meeting its quality threshold: automate
+deterministic checks, and record reviewer, reasoning and retained visual/video
+evidence for judgment. Use a human only where the criterion requires one.
+
 ### Scenario Authoring Rules (the heart of this skill)
 
-**Eight mandatory parts**: Fixture · Happy Path · Negative Paths · Restart/
-Replay Paths · Edge Cases · Fresh-Eyes Pass Assertions · Do Not Count As
-Pass · Required Evidence.
+**Required core**: representative fixture, positive product path, acceptance and
+required evidence. Add negative, restart/replay, edge-case and independent-review
+checks where an explicit current promise or a plausible material failure at the
+intended use boundary requires them. These are coverage prompts, not eight
+mandatory workstreams. No minimum case count or empty section is required.
+
+State the proof boundary in the existing scenario: which result it qualifies,
+which failure checks are necessary before that result is used, the targeted repair
+command, the broader close check, and when to stop or reconsider. Keep this brief.
+Protect actual access, data integrity, control and spend boundaries at their first
+consumer; do not postpone a critical check just to show a happy path. Conversely,
+future production scale or every imaginable recovery combination is not an
+implicit prerequisite for a bounded experiment. Required operational promises
+remain required when the product actually includes them.
 
 **Fixture**: declares the REAL subject (real project, real data, real scale —
 state why it's representative); the seed corpus; ALL actors including any
@@ -278,22 +349,22 @@ validated+instantiated BEFORE implementation (contract-first discipline).
 2. CITE the research clause it proves (inline: "(research §X; invariant N)"),
 3. NAME the evidence artifact it retains (e.g., `u1-whereami-map.json`).
 A step that cannot do all three is vague, invented, or unverifiable — fix or
-delete. Steps are numbered, grouped into phases, 4–8 steps per phase, with
-JIT gates between phases and blocked stop-conditions where prerequisites can
-be missing.
+delete. Group steps where a real dependency or feedback boundary helps; no step
+quota or gate between every group. Name blocked conditions for actual prerequisites.
 
-**Negative paths**: deliberate failure-mode proofs (degraded modes, rejected
-invalid operations, malformed input handling, non-TTY/format discipline) —
-each with evidence.
+**Negative paths**: select failure-mode proofs from the current promise, observed
+defects and material risks. Name the consequence and intended use they protect.
+Prefer a representative check of the mechanism over a combinatorial matrix; add
+cases when evidence exposes a distinct failure. Optional hardening is not a blocker.
 
 **Do Not Count As Pass**: enumerate the gaming vectors — the exact ways an
 agent could technically-pass while actually failing (static files
 masquerading as compiled output, cache-reread "replay" proofs,
 post-hoc-chosen eval tasks, coached fresh agents, fixture-hardcoded
 behavior, prose-only verdicts, skipped-instead-of-blocked suites,
-**synthetic/toy fixture substituted for the real subject** — a standing
-bullet). Writing this list is the depth-forcing function; if you cannot
-think of 6+ entries you do not yet understand the feature.
+**synthetic/toy fixture substituted for the real subject**). Include only relevant
+false-pass risks; no minimum bullet count. A review observation may be enough to
+exclude a false claim without adding a new runtime test or recovery feature.
 
 **Required Evidence**: named artifact list (becomes the package
 `evidence_contract`, which greenlight enforces as its own synthetic suite) +
@@ -301,11 +372,11 @@ a command log (`*-command-log.jsonl` with argv/exit/stdout/stderr/timestamps)
 + final report + artifact index.
 
 **Scenario QA layers (run before finishing pass 1)**:
-- L1 structural completeness (all eight parts present);
+- L1 the core outcome, acceptance, representative input and proof boundary are clear;
 - L2 grounding-triple audit on every step;
-- L3 red-team yourself: try to pass each scenario while violating research
-  intent — each successful attack becomes a negative assertion or
-  do-not-count bullet;
+- L3 examine plausible false passes against the actual promise. Close relevant
+  proof gaps with the smallest sufficient assertion or review; classify unrelated
+  hardening as optional rather than automatically enlarging the contract;
 - L4 fresh-eyes questions: could a fresh agent execute without asking what
   the feature means? does every acceptance claim have a proof owner? are
   blocked states honest?
@@ -341,11 +412,14 @@ and these SEVEN checks:
 1. **Independent inventory diff** — re-derive each unit's in-scope clause
    list from the research doc WITHOUT reading the crosswalk; then diff
    against the crosswalk. Misses = underscoping findings (CRITICAL).
-2. **Grounding-triple audit** — sample ≥50% of steps: command real? citation
+2. **Grounding-triple audit** — check changed and load-bearing steps, then
+   sample the remainder according to risk: command real? citation
    resolves? artifact named and consumed by Required Evidence?
-3. **Scenario red-team** — adversarially attempt to pass each scenario while
-   violating intent; every attack found → new negative assertion /
-   do-not-count bullet.
+3. **Scenario red-team** — examine plausible false passes against current intent.
+   For a material gap, use the smallest sufficient assertion/review. Check whether
+   each proposed addition protects this outcome or invents future scope; do not
+   turn every conceivable attack into a required test. Route an overgrown existing
+   obligation through explicit amendment, never silently drop it to obtain green.
 4. **UVP schema lint** — package specs against verify-authoring rules (three
    valid suite pairs only, quoted semver, package-root-relative paths,
    non-empty scopes, canonical capabilities).

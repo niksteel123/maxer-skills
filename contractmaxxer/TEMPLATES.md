@@ -3,13 +3,38 @@
 > Parameterized templates, not copy-paste. Contractmaxxer fills `{placeholders}`
 > from Phase 1 research. The Follow-Up Pass (sub-optimization) in each handoff
 > is WRITTEN per-feature — the `WORKED EXAMPLE` blocks below show the required
-> quality bar (Cortex-flavored; replace content, match depth). Every handoff
-> ends with its Follow-Up Pass as the ABSOLUTE FINAL section (copyable).
+> quality bar (Cortex-flavored; replace content with relevant checks). Every
+> handoff places its optional, evidence-triggered Follow-Up Pass last (copyable).
 >
 > FORWARD ENRICHMENT is built into every template's workflow: the session that
 > completes a stage updates the named `{ENRICHMENT:...}` markers in LATER
 > handoffs before ending. A handoff must work without enrichment (point at the
 > artifact directly) and improve with it.
+
+Product-board context is conditional. When the user, repository instructions or
+guide names a board, include its concrete path/link and relevant milestone IDs
+in the generated prompt body. Do not copy the board or leave an unresolved marker.
+Planning prompts 01/02 reconcile relevant milestones with research/contracts;
+03 checks that the proposed outcomes/dependencies agree. Planning prompts preserve
+the full product goal separately from the next demonstration, use the board's
+readable acceptance entries, and identify pending canonical-plan amendments before
+treating a redesign as settled. Acceptance bullets do not imply one unit each.
+Execution-prep and the
+generated 07/08/10 prompts tell the coordinator to reread at start/resume,
+next-outcome selection and changed prerequisites, and update after meaningful
+results, blocks or steering. Closing prompts apply the product-board Achieved
+policy and report actual unlocks/open obligations, not a unit-count proxy.
+Use the product-board skill for completion and external-workflow guidance.
+If no board is in scope, omit this context; do not create a new planning gate.
+
+Every generated delegation prompt carries the fleet-controller/registry routing:
+select from eligible providers before selecting a native, CLI or remote adapter;
+state actual model/effort and meaningful eligibility limitations. Existing native
+subagents are not exempt. Execution prompts include the product-progress check at
+their existing cadence: what useful result is next, why the next verification is
+needed, and when sufficient evidence lets work advance. Do not add another watcher
+or audit form. Planning prompts bound required failure/recovery proof to current
+promises and material risks; an exploratory question is not automatically a gate.
 
 Enrichment marker map (who fills what, when):
 
@@ -28,17 +53,19 @@ Enrichment marker map (who fills what, when):
 ## Template: 01 HARDENING Handoff
 
 ```markdown
-# {Feature} — 01 Research Hardening (revision {next_rev})
+# {Feature} — 01 Research Hardening (input {rev_pin})
 
 ## First Action
 Invoke the `research-hardening` skill.
 
 ## Your Mission
-Run ONE stamped hardening revision of `{research_doc}` (currently {rev_pin}).
+Resolve the stated hardening gaps in `{research_doc}` (currently {rev_pin}).
 The readiness pre-scan found: {weakest_items_summary}. This invocation should
-run passes {recommended_passes} against those gaps. Done when: the revision
-is stamped and the scorecard delta is reported. The pipeline cannot proceed
-to the contract pass until all 7 bar items PASS.
+run the relevant passes against those gaps. Done when: the readiness evidence
+for the next bounded outcome or experiment is recorded. Stamp actual research
+changes; a checked no-op retains {rev_pin}. Unresolved architecture may be the
+subject of an explicit experiment with inputs, budget and falsifiable result;
+it must not be presented as a decided implementation requirement.
 
 ## Source Documents (Read In This Order)
 1. `{research_doc}` — header + outline + the sections flagged below — READ
@@ -53,7 +80,7 @@ PASS without evidence.
 
 ## Key Context From Research (pre-scan findings)
 - Readiness pre-scan: {item-by-item PASS/WEAK/FAIL with one-line evidence}
-- Codebase claims to spot-verify first: {3-5 reality claims from subagent 2,
+- Codebase claims to spot-verify first: {relevant unresolved reality claims,
   with file paths}
 - External dependencies needing BOM treatment: {list from subagent 1}
 - {feature-specific finding}
@@ -63,20 +90,22 @@ PASS without evidence.
    session (coordinate or snapshot if it is).
 2. Invoke `research-hardening`; direct it at passes {recommended_passes}
    targeting: {specific gaps}.
-3. While it runs, verify these pre-scan claims yourself: {2-3 claims}.
-4. Verify output: revision {next_rev} stamped with corrections listed;
-   scorecard delta reported; `01-hardening-revision.md` refreshed.
+3. Verify the unresolved pre-scan claims needed for this outcome: {claims}.
+4. Verify output: meaningful changes are stamped with corrections listed, or
+   the checked no-op names the retained revision. Record readiness and any
+   remaining experiment/blocker in the existing guide. Refresh the 01 re-invoke
+   prompt only if a material additional hardening pass is needed.
 5. FORWARD ENRICHMENT: open `02-contract-create.md` and
    `03-contract-validate.md`; replace `{ENRICHMENT:revision-pin}` with the
-   new revision id and `{ENRICHMENT:readiness-notes}` with any remaining
-   WEAK items + where they live. If the bar is now READY, say so in both.
+   current revision id and `{ENRICHMENT:readiness-notes}` with remaining
+   questions and their scope. Name the outcome or experiment that is READY.
 
 ## Follow-Up Pass (Sub-Optimization) — send as follow-up in this session
-{WRITTEN per-feature. Rules: ≥3 real file refs; falsifiable questions;
-red-flag language scan; honest exit.}
+{WRITTEN per-feature when unresolved evidence warrants it. Relevant real file
+refs, falsifiable questions and honest exit; no question/reference quota.}
 
 WORKED EXAMPLE (quality bar):
-> ULTRATHINK and be meticulous. Re-read the revision entry you just stamped.
+> Re-read the meaningful revision entry, or the checked no-op readiness result.
 > (1) Open `crates/swarm-services/src/method_registry/types.rs` — the doc
 > claims a MethodGroup count; recount the enum variants. Does the stamped
 > correction match? (2) The doc's §"Existing SwarmNet Reality" cites
@@ -84,8 +113,8 @@ WORKED EXAMPLE (quality bar):
 > actually side-effect-free as claimed, or did you take the doc's word?
 > (3) Re-grep the revision header: is EVERY correction you made this session
 > listed there, including the small ones? (4) Scan your additions for
-> hedge-language that should be decisions ("could/should/maybe" on
-> load-bearing items). (5) If you found zero problems in a {N}k-line doc,
+> load-bearing uncertainty: is it a justified decision, a falsifiable
+> assumption, or a bounded experiment? (5) If you found zero problems,
 > state that explicitly and list exactly what you spot-checked. Apply fixes
 > now, amend the revision entry, and update the scorecard.
 ```
@@ -121,10 +150,11 @@ obligations here. Done when: pass-1 quality checklist clean and prompts
 6. {best_existing_contract} — quality bar — MATCH OR EXCEED
 
 ## Scope Gate (BLOCKING)
-Citation, not restatement: zero normative sentences without a research
-citation. Every in-scope clause appears in the crosswalk or its deferred
-footer. Banned language scan before finishing: post-MVP / Phase 2+ /
-stretch goal / nice to have / deferred / out of scope / simplified.
+Citation, not restatement: current requirements have source citations. Account
+for every in-scope clause in the crosswalk or explicit remaining-work footer.
+Review actual omissions, changed obligations and their authority. Later work
+may remain provisional; user steering or evidence may revise intent. A vocabulary
+ban is not a coverage check, and a weaker criterion is not proof of completion.
 
 ## Key Context From Research
 - Expected unit structure (pre-stage guess): {expected_units from subagent 1}
@@ -144,19 +174,17 @@ stretch goal / nice to have / deferred / out of scope / simplified.
   correct ONLY for a MINT decision.
 
 ## Step-by-Step Workflow
-1. Read sources in order. Run the entry gate (readiness bar) — STOP and
-   route to 01 if any item FAILs.
-2. Invoke `research-to-contract`. MODE DIRECTIVE ({mode}, from manifest —
-   research-to-contract must respect this carve, not re-expand it):
-   mini = ONE unit (rarely 2), authored IN FULL, no stubs, no SPINE;
-   normal = 2–4 units, author the first {N} in full, stub the rest;
-   max = 5+ units, stub+graduation discipline, a SPINE release unit. The
-   package model is NOT a contract decision: the stage-0 surface resolution
-   already made it (AMEND the owning surface package, per-unit `unit:`
-   views; a standalone package ONLY for a MINT record) — the contract
-   encodes that resolution, never re-opens it.
-   Escalate the mode (with a guide log line) if unit discovery outgrows it —
-   never silently exceed the carve.
+1. Read sources and apply the entry gate to the next named outcome or bounded
+   experiment. Route its missing evidence to 01; continue independent ready work.
+2. Invoke `research-to-contract`. Mode {mode} describes the justified research/
+   review depth, not a unit-count quota. Choose coherent useful outcomes and
+   early representative feedback; fully author near-term work and leave later
+   decisions provisional. Add an integration/release outcome only for actual
+   obligations it owns. Start from stage 0's surface resolution: AMEND the owning
+   package and use scoped views, or MINT for a genuinely new surface. If evidence
+   changes ownership or package shape, reconcile that recorded decision and its
+   affected consumers. Mode changes in either direction need a reason in the
+   existing guide, not a new approval ritual.
 3. Feature-specific guidance while authoring:
    - {e.g., "Phase 1's UI capsule inspector deliverable needs a browser
      medium row + checklist item — the pilot missed this"}
@@ -174,7 +202,7 @@ stretch goal / nice to have / deferred / out of scope / simplified.
    00-pipeline-guide's stage table). Do NOT duplicate per-unit files.
 
 ## Follow-Up Pass (Sub-Optimization) — send as follow-up in this session
-{WRITTEN per-feature. ≥5 questions; ≥3 real refs.}
+{WRITTEN per-feature for the remaining material questions, with exact evidence refs.}
 
 WORKED EXAMPLE (quality bar):
 > ULTRATHINK and be meticulous. (1) WITHOUT opening your crosswalk, list
@@ -182,15 +210,16 @@ WORKED EXAMPLE (quality bar):
 > diff against the crosswalk: any clause with no row and no deferred-footer
 > owner? (2) Open scenario step {N} — does it carry the full grounding
 > triple (product command from §Developer Commands, citation, named
-> artifact)? Sample 5 more steps at random. (3) Your topology Track A
+> artifact)? Inspect further steps where changed inputs or risk warrant it. (3) Your topology Track A
 > clusters {surfaces} — open `{key_file}`: is the convergence point really
 > after its feeders, or did you serialize two independent tracks? (4) The
 > tool-to-medium matrix: research lists "{UI deliverable}" — which row
 > covers it, and which checklist item? If none, that is the exact gap class
 > the pilot hit — fix it now. (5) Scan the whole contract for normative
-> sentences with no citation, and for banned scope language. (6) Count
-> do-not-count-as-pass bullets per scenario — fewer than 6 means you don't
-> yet understand the gaming surface; red-team harder. Apply all fixes, log
+> claims with missing support and actual unauthorized obligation changes. (6)
+> Check realistic ways the scenario could pass without delivering its claim;
+> add a falsifiable check only where it addresses a material risk. There is no
+> required bullet count or extra round for a small scope. Apply fixes, log
 > Class 1 lines, re-run the quality checklist.
 ```
 
@@ -221,13 +250,16 @@ applied (Class 1 log lines) or routed (research gaps → stage 1).
 ## The Seven Checks (all blocking)
 1. INDEPENDENT INVENTORY DIFF — re-derive each unit's clause list from the
    research doc WITHOUT reading the crosswalk; diff. Misses = CRITICAL.
-2. GROUNDING-TRIPLE AUDIT — sample ≥50% of scenario steps: real command /
+2. GROUNDING-TRIPLE AUDIT — check changed and load-bearing steps, then
+   risk-based remaining coverage: real command /
    resolving citation / named artifact consumed by Required Evidence.
 3. SCENARIO RED-TEAM — actively try to pass each scenario while violating
    research intent. Specific attack surfaces for THIS feature:
    {feature-specific attack list, e.g., "compiled briefs replaced by static
    markdown", "replay proven by cache re-read", "novice agent coached"}.
-   Every successful attack → new negative assertion / do-not-count bullet.
+   Address material false passes with the smallest sufficient assertion/review.
+   Check proposed tests against the current product promise and intended use;
+   speculative hardening does not automatically become a blocking obligation.
 4. UVP SCHEMA LINT — three valid suite pairs only; quoted semver;
    package-root-relative paths; non-empty scopes; canonical capabilities;
    both docs in path_globs. For AMEND resolutions the §UVP-package-spec
@@ -312,29 +344,32 @@ contract directly — this handoff works either way)
 
 ## Scope Gate (BLOCKING)
 Row-for-row fidelity: every contract suite-table row → one suite entry +
-file; every Required Evidence artifact → evidence_contract; checklist item
-ids verbatim. Missing obligations are CONTRACT amendments (Class 1) — never
+file; every Required Evidence artifact → evidence_contract; criterion wording
+faithful, with runtime item IDs read from checklist list and mapped. Missing obligations are CONTRACT amendments (Class 1) — never
 invented or dropped here. Both the research doc and contract doc MUST be in
 path_globs (staleness coupling).
 
 ## Step-by-Step Workflow
-1. Preflight: debug binaries built; `target/debug/agent-swarm verify --help`
-   responds (else BLOCKED — never hand-validate YAML). Check `df -h .`; if the
+1. Preflight: resolve suitable installed/built tools and the intended daemon;
+   verify the required verbs and provenance. Build only for a missing/changed
+   consumer. Inspect resource headroom; if the
    daemon/data dir you are about to create is load-bearing, DECLARE it in
    `<repo>/.disk-protect` the moment it exists (path | owner | why-unrebuildable |
-   release-condition) — the `disk-janitor` contract that keeps cleanup autonomous.
+   release-condition). This records ownership; deletion still requires the
+   repository's explicit authorization. No janitor skill is required to inspect
+   `uvp-fleet probe`, disk headroom and active build-root ownership.
 2. Invoke `contract-to-uvp` for unit {unit_id}.
 3. Feature-specific guidance: {e.g., "the contract fixes these test names —
-   transcribe exactly: {2-3 names}"; "evidence root is {root}; the synthetic
+   transcribe exactly: {relevant test names}"; "evidence root is {root}; the synthetic
    evidence.required_artifacts suite will enforce the full list"}.
 4. Verify: validate ok/zero errors; publish records lineage; the ONE
-   instantiate returns the pinned instance id; DELTA-view greenlight
-   (`view=unit:{epic}-u{N}`) shows green:false, every NEW suite never-run,
-   evidence.required_artifacts red — ANY pre-implementation green INSIDE
-   the delta view = defect. OUTSIDE the delta view, carried/inherited
-   greens (and carried stale) are EXPECTED (B1): read the carryover audit
-   `{carried, reset, new}` and reconcile every reset per D22. MINT only:
-   whole-package all-red never-run, zero stale reasons.
+   instantiate returns the pinned instance id. Record new-obligation baseline
+   and selected unit-view status; genuinely unimplemented new obligations must
+   not receive vacuous green. Existing matching proof may remain valid. Read
+   carryover `{carried, reset, new}` and item-level status; reconcile every reset
+   against actual identity, inputs and evidence. Inspect selected command plans
+   and matched counts before expensive execution. Do not force unaffected proof
+   red or substitute a whole-package color for the affected-obligation check.
 5. FORWARD ENRICHMENT: open 05/06/07-prep; fill
    `{ENRICHMENT:package-instance}` (slug + instance id + baseline summary)
    and `{ENRICHMENT:suite-list}` (suite ids by kind).
@@ -390,9 +425,11 @@ contract + TESTS.md directly — this handoff works either way)
 4. {quality_bar_beads_note} — REFERENCE
 
 ## Scope Gate (BLOCKING)
-Every in-scope clause → ≥1 bead with VERBATIM cited embeds. Every suite →
-≥1 turns-green/gate owner. No contributes bead claims greening. Labels ⊇
-work_unit_queries ({labels}). Zero scope-reduction language in any bead.
+Every current in-scope clause → ≥1 bead with an accurate requirement citation.
+Every required suite in this unit's view → ≥1 turns-green/gate owner. No
+contributes bead claims greening. Labels ⊇ work_unit_queries ({labels}). Review
+unauthorized omissions or weakened proof against current intent and amendments;
+vocabulary alone is not a scope defect.
 Gate bead is `--type task` with the full fix-loop embedded.
 
 ## Step-by-Step Workflow
@@ -404,23 +441,24 @@ Gate bead is `--type task` with the full fix-loop embedded.
    {tracks}; the convergence beads own {suite ids}"; "Background sections:
    the WHY for this unit is {1-line intent from research}"}.
 4. Verify: coverage gate two-sided 100%; matrix at {matrix_path}; cycles
-   empty; `bv --robot-plan` diffed vs topology; polish rounds run to
-   steady state; synced + pushed.
+   empty; `bv --robot-plan` diffed vs actual capability topology; relevant review
+   findings resolved, with further passes only for changed inputs or unresolved
+   evidence; synced + pushed.
 5. FORWARD ENRICHMENT: stage-4 skill writes 06 itself with real ids —
    VERIFY it did; then open 07-prep and fill `{ENRICHMENT:epic-ids}`,
    `{ENRICHMENT:matrix-path}`, `{ENRICHMENT:bead-counts}` (by class).
 
 ## Follow-Up Pass (Sub-Optimization) — send as follow-up in this session
 WORKED EXAMPLE (quality bar):
-> ULTRATHINK. Run polish round 1 verbatim from the skill, then additionally:
+> Check the changed graph and its unresolved proof questions:
 > (1) Pick the two largest beads — is every research excerpt blockquoted
 > with a § citation, or did paraphrase creep in? (2) Open the matrix: does
 > `{real_suite_id}` have a turns-green owner that sits AFTER its feeders in
 > `br dep tree`? (3) `br dep cycles` — empty? `bv --robot-plan` — do its
 > tracks match {tracks}? If not, which dependency is false? (4) Read the
-> gate bead end-to-end: fix loop verbatim? 5-stalled valve? tool-to-medium
-> matrix? `--type task`? (5) grep all beads for banned scope language and
-> for AC that a no-op implementation could satisfy. (6) Could agent #3 of 3
+> gate bead end-to-end: targeted fix loop? evidence-triggered reflection and reconciliation? tool-to-medium
+> matrix? `--type task`? (5) compare beads against current authorized scope and
+> inspect AC that a no-op implementation could satisfy. (6) Could agent #3 of 3
 > implement bead {example_id} with ZERO other context? Fix everything via
 > `br`, re-run the coverage gate, sync + push.
 ```
@@ -458,7 +496,8 @@ unit {unit_id} → research sections it cites → `test-packages/
 
 ## Blocking Dimensions
 Scope drift is the prime dimension: uncovered clause = CRITICAL; invented
-scope = CRITICAL; scope-reduction language anywhere = CRITICAL. Plus:
+scope = CRITICAL when unauthorized; compare obligation changes with current
+intent and recorded amendments rather than treating language as a defect. Plus:
 proof-class sanity (no contributes bead claiming greening; gate bead
 complete) and topology consistency. Plus the W1 surface guards (BLOCKING):
 a bead minting a parallel package over an owned surface = CRITICAL; diff
@@ -501,19 +540,15 @@ Invoke the `contract-to-execution` skill.
 Generate the real execution prompts for unit {unit_id}: `07-execution-
 kickoff.md` (identical for N agents, fully self-contained, all policy
 verbatim), `08-execution-push.md`, `10-completion-sweep.md`. These are the
-documents the swarm actually uses — they are born enriched with real ids
-and are NEVER forward-patched afterward. Done when: all three exist with
+documents the swarm actually uses — they carry real ids and explicit input
+bindings. Done when the required current prompts exist with
 zero unfilled placeholders and the kickoff passes the agent-#3 test.
 
-> RE-RUN PER UNIT. These three files are NOT carried forward between units —
-> each unit re-runs THIS prep step, which OVERWRITES 07/08/10 with that
-> unit's real ids (the prior unit is already greenlit, so its copy is
-> disposable). The generated files MUST carry a "GENERATED FOR UNIT <X> —
-> stale if the guide shows a later execution unit" banner (the
-> contract-to-execution skill stamps it). If you arrive at a new unit's
-> execution and the kickoff still names the previous unit, that is EXPECTED
-> — re-run this prep step; the kickoff updates only by regeneration, never
-> by auto-patch.
+> RECONCILE AFFECTED PROMPTS. Compare unit/epic/instance/obligation bindings with
+> the recorded change. Update only stale or missing prompt content; retain active
+> unaffected prompts and checkpoint references. A later guide cursor neither
+> invalidates another unit's prompt nor proves earlier work closed. Stamp the
+> concrete bindings and reconciliation check defined by contract-to-execution.
 
 ## Enriched Context (filled by earlier sessions; if still bare, discover via
 `00-pipeline-guide.md` — this handoff works either way)
@@ -522,8 +557,10 @@ zero unfilled placeholders and the kickoff passes the agent-#3 test.
 - Audit verdict: {ENRICHMENT:audit-verdict}
 
 ## Preconditions (verify, do not assume)
-Audit verdict READY/FIXED-READY · package instance current (zero stale
-reasons) · AgentMail reachable · evidence root convention confirmed.
+Relevant audit verdict READY/FIXED-READY · selected obligations current after
+input/carryover reconciliation · authoritative AgentMail/Beads reachable ·
+evidence root convention confirmed. Unrelated stale suites do not become an
+implicit dependency; declared capability prerequisites still bind.
 
 ## Source Documents
 Contract unit {unit_id} (topology → agent count; Verification
@@ -535,15 +572,18 @@ especially the AgentMail + work-loop sections.
 ## Step-by-Step Workflow
 1. Invoke `contract-to-execution`; it embeds: boot sequence, scoped ready
    queue, work loop with burndown close-notes, proof-class table, gate
-   fix-loop + 5-stalled valve, JIT defect & scope policy, tool-to-medium
+   targeted fix-loop + evidence-triggered reflection, affected-artifact table,
+   JIT defect & scope policy, tool-to-medium
    matrix, non-negotiables incl. STALE-instance handling, flat
    coordination, **the FRONTIER SENSOR duty** (after every `br close`,
    re-read the scoped ready queue; if it is wider than the active fleet,
-   SendMessage the orchestrator `FRONTIER WIDENED → <n>: <ids>` — lanes are
+   notify the current controller `FRONTIER WIDENED → <n>: <ids>` — lanes are
    the sensors, the orchestrator owns the fleet), **and the disk duty** (`df -h .` before heavy builds;
-   `disk-janitor` under 50 GB free, never below the 20 GB floor; DECLARE
+   compare expected peak with configured host reserves; DECLARE
    every build worktree / data dir / fixture the lane creates in
-   `<repo>/.disk-protect` at creation — undeclared = reclaimable), **and —
+   `<repo>/.disk-protect` at creation; absence never authorizes deletion;
+   resource inspection works through the current adapter without an optional
+   janitor/NTM skill), **and —
    final/SPINE unit only — the W5 adjacency prereq rows from the contract**
    (`greenlight(surface, view=regression)` per touched surface, resolved
    against the lineage head at evaluation time; ADVISORY until Phase 2: a
@@ -554,11 +594,10 @@ especially the AgentMail + work-loop sections.
 3. Run the agent-#3 test: read the kickoff as the third of three parallel
    agents with nothing else — can you boot, claim, implement, burndown,
    land? Any question you'd need to ask = a gap to fix.
-4. Update `00-pipeline-guide.md` (stage 6 active); report agent-count
-   recommendation WITHIN the mode cap ({mode}: mini ≤2, normal ≤4,
-   max ≤6 + one closer agent) — topology parallelism justifies count, the
-   cap bounds it; literal next action for the human: "open {N} sessions,
-   paste 07-execution-kickoff.md into each."
+4. Update `00-pipeline-guide.md` (stage 6 active). Derive staffing from the
+   live capability frontier, reservations, available resources, eligible models
+   and the user's cap. Record the literal next authorized `uvp-fleet` or existing
+   adapter action; a mode label prescribes neither unit nor agent counts.
 
 ## Follow-Up Pass (Sub-Optimization) — send as follow-up in this session
 > ULTRATHINK. (1) grep all three generated files for `TBD`, `TODO`, and
@@ -572,8 +611,8 @@ especially the AgentMail + work-loop sections.
 > plan." An agent reading it must be unable to wander into another feature's
 > beads. (2) Verify the
 > fix-loop text in the kickoff matches the gate bead's verbatim (diff
-> them). (3) Is the escape valve stall-sensitive (5 STALLED iterations),
-> not count-sensitive? (4) Does the kickoff tell agents what to do on a
+> them). (3) Does reflection respond to contrary evidence, repeated failure
+> without new information, feedback budgets and user steering? (4) Does the kickoff tell agents what to do on a
 > STALE instance and on work-belonging-to-no-bead? (5) Confirm the sweep
 > prompt's orphan-sweep wording counts deferred-footer ownership as owned.
 > (6) Does the generated 10-completion-sweep carry the W3 TRIAGE + HANDBACK
@@ -597,9 +636,9 @@ mode: "mini|normal|max"          # see SKILL.md Pipeline Modes
 mode_source: "agent|user"        # user override always wins
 mode_rationale: "{1-2 lines: the signals that decided it}"
 auto:
-  enabled: false                 # true ONLY on explicit user request, Claude Code only
-  stop_policy: "autonomous"      # autonomous (default) = NO approval stops; decisions delegated to the orchestrator (recorded, retro-review). "review-stops" only if the owner opted in. Hard stops ONLY: external-dependency blocks / unrecoverable blockage after recovery attempt
-  routing: "default"             # the SKILL.md tier table, or a recorded override
+  enabled: false                 # true on explicit user request with a verified controller
+  stop_policy: "autonomous"      # within authorization/budget; checkpoint affected work on steering, missing inputs or unknown outcome; review-stops only when requested
+  routing: "{fleet-config-path}" # passed to uvp-fleet --config; its registry drives model argv
 units: []            # filled by enrichment after stage 2
 package_slug_convention: "per surface resolution — AMEND test-packages/{surface_pkg} (delta); MINT test-packages/{new_surface_pkg} only per the decision record"
 evidence_root_convention: "evidence/{slug}-unit{N}/"
@@ -607,7 +646,7 @@ bead_labels: ["{slug}", "{slug}-u{N}"]
 bead_cli: "br"
 handoffs:
   - {file: 01-..., status: generated|pending|stage-owned}
-env: {build: "cargo build -p swarm-cli -p swarmd (debug)", daemon: "...",
+env: {build: "{observed tool/build provenance; build only if missing or changed}", daemon: "...",
       agentmail: true|false}
 ```
 
@@ -616,15 +655,15 @@ env: {build: "cargo build -p swarm-cli -p swarmd (debug)", daemon: "...",
 ```markdown
 # {Feature} — Contract Pipeline Execution Guide
 
-Entry point: stage {N}. One handoff = one fresh session. 03 and 06 MUST be
-fresh sessions (cross-model encouraged).
+Entry point: stage {N}. Stage numbers identify artifact roles. Keep healthy
+continuations; use a fresh independent context for required 03/06 audits.
 
 ## Run Order
 
 | Session | Handoff | Fresh session? | Forward-enriches |
 | --- | --- | --- | --- |
-| 1 | 01-hardening-revision (repeat until READY) | yes | 02, 03 |
-| 2 | 02-contract-create | yes | 04, 05, 06, 07-prep |
+| 1 | 01-hardening-revision (resolve current readiness gaps) | owned context; preserve valid continuation | 02, 03 |
+| 2 | 02-contract-create | owned context; preserve valid continuation | 04, 05, 06, 07-prep |
 | 3 | 03-contract-validate | YES — mandatory fresh; cross-model encouraged | 04 |
 
 DECISION CHECKPOINT (autonomous by default) — the pass-2 session (or a
@@ -633,12 +672,13 @@ findings and any source-doc owner-gated decisions with recorded rationale
 (retro-review flagged), then proceeds. Pause for the owner ONLY on an
 external-dependency block or if the owner requested a review stop here.
 
-Then PER UNIT, in contract order:
+Then for each ready outcome, following actual capability dependencies. Independent
+outcomes may overlap when their ownership, reservations and capacity allow it:
 
 | Session | Handoff | Fresh session? | Forward-enriches |
 | --- | --- | --- | --- |
-| 4 | 04-uvp-transcribe | yes | 05, 06, 07-prep |
-| 5 | 05-beads-create | yes | 06 (verify stage rewrote it), 07-prep |
+| 4 | 04-uvp-transcribe | owned context; preserve valid continuation | 05, 06, 07-prep |
+| 5 | 05-beads-create | owned context; preserve valid continuation | 06 (verify stage rewrote it), 07-prep |
 | 6 | 06-beads-audit | YES — mandatory fresh; cross-model encouraged | 07-prep |
 
 DECISION CHECKPOINT (autonomous by default) — execution proceeds when the
@@ -722,7 +762,8 @@ cursor are the resume state.
   (stage failed twice / stalled gate valve / 3 boundary attempts)
 - Delegated-decision log: every owner-gated item adjudicated by the
   orchestrator gets a run-log row with rationale + `retro-review` flag
-- Model routing: {default per SKILL.md tier table | override + reason}
+- Model routing: {current registry model + task_type + resolved effort and its
+  source, or explicit allowed override + reason; verify support at dispatch}
 - Execution swarm cap: {per mode: mini ≤2 / normal ≤4 / max ≤6 + closer}
 - Host check: background-agent tooling confirmed {date}
 

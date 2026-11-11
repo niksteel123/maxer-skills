@@ -5,38 +5,36 @@ description: "Stage 5 of the contract-first pipeline. FRESH-SESSION audit of con
 
 # Contract Bead Audit — Fresh Eyes Before The Swarm Runs
 
-> ULTRATHINK. In the contract-first pipeline, greenlight backstops
-> CORRECTNESS — a bad bead set cannot ship a falsely-complete unit. What it
-> CAN do is burn agent-days: mis-parallelized tracks, misread scope
-> discovered as stubborn reds at bead 9 of 10, fresh agents thrashing on
-> ambiguous context. This audit is the ECONOMY defense: catch in plan space
-> for the cost of one read what execution space charges in days. Your value
-> is precisely that you did NOT write these beads — stay adversarial.
+Use fresh context to find task/proof mistakes that would delay useful product
+feedback. Verify real consumer wiring, coherent outcomes and executable proof;
+a green gate with a vacuous scope can still misrepresent product readiness.
 
 ## The Contract-First Pipeline — 60-Second Orientation
 
 | # | Stage (skill) | Produces | Done when |
 | --- | --- | --- | --- |
-| 1 | research-hardening | ideal source doc via stamped revisions | 7-item readiness bar = READY |
+| 1 | research-hardening | current intent and falsifiable assumptions | readiness for the named next outcome or experiment |
 | 2 | research-to-contract | execution contract (units, scenarios, UVP specs, crosswalk) | pass-2 fresh-eyes validation clean |
-| 3 | contract-to-uvp | validated TESTS.md package per unit | instantiated; ALL-RED never-run baseline |
+| 3 | contract-to-uvp | current surface-package delta or justified new package | delta baseline and actual carryover verified |
 | 4 | contract-to-beads | bead graph with proof classes per unit | 100% two-sided coverage; polish steady-state |
 | 5 | contract-bead-audit | fresh-eyes audited bead graph | verdict READY |
 | 6 | contract-to-execution | kickoff/push/sweep prompts; flat swarm runs | unit UVP greenlight via gate fix-loop |
 
 Laws binding every stage:
-1. The research doc is canonical. Downstream artifacts CITE it, never restate
-   it. Conflicts resolve upward: code → package → contract → research.
+1. Research records current canonical intent. Cite requirements without
+   duplicating them. User steering or contrary evidence can revise that intent;
+   reconcile affected code, packages and contracts instead of resolving by rank.
 2. A unit is complete ONLY on truthful UVP greenlight — never on narrative,
    bead acceptance criteria, or local tests alone.
 3. Blocked is a valid truthful result; mocks never substitute for missing
    prerequisites.
-4. Amendments: Class 1 (tighten/repair) = free + one log line. Class 2
-   (weaken/redefine-pass) = recorded with research_basis. Red→green without a
-   code change trips an automatic audit.
+4. Record amendment evidence and actual proof impact. Current authorized scope
+   and evidence may revise design; weakened acceptance needs an explicit basis
+   and review. Inspect carryover and the changed claims before accepting green.
 5. Manual scenarios run on REAL subjects with real data; synthetic data only
    in labeled automated eval decks.
-6. Each stage writes exactly ONE artifact class.
+6. Each normal stage has one primary artifact class. Substantial steering pauses
+   affected dispatch and reconciles all affected artifact classes together.
 
 Stage prompts live in `docs/plan-hub/prompts/<feature>-contract-pipeline/`
 (numbered 00–10; every iterative prompt ends with its copyable fresh-eyes
@@ -47,9 +45,10 @@ went blind to — before the swarm pays for it in execution time.**
 
 ## Mandate
 
-- Run in a session that did NOT create the beads (fresh context is the
-  mechanism, not a nicety). Cross-model runs (Codex/Gemini) are encouraged
-  as a final round.
+- Run in a session that did NOT create the beads. Select its model through
+  fleet-controller and the current registry across eligible providers; fresh
+  context establishes reviewer independence, not a provider name. Do not add
+  another review round solely to use a different model.
 - Discovery entry point:
   `docs/plan-hub/prompts/<feature>-contract-pipeline/00-pipeline-guide.md`
   names every artifact and id; start there (or from the `06-beads-audit.md`
@@ -75,10 +74,11 @@ went blind to — before the swarm pays for it in execution time.**
    ASYMMETRIC check; read the asymmetry carefully:
    - For every pair of beads that could be READY simultaneously (no dep path
      between them), intersect their declared `Files:` scopes. **A non-empty
-     intersection with no dependency edge IS a finding**: reservations are
-     exclusive, so those beads are serial in reality while the graph
-     advertises them as parallel. Resolve: add the real `br dep` edge (they
-     ARE sequential), or narrow the scopes (they only *looked* overlapping).
+     intersection IS a placement finding**: exclusive reservations can prevent
+     concurrent edits. Narrow scopes or schedule the conflicting edits through
+     live reservations. Add a `br dep` edge only when one bead consumes the
+     other's delivered capability; temporary file contention is not a permanent
+     product dependency.
    - **A clean intersection proves NOTHING.** `Files:` is a pre-work
      prediction; files get created ad hoc as the plan unfolds, so runtime
      collisions can exist that no declaration foresaw. **Do not report "no
@@ -92,7 +92,7 @@ went blind to — before the swarm pays for it in execution time.**
    `br dep list`/`br dep tree` output and note the manual derivation in the
    report — never skip the diff silently). Divergence = false/missing deps (fix beads) OR stale
    topology (Class 1 contract amendment). Resolve every divergence.
-4. **Proof matrix consistency**: every suite/checklist suite in the package
+4. **Proof matrix consistency**: every suite/checklist suite in the unit's current view
    has ≥1 `turns-green`/`gate` owner; every bead appears with exactly one
    class; no `contributes` bead occupies an owner cell.
 5. **Labels**: every bead's labels ⊇ the package `bindings.work_unit_queries`
@@ -119,14 +119,15 @@ went blind to — before the swarm pays for it in execution time.**
    later unit.
 2. **Reference accuracy in spirit** — do the cited sections actually SAY
    what the bead claims they say (not just exist)? Spot-read.
-3. **Embedded-content fidelity** — research excerpts verbatim (blockquoted,
-   cited), not paraphrase-weakened; measurable criteria preserved EXACTLY;
-   zero "post-MVP"/"simplified"/"nice to have" language anywhere
-   (DO NOT OVERSIMPLIFY — any scope-reduction phrasing is CRITICAL).
+3. **Requirement fidelity** — citations resolve to current authorized intent;
+   excerpts and measurable criteria remain faithful. Judge the actual obligation
+   change and its authority, not prohibited words. Owner steering or a justified
+   redesign may revise scope; silent omission or weakened proof to obtain green
+   is a finding. Check affected-artifact reconciliation and preserved evidence.
 4. **Proof-class sanity** — scaffolding beads claim no greening in their AC;
    `turns-green` beads sit AFTER their feeders in the graph and verify via
    `verify run`, not local tests; the gate bead embeds the full fix loop
-   (JIT fix beads, 5-stalled-iteration escape valve, verdict workflow,
+   (JIT fix beads, evidence-triggered reflection and reconciliation, verdict workflow,
    tool-to-medium matrix, blocked-is-valid, realism rule).
 5. **Independent decomposition critique** — is this the BEST decomposition,
    or merely A valid one? Could tracks parallelize further? Are there
@@ -137,15 +138,24 @@ went blind to — before the swarm pays for it in execution time.**
 
 | Severity | Examples | Action |
 |---|---|---|
-| CRITICAL | uncovered clause, invented scope, scope-reduction language, contributes-bead claiming greening, cycle, suite with no owner | Fix before anything else |
+| CRITICAL | uncovered current clause, unauthorized scope change, contributes-bead claiming greening, cycle, required suite with no owner | Fix before affected execution |
 | HIGH | paraphrased AC, ghost references, false dependency serializing a track, gate bead missing fix-loop parts | Fix before execution |
 | MEDIUM | thin Background/WHY, vague Technical Approach, label gaps | Fix if quick |
 | LOW | naming/style | Note only |
 
-Apply fixes via `br update` / `br create` / `br dep add|remove`; batch into
-one commit; `br sync --flush-only && git add .beads/ && git commit && git push`.
+Apply affected fixes through the actual task plane. Check supported CLI flags,
+the task/edge identities and the export diff. Follow repository allowlist and
+shared-checkout Git policy; inspect the staged candidate in a separate step
+before committing. Do not broadly stage the task directory or rewrite peers'
+provenance to close this audit.
 
 ## Phase 4 — Report + Verdict
+
+Check whether the graph's proof work protects the current product promise or
+invents optional future hardening. Required consumer defects remain findings;
+speculative cases do not automatically become fix beads. Route overgrown contract
+obligations for explicit amendment, preserve honest open states, and stop review
+when material findings are resolved or clearly routed. No additional audit quota.
 
 Write `<unit>-bead-audit-report.md` into the pipeline prompts folder:
 executive summary, findings by severity with bead ids, fixes applied,
